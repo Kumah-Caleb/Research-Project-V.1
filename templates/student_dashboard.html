@@ -264,15 +264,9 @@
 
     <div class="container">
         <div class="welcome-card">
-            <h1>Welcome, {{ user.full_name }}! 👋</h1>
+            <h1 id="welcomeName">Welcome, Student! 👋</h1>
             <p>Track your academic performance and get AI-powered predictions</p>
-            <div class="program-badge">
-                {% if user.program_type == 'regular' %}
-                🎓 Regular Program (5 days/week)
-                {% else %}
-                🌙 Non-Regular Program (Weekend/Evening)
-                {% endif %}
-            </div>
+            <div class="program-badge" id="programBadge">🎓 Regular Program (5 days/week)</div>
         </div>
 
         <div class="stats-grid">
@@ -285,11 +279,11 @@
                 <div class="stat-label">Total Predictions</div>
             </div>
             <div class="stat-card">
-                <div class="stat-number" id="currentWeek">{{ current_week }}</div>
+                <div class="stat-number" id="currentWeek">--</div>
                 <div class="stat-label">Current Week</div>
             </div>
             <div class="stat-card">
-                <div class="stat-number" id="weeksRemaining">{{ weeks_remaining }}</div>
+                <div class="stat-number" id="weeksRemaining">--</div>
                 <div class="stat-label">Weeks Remaining</div>
             </div>
         </div>
@@ -343,28 +337,52 @@
 
         <div class="calendar-widget">
             <h3>📅 Academic Calendar</h3>
-            <div class="week-info">
-                <strong>Week {{ current_week }} of 15</strong>
+            <div class="week-info" id="weekInfo">
+                <strong id="weekText">Loading...</strong>
                 <div class="progress-bar">
-                    <div class="progress-fill" style="width: {{ (current_week / 15 * 100)|round }}%"></div>
+                    <div class="progress-fill" id="progressFill" style="width: 0%"></div>
                 </div>
-                <p style="margin-top: 1rem;">
-                    {% if weeks_remaining > 0 %}
-                    ⏰ {{ weeks_remaining }} weeks remaining in the semester
-                    {% else %}
-                    🎉 Semester break! Prepare for next semester
-                    {% endif %}
-                </p>
+                <p id="weeksMessage" style="margin-top: 1rem;">Loading...</p>
             </div>
         </div>
     </div>
 
     <script>
+        // Get user data from localStorage (set during login)
+        let currentUser = null;
+        
+        function getCurrentWeek() {
+            const today = new Date();
+            // AAMUSTED semester starts in late August
+            const semesterStart = new Date(today.getFullYear(), 7, 26); // August 26
+            const diffDays = Math.floor((today - semesterStart) / (1000 * 60 * 60 * 24));
+            let week = Math.floor(diffDays / 7) + 1;
+            if (week < 1) week = 1;
+            if (week > 15) week = 15;
+            return week;
+        }
+        
+        function loadUserData() {
+            const userStr = localStorage.getItem('currentUser');
+            if (userStr) {
+                currentUser = JSON.parse(userStr);
+                document.getElementById('welcomeName').innerHTML = `Welcome, ${currentUser.full_name || currentUser.username}! 👋`;
+                
+                const programType = currentUser.program_type || 'regular';
+                const programBadge = document.getElementById('programBadge');
+                if (programType === 'regular') {
+                    programBadge.innerHTML = '🎓 Regular Program (5 days/week)';
+                } else {
+                    programBadge.innerHTML = '🌙 Non-Regular Program (Weekend/Evening)';
+                }
+            }
+        }
+        
         async function loadDashboardData() {
             try {
-                // Load predictions
-                const response = await fetch('/api/history');
-                const predictions = await response.json();
+                // Load predictions from localStorage
+                const predictionsStr = localStorage.getItem('predictions');
+                const predictions = predictionsStr ? JSON.parse(predictionsStr) : [];
                 
                 const recentDiv = document.getElementById('recentPredictions');
                 const statsCount = document.getElementById('predictionsCount');
@@ -374,18 +392,18 @@
                     
                     // Calculate average score
                     let totalScore = 0;
-                    predictions.forEach(p => totalScore += p.score);
+                    predictions.forEach(p => totalScore += p.score || p.weighted_score || 0);
                     const avgScore = (totalScore / predictions.length).toFixed(1);
                     document.getElementById('avgScore').textContent = avgScore + '%';
                     
                     // Display recent predictions
                     recentDiv.innerHTML = predictions.slice(0, 5).map(p => `
-                        <div class="activity-item">
+                        <div class="activity-item" onclick="viewPrediction(${JSON.stringify(p).replace(/"/g, '&quot;')})">
                             <div>
                                 <strong>${p.grade || p.prediction || 'Prediction'}</strong>
                                 <div class="activity-date">${new Date(p.date).toLocaleDateString()}</div>
                             </div>
-                            <div class="activity-score">${p.score?.toFixed(1) || p.weighted_score?.toFixed(1) || '--'}%</div>
+                            <div class="activity-score">${(p.score || p.weighted_score || 0).toFixed(1)}%</div>
                         </div>
                     `).join('');
                 } else {
@@ -393,20 +411,49 @@
                 }
             } catch (error) {
                 console.error('Error loading dashboard data:', error);
+                document.getElementById('recentPredictions').innerHTML = '<p style="text-align: center; color: #999; padding: 2rem;">Unable to load predictions. Start by making your first prediction!</p>';
             }
+        }
+        
+        function updateCalendar() {
+            const currentWeek = getCurrentWeek();
+            const weeksRemaining = 15 - currentWeek;
+            
+            document.getElementById('currentWeek').textContent = currentWeek;
+            document.getElementById('weeksRemaining').textContent = weeksRemaining;
+            document.getElementById('weekText').innerHTML = `<strong>Week ${currentWeek} of 15</strong>`;
+            
+            const progressPercent = (currentWeek / 15 * 100);
+            document.getElementById('progressFill').style.width = `${progressPercent}%`;
+            
+            const weeksMsg = document.getElementById('weeksMessage');
+            if (weeksRemaining > 0) {
+                weeksMsg.innerHTML = `⏰ ${weeksRemaining} weeks remaining in the semester`;
+            } else {
+                weeksMsg.innerHTML = `🎉 Semester break! Prepare for next semester`;
+            }
+        }
+        
+        function viewPrediction(prediction) {
+            // Show prediction details in a modal or console
+            alert(`Prediction: ${prediction.grade || prediction.prediction}\nScore: ${(prediction.score || prediction.weighted_score || 0).toFixed(1)}%\nDate: ${new Date(prediction.date).toLocaleString()}`);
         }
         
         async function logout() {
             try {
                 await fetch('/api/logout', { method: 'POST' });
-                window.location.href = '/';
-            } catch (error) {
-                console.error('Logout error:', error);
-                window.location.href = '/';
+            } catch (e) {
+                console.log('Logout error:', e);
             }
+            localStorage.removeItem('currentUser');
+            localStorage.removeItem('predictions');
+            window.location.href = '/';
         }
         
+        // Initialize
+        loadUserData();
         loadDashboardData();
+        updateCalendar();
     </script>
 </body>
 </html>
