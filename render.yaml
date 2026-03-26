@@ -1,16 +1,15 @@
-@"
-services:
+﻿services:
   - type: web
-    name: aamusted-academic-suite
+    name: student-performance-predictor7
     runtime: python
-    repo: https://github.com/Kumah_Caleb/student-performance-predictor
+    repo: https://github.com/Kumah-Caleb/Research-Project-V.1
     plan: free
     region: oregon
+    branch: main
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn app:app
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
-"@ | Out-File -FilePath render.yaml -Encoding utf8
-
-Write-Host "✅ render.yaml created!" -ForegroundColor Green
+      - key: FLASK_ENV
+        value: production
