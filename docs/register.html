@@ -233,7 +233,7 @@
     </div>
 
     <script>
-        // ✅ FIXED: Use the correct Render backend URL
+        // ✅ IMPORTANT: Use the full Render backend URL
         const API_URL = 'https://student-performance-predictor7.onrender.com';
         
         document.getElementById('registerForm').addEventListener('submit', async (e) => {
@@ -247,6 +247,25 @@
             
             errorDiv.style.display = 'none';
             successDiv.style.display = 'none';
+            
+            // Validation
+            if (!document.getElementById('fullName').value.trim()) {
+                errorDiv.textContent = 'Please enter your full name';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            if (!document.getElementById('username').value.trim()) {
+                errorDiv.textContent = 'Please choose a username';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            if (!document.getElementById('email').value.trim()) {
+                errorDiv.textContent = 'Please enter your email';
+                errorDiv.style.display = 'block';
+                return;
+            }
             
             if (password !== confirmPassword) {
                 errorDiv.textContent = 'Passwords do not match';
@@ -267,7 +286,7 @@
                 full_name: document.getElementById('fullName').value,
                 username: document.getElementById('username').value,
                 email: document.getElementById('email').value,
-                index_number: document.getElementById('indexNumber').value,
+                index_number: document.getElementById('indexNumber').value || '',
                 password: password,
                 program_type: document.querySelector('input[name="programType"]:checked').value,
                 department: document.getElementById('department').value,
@@ -275,35 +294,44 @@
                 role: document.querySelector('input[name="role"]:checked').value
             };
             
+            console.log('Sending to:', `${API_URL}/api/register`);
+            console.log('Registration data:', data);
+            
             try {
-                // ✅ FIXED: Use full API URL
+                // ✅ FIXED: Use the full URL with API_URL
                 const response = await fetch(`${API_URL}/api/register`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
                     body: JSON.stringify(data)
                 });
                 
+                console.log('Response status:', response.status);
                 const result = await response.json();
+                console.log('Response data:', result);
                 
                 if (result.success) {
-                    successDiv.textContent = 'Account created successfully! Redirecting to login...';
+                    successDiv.textContent = '✅ Account created successfully! Redirecting to login...';
                     successDiv.style.display = 'block';
                     
                     // Save user info to localStorage
                     localStorage.setItem('currentUser', JSON.stringify(result.user));
                     
+                    // Redirect to login page after 2 seconds
                     setTimeout(() => {
                         window.location.href = '/login.html';
                     }, 2000);
                 } else {
-                    errorDiv.textContent = result.error || 'Registration failed';
+                    errorDiv.textContent = result.error || 'Registration failed. Please try again.';
                     errorDiv.style.display = 'block';
                     btn.disabled = false;
                     btn.innerHTML = 'Create Account';
                 }
             } catch (error) {
                 console.error('Registration error:', error);
-                errorDiv.textContent = 'Network error. Please try again.';
+                errorDiv.textContent = 'Network error: ' + error.message + '. Please check your connection.';
                 errorDiv.style.display = 'block';
                 btn.disabled = false;
                 btn.innerHTML = 'Create Account';
