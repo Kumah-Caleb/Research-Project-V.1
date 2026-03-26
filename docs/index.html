@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Performance Predictor | AAMUSTED</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            transition: background 0.3s ease;
+        }
+        
+        body.dark-mode {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            transition: background 0.3s ease;
+        }
+        
+        body.dark-mode .container {
+            background: #1e1e2e;
+            color: #eee;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .theme-toggle {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        body.dark-mode label {
+            color: #ddd;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        body.dark-mode input, body.dark-mode select {
+            background: #2d2d3a;
+            border-color: #444;
+            color: #eee;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .predict-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: transform 0.2s;
+        }
+        
+        .predict-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .predict-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            animation: fadeIn 0.5s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .result.excellent {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            color: #155724;
+        }
+        
+        .result.good {
+            background: #d1ecf1;
+            border: 2px solid #17a2b8;
+            color: #0c5460;
+        }
+        
+        .result.average {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            color: #856404;
+        }
+        
+        .result.poor {
+            background: #f8d7da;
+            border: 2px solid #dc3545;
+            color: #721c24;
+        }
+        
+        body.dark-mode .result.excellent {
+            background: #1e4620;
+            color: #a5d6a5;
+        }
+        
+        body.dark-mode .result.good {
+            background: #0c5460;
+            color: #b8e1fc;
+        }
+        
+        body.dark-mode .result.average {
+            background: #856404;
+            color: #ffe69c;
+        }
+        
+        body.dark-mode .result.poor {
+            background: #721c24;
+            color: #f5c6cb;
+        }
+        
+        .prediction {
+            font-size: 36px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        
+        .score {
+            font-size: 24px;
+            margin: 10px 0;
+        }
+        
+        .confidence {
+            font-size: 14px;
+            color: #666;
+            margin-top: 10px;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .status {
+            background: #e3f2fd;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 14px;
+        }
+        
+        body.dark-mode .status {
+            background: #2d2d3a;
+            color: #ddd;
+        }
+        
+        .grade-scale {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+            text-align: center;
+        }
+        
+        .grade-item {
+            padding: 8px;
+            border-radius: 8px;
+            font-size: 12px;
+        }
+        
+        .grade-item.A { background: #d4edda; color: #28a745; }
+        .grade-item.B { background: #d1ecf1; color: #17a2b8; }
+        .grade-item.C { background: #fff3cd; color: #ffc107; }
+        .grade-item.D { background: #ffe5d0; color: #fd7e14; }
+        .grade-item.F { background: #f8d7da; color: #dc3545; }
+        
+        .tips-list {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            text-align: left;
+        }
+        
+        body.dark-mode .tips-list {
+            background: #2d2d3a;
+        }
+        
+        .tips-list ul {
+            margin-top: 10px;
+            padding-left: 20px;
+        }
+        
+        .tips-list li {
+            margin: 5px 0;
+        }
+        
+        .share-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            justify-content: center;
+        }
+        
+        .share-btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: opacity 0.2s;
+        }
+        
+        .share-btn:hover {
+            opacity: 0.8;
+        }
+        
+        .share-twitter {
+            background: #1da1f2;
+            color: white;
+        }
+        
+        .share-linkedin {
+            background: #0077b5;
+            color: white;
+        }
+        
+        .share-copy {
+            background: #28a745;
+            color: white;
+        }
+        
+        .history-panel {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            display: none;
+        }
+        
+        body.dark-mode .history-panel {
+            background: #2d2d3a;
+        }
+        
+        .history-panel h3 {
+            margin-bottom: 15px;
+        }
+        
+        .history-item {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .history-item:hover {
+            background: #e9ecef;
+        }
+        
+        body.dark-mode .history-item:hover {
+            background: #3d3d4a;
+        }
+        
+        .clear-history {
+            margin-top: 10px;
+            padding: 8px 15px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        @media (max-width: 600px) {
+            .grade-scale {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            .prediction {
+                font-size: 28px;
+            }
+            .share-buttons {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <button class="theme-toggle" onclick="toggleTheme()">🌙 Dark Mode</button>
+            <h1>🎓 Student Performance Predictor</h1>
+            <p>AAMUSTED - AI-Powered Academic Performance Prediction</p>
+        </div>
+        <div class="content">
+            <div class="status" id="serverStatus">🔌 Connecting to server...</div>
+            
+            <div class="form-group">
+                <label>📅 Attendance (%)</label>
+                <input type="number" id="attendance" min="0" max="100" value="85">
+            </div>
+            <div class="form-group">
+                <label>📝 Assignments (%)</label>
+                <input type="number" id="assignments" min="0" max="100" value="80">
+            </div>
+            <div class="form-group">
+                <label>💬 Engagement (%)</label>
+                <input type="number" id="engagement" min="0" max="100" value="85">
+            </div>
+            <div class="form-group">
+                <label>📚 Study Hours (per week)</label>
+                <input type="number" id="studyHours" min="0" max="40" value="12">
+            </div>
+            <div class="form-group">
+                <label>📊 Previous Grade (%)</label>
+                <input type="number" id="previousGrade" min="0" max="100" value="75">
+            </div>
+            <div class="form-group">
+                <label>🎯 Extra Curricular (0-5)</label>
+                <input type="number" id="extraCurricular" min="0" max="5" value="2">
+            </div>
+            <div class="form-group">
+                <label>👨‍👩‍👧 Parent Education</label>
+                <select id="parentEducation">
+                    <option value="1">High School</option>
+                    <option value="2" selected>Bachelor's Degree</option>
+                    <option value="3">Master's Degree</option>
+                    <option value="4">PhD/Doctorate</option>
+                </select>
+            </div>
+            
+            <button class="predict-btn" id="predictBtn">🔮 Predict Performance</button>
+            <div id="result"></div>
+            
+            <div class="history-panel" id="historyPanel">
+                <h3>📜 Recent Predictions</h3>
+                <div id="historyList"></div>
+                <button class="clear-history" onclick="clearHistory()">Clear History</button>
+            </div>
+            
+            <div class="info-box">
+                <h4>📖 AAMUSTED Grading System</h4>
+                <div class="grade-scale">
+                    <div class="grade-item A"><strong>A</strong><br>80-100%</div>
+                    <div class="grade-item B"><strong>B</strong><br>70-79%</div>
+                    <div class="grade-item C"><strong>C</strong><br>60-69%</div>
+                    <div class="grade-item D"><strong>D</strong><br>50-59%</div>
+                    <div class="grade-item F"><strong>F</strong><br>Below 50%</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Your Render backend URL
+        const API_URL = 'https://student-performance-predictor7.onrender.com';
+        
+        function getGrade(score) {
+            if (score >= 80) return { grade: 'A', text: 'Excellent', class: 'excellent' };
+            if (score >= 70) return { grade: 'B', text: 'Very Good', class: 'good' };
+            if (score >= 60) return { grade: 'C', text: 'Good', class: 'average' };
+            if (score >= 50) return { grade: 'D', text: 'Pass', class: 'average' };
+            return { grade: 'F', text: 'Needs Improvement', class: 'poor' };
+        }
+        
+        function getImprovementTips(data) {
+            const tips = [];
+            if (data.attendance < 70) tips.push("📅 Improve attendance - attend more classes (target 85%+)");
+            if (data.assignments < 70) tips.push("📝 Complete more assignments on time and improve quality");
+            if (data.engagement < 70) tips.push("💬 Participate more in class discussions and activities");
+            if (data.study_hours < 10) tips.push("⏰ Increase study hours to 10-15 hours per week");
+            if (data.previous_grade < 65) tips.push("📚 Review fundamentals and seek academic support");
+            if (data.extra_curricular < 2) tips.push("🎯 Join extracurricular activities to develop soft skills");
+            if (data.parent_education < 2 && data.weighted_score < 70) tips.push("👨‍👩‍👧 Seek guidance from academic advisors");
+            if (tips.length === 0) tips.push("🌟 Excellent! Keep maintaining your high standards!");
+            return tips;
+        }
+        
+        async function checkServer() {
+            const statusDiv = document.getElementById('serverStatus');
+            try {
+                const response = await fetch(`${API_URL}/health`);
+                if (response.ok) {
+                    statusDiv.innerHTML = '✅ Backend connected! Ready to predict.';
+                    statusDiv.style.background = '#d4edda';
+                    statusDiv.style.color = '#155724';
+                } else {
+                    statusDiv.innerHTML = '⚠️ Backend responded but with error.';
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `❌ Cannot connect to backend. Make sure your Render app is running.`;
+                statusDiv.style.background = '#f8d7da';
+                statusDiv.style.color = '#721c24';
+                console.error('Connection error:', error);
+            }
+        }
+        
+        function getCurrentInputs() {
+            return {
+                attendance: parseFloat(document.getElementById('attendance').value),
+                assignments: parseFloat(document.getElementById('assignments').value),
+                engagement: parseFloat(document.getElementById('engagement').value),
+                study_hours: parseFloat(document.getElementById('studyHours').value),
+                previous_grade: parseFloat(document.getElementById('previousGrade').value),
+                extra_curricular: parseFloat(document.getElementById('extraCurricular').value),
+                parent_education: parseInt(document.getElementById('parentEducation').value)
+            };
+        }
+        
+        function saveToHistory(result, inputs) {
+            let history = JSON.parse(localStorage.getItem('predictions') || '[]');
+            history.unshift({
+                date: new Date().toISOString(),
+                prediction: result.prediction,
+                score: result.weighted_score,
+                confidence: result.confidence,
+                inputs: inputs
+            });
+            // Keep only last 10 predictions
+            history = history.slice(0, 10);
+            localStorage.setItem('predictions', JSON.stringify(history));
+            loadHistory();
+        }
+        
+        function loadHistory() {
+            const history = JSON.parse(localStorage.getItem('predictions') || '[]');
+            const historyPanel = document.getElementById('historyPanel');
+            const historyList = document.getElementById('historyList');
+            
+            if (history.length > 0) {
+                historyPanel.style.display = 'block';
+                historyList.innerHTML = history.map((item, index) => `
+                    <div class="history-item" onclick="loadHistoryItem(${index})">
+                        <strong>${new Date(item.date).toLocaleDateString()}</strong><br>
+                        ${item.prediction} - Score: ${item.score.toFixed(1)}% (${item.confidence.toFixed(0)}% confidence)
+                    </div>
+                `).join('');
+            } else {
+                historyPanel.style.display = 'none';
+            }
+        }
+        
+        function loadHistoryItem(index) {
+            const history = JSON.parse(localStorage.getItem('predictions') || '[]');
+            const item = history[index];
+            if (item) {
+                document.getElementById('attendance').value = item.inputs.attendance;
+                document.getElementById('assignments').value = item.inputs.assignments;
+                document.getElementById('engagement').value = item.inputs.engagement;
+                document.getElementById('studyHours').value = item.inputs.study_hours;
+                document.getElementById('previousGrade').value = item.inputs.previous_grade;
+                document.getElementById('extraCurricular').value = item.inputs.extra_curricular;
+                document.getElementById('parentEducation').value = item.inputs.parent_education;
+                predict(); // Automatically predict
+            }
+        }
+        
+        function clearHistory() {
+            if (confirm('Clear all prediction history?')) {
+                localStorage.removeItem('predictions');
+                loadHistory();
+            }
+        }
+        
+        async function shareResult(prediction, score) {
+            const text = `🎓 My Academic Performance Prediction: ${prediction} (${score.toFixed(1)}%) - Check yours at AAMUSTED Student Performance Predictor!`;
+            
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: 'My Performance Prediction',
+                        text: text,
+                        url: window.location.href
+                    });
+                } catch (err) {
+                    copyToClipboard(text);
+                }
+            } else {
+                copyToClipboard(text);
+            }
+        }
+        
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text);
+            alert('Result copied to clipboard!');
+        }
+        
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const btn = document.querySelector('.theme-toggle');
+            if (document.body.classList.contains('dark-mode')) {
+                btn.innerHTML = '☀️ Light Mode';
+            } else {
+                btn.innerHTML = '🌙 Dark Mode';
+            }
+        }
+        
+        async function predict() {
+            const btn = document.getElementById('predictBtn');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span> Predicting...';
+            
+            const inputs = getCurrentInputs();
+            
+            try {
+                const response = await fetch(`${API_URL}/predict`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(inputs)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    const gradeInfo = getGrade(result.weighted_score);
+                    const tips = getImprovementTips({...inputs, weighted_score: result.weighted_score});
+                    
+                    document.getElementById('result').innerHTML = `
+                        <div class="result ${gradeInfo.class}">
+                            <h2>🎯 ${result.prediction}</h2>
+                            <div class="prediction">${gradeInfo.grade} - ${gradeInfo.text}</div>
+                            <div class="score">Overall Score: ${result.weighted_score.toFixed(1)}%</div>
+                            <div class="confidence">Confidence: ${result.confidence.toFixed(1)}%</div>
+                            <div class="tips-list">
+                                <strong>💡 Improvement Tips:</strong>
+                                <ul>
+                                    ${tips.map(tip => `<li>${tip}</li>`).join('')}
+                                </ul>
+                            </div>
+                            <div class="share-buttons">
+                                <button class="share-btn share-copy" onclick="copyToClipboard('🎓 My Performance: ${result.prediction} (${result.weighted_score.toFixed(1)}%)')">📋 Copy Result</button>
+                                <button class="share-btn share-twitter" onclick="shareResult('${result.prediction}', ${result.weighted_score})">🐦 Share</button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    saveToHistory(result, inputs);
+                } else {
+                    document.getElementById('result').innerHTML = `
+                        <div class="result poor">
+                            ❌ Error: ${result.error || 'Prediction failed'}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Fetch error:', error);
+                document.getElementById('result').innerHTML = `
+                    <div class="result poor">
+                        ❌ Network Error: ${error.message}
+                    </div>
+                `;
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+        
+        document.getElementById('predictBtn').addEventListener('click', predict);
+        checkServer();
+        loadHistory();
+    </script>
+</body>
+</html>
