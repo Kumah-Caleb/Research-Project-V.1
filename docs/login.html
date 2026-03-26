@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - AAMUSTED Performance Predictor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 450px;
+            overflow: hidden;
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .form-container {
+            padding: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.3s;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .login-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .register-link {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+        }
+
+        .register-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .register-link a:hover {
+            text-decoration: underline;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+            font-size: 14px;
+            border-left: 4px solid #dc3545;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+            font-size: 14px;
+            border-left: 4px solid #28a745;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .demo-info {
+            background: #e3f2fd;
+            padding: 12px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-size: 12px;
+            text-align: center;
+            color: #0056b3;
+        }
+
+        .demo-info strong {
+            color: #004085;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="header">
+            <h1>🔐 Welcome Back</h1>
+            <p>Login to your AAMUSTED Performance Predictor</p>
+        </div>
+        <div class="form-container">
+            <div id="errorMsg" class="error-message"></div>
+            <div id="successMsg" class="success-message"></div>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="username" required placeholder="Enter your username" autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="password" required placeholder="Enter your password" autocomplete="current-password">
+                </div>
+                <button type="submit" class="login-btn" id="loginBtn">Login</button>
+            </form>
+            
+            <div class="register-link">
+                Don't have an account? <a href="/register">Register here</a>
+            </div>
+            
+            <div class="demo-info">
+                <strong>📌 Demo Accounts:</strong><br>
+                Student: username: "student" / password: "student123"<br>
+                Lecturer: username: "lecturer" / password: "lecturer123"
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API URL - Update this to your Render backend URL
+        const API_URL = 'https://student-performance-predictor7.onrender.com';
+        
+        // Demo users for offline testing (in case backend is unavailable)
+        const DEMO_USERS = {
+            student: {
+                id: 'demo_student_1',
+                username: 'student',
+                full_name: 'John Doe',
+                email: 'student@aamusted.edu.gh',
+                role: 'student',
+                program_type: 'regular',
+                index_number: '2024/IT/001',
+                department: 'Information Technology',
+                level: '200'
+            },
+            lecturer: {
+                id: 'demo_lecturer_1',
+                username: 'lecturer',
+                full_name: 'Dr. Jane Smith',
+                email: 'jane.smith@aamusted.edu.gh',
+                role: 'lecturer',
+                program_type: 'regular',
+                index_number: 'STAFF001',
+                department: 'Information Technology',
+                level: 'Senior Lecturer'
+            }
+        };
+        
+        async function login(username, password) {
+            try {
+                const response = await fetch(`${API_URL}/api/login`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    return { success: true, data: data };
+                } else {
+                    const error = await response.json();
+                    return { success: false, error: error.error || 'Invalid credentials' };
+                }
+            } catch (error) {
+                console.error('Network error:', error);
+                // Fallback to demo users if backend is unavailable
+                return checkDemoUser(username, password);
+            }
+        }
+        
+        function checkDemoUser(username, password) {
+            if (username === 'student' && password === 'student123') {
+                return { 
+                    success: true, 
+                    data: { 
+                        role: 'student', 
+                        user: DEMO_USERS.student 
+                    } 
+                };
+            } else if (username === 'lecturer' && password === 'lecturer123') {
+                return { 
+                    success: true, 
+                    data: { 
+                        role: 'lecturer', 
+                        user: DEMO_USERS.lecturer 
+                    } 
+                };
+            }
+            return { success: false, error: 'Invalid credentials' };
+        }
+        
+        function saveUserToLocalStorage(user) {
+            const userData = {
+                id: user.id || `user_${Date.now()}`,
+                username: user.username,
+                full_name: user.full_name,
+                email: user.email,
+                role: user.role,
+                program_type: user.program_type || 'regular',
+                index_number: user.index_number || '',
+                department: user.department || '',
+                level: user.level || '100',
+                loginTime: new Date().toISOString()
+            };
+            localStorage.setItem('currentUser', JSON.stringify(userData));
+            
+            // Initialize predictions array if not exists
+            if (!localStorage.getItem('predictions')) {
+                localStorage.setItem('predictions', JSON.stringify([]));
+            }
+            
+            return userData;
+        }
+        
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const btn = document.getElementById('loginBtn');
+            const errorDiv = document.getElementById('errorMsg');
+            const successDiv = document.getElementById('successMsg');
+            
+            if (!username || !password) {
+                errorDiv.textContent = 'Please enter both username and password';
+                errorDiv.style.display = 'block';
+                successDiv.style.display = 'none';
+                return;
+            }
+            
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span> Logging in...';
+            errorDiv.style.display = 'none';
+            successDiv.style.display = 'none';
+            
+            const result = await login(username, password);
+            
+            if (result.success) {
+                let user;
+                if (result.data.user) {
+                    user = result.data.user;
+                } else {
+                    // If backend returned user data
+                    user = {
+                        username: username,
+                        full_name: username === 'student' ? 'Student User' : 'Lecturer User',
+                        role: result.data.role,
+                        program_type: 'regular'
+                    };
+                }
+                
+                saveUserToLocalStorage(user);
+                
+                successDiv.textContent = 'Login successful! Redirecting...';
+                successDiv.style.display = 'block';
+                
+                // Redirect after short delay
+                setTimeout(() => {
+                    window.location.href = '/dashboard';
+                }, 1000);
+            } else {
+                errorDiv.textContent = result.error || 'Login failed. Please check your credentials.';
+                errorDiv.style.display = 'block';
+                btn.disabled = false;
+                btn.innerHTML = 'Login';
+            }
+        });
+        
+        // Check if already logged in
+        function checkExistingSession() {
+            const user = localStorage.getItem('currentUser');
+            if (user) {
+                const userData = JSON.parse(user);
+                // Redirect to dashboard if already logged in
+                window.location.href = '/dashboard';
+            }
+        }
+        
+        // Check for existing session on page load
+        checkExistingSession();
+    </script>
+</body>
+</html>
