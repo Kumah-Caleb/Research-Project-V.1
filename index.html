@@ -1,0 +1,346 @@
+# Backup your current index.html first
+Copy-Item index.html index.html.backup
+
+# Create new index.html that connects to backend
+@'
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AAMUSTED Student Performance Predictor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        
+        .predict-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+        
+        .result.success {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            color: #155724;
+        }
+        
+        .prediction {
+            font-size: 48px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        
+        .info-box {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        
+        .grade-scale {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+            text-align: center;
+        }
+        
+        .grade-item {
+            padding: 5px;
+            border-radius: 5px;
+            font-size: 12px;
+        }
+        .grade-item.A { background: #d4edda; color: #28a745; }
+        .grade-item.B { background: #d1ecf1; color: #17a2b8; }
+        .grade-item.C { background: #fff3cd; color: #ffc107; }
+        .grade-item.D { background: #ffe5d0; color: #fd7e14; }
+        .grade-item.F { background: #f8d7da; color: #dc3545; }
+        
+        .nav-links {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        
+        .nav-links a {
+            color: var(--primary);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            background: #f0f0f0;
+        }
+        
+        @media (max-width: 600px) {
+            .grade-scale {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎓 AAMUSTED Student Performance Predictor</h1>
+            <p>Department of Information Technology Education, Kumasi</p>
+            <p style="font-size: 12px;">Based on AAMUSTED Grading System | 7-Factor Model</p>
+        </div>
+        
+        <div class="content">
+            <div class="nav-links">
+                <a href="/login">🔐 Login</a>
+                <a href="/register">📝 Register</a>
+            </div>
+            
+            <div id="serverStatus" style="background: #fff3cd; padding: 10px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
+                🔌 Checking connection to backend...
+            </div>
+            
+            <div class="form-group">
+                <label>📅 Attendance (%)</label>
+                <input type="number" id="attendance" placeholder="0-100" min="0" max="100">
+            </div>
+            
+            <div class="form-group">
+                <label>📝 Assignments (%)</label>
+                <input type="number" id="assignments" placeholder="0-100" min="0" max="100">
+            </div>
+            
+            <div class="form-group">
+                <label>💬 Engagement (%)</label>
+                <input type="number" id="engagement" placeholder="0-100" min="0" max="100">
+            </div>
+            
+            <div class="form-group">
+                <label>📚 Study Hours (per week)</label>
+                <input type="number" id="studyHours" value="10" min="0" max="40">
+            </div>
+            
+            <div class="form-group">
+                <label>📊 Previous Grade (%)</label>
+                <input type="number" id="previousGrade" value="65" min="0" max="100">
+            </div>
+            
+            <div class="form-group">
+                <label>🎯 Extra Curricular (0-5)</label>
+                <input type="number" id="extraCurricular" value="2" min="0" max="5">
+            </div>
+            
+            <div class="form-group">
+                <label>👨‍👩‍👧 Parent Education (1-4)</label>
+                <select id="parentEducation">
+                    <option value="1">High School</option>
+                    <option value="2" selected>Bachelor's Degree</option>
+                    <option value="3">Master's Degree</option>
+                    <option value="4">PhD/Doctorate</option>
+                </select>
+            </div>
+            
+            <button class="predict-btn" id="predictBtn">🔮 Predict Performance</button>
+            
+            <div id="result"></div>
+            
+            <div class="info-box">
+                <h4>📖 AAMUSTED Grading System</h4>
+                <div class="grade-scale">
+                    <div class="grade-item A"><strong>A</strong><br>80-100%</div>
+                    <div class="grade-item B"><strong>B</strong><br>70-79%</div>
+                    <div class="grade-item C"><strong>C</strong><br>60-69%</div>
+                    <div class="grade-item D"><strong>D</strong><br>50-59%</div>
+                    <div class="grade-item F"><strong>F</strong><br>Below 50%</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Backend API URL
+        const API_URL = 'https://aamusted-performance-api.onrender.com';
+        
+        // Check server connection
+        async function checkServer() {
+            const statusDiv = document.getElementById('serverStatus');
+            try {
+                const response = await fetch(`${API_URL}/health`);
+                if (response.ok) {
+                    statusDiv.innerHTML = '✅ Backend connected! Ready to predict.';
+                    statusDiv.style.background = '#d4edda';
+                    statusDiv.style.color = '#155724';
+                } else {
+                    statusDiv.innerHTML = '⚠️ Backend responded but with error.';
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `❌ Cannot connect to backend at ${API_URL}<br><small>Please make sure the backend is deployed on Render</small>`;
+                statusDiv.style.background = '#f8d7da';
+                statusDiv.style.color = '#721c24';
+            }
+        }
+        
+        function getGrade(score) {
+            if (score >= 80) return { grade: 'A', text: 'Excellent', color: '#28a745' };
+            if (score >= 70) return { grade: 'B', text: 'Very Good', color: '#17a2b8' };
+            if (score >= 60) return { grade: 'C', text: 'Good', color: '#ffc107' };
+            if (score >= 50) return { grade: 'D', text: 'Pass', color: '#fd7e14' };
+            return { grade: 'F', text: 'Fail', color: '#dc3545' };
+        }
+        
+        document.getElementById('predictBtn').addEventListener('click', async () => {
+            const attendance = document.getElementById('attendance').value;
+            const assignments = document.getElementById('assignments').value;
+            const engagement = document.getElementById('engagement').value;
+            const studyHours = document.getElementById('studyHours').value;
+            const previousGrade = document.getElementById('previousGrade').value;
+            const extraCurricular = document.getElementById('extraCurricular').value;
+            const parentEducation = document.getElementById('parentEducation').value;
+            
+            if (!attendance || !assignments || !engagement) {
+                alert('Please fill in attendance, assignments, and engagement');
+                return;
+            }
+            
+            const btn = document.getElementById('predictBtn');
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span> Predicting...';
+            
+            try {
+                const response = await fetch(`${API_URL}/predict`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        attendance: parseFloat(attendance),
+                        assignments: parseFloat(assignments),
+                        engagement: parseFloat(engagement),
+                        study_hours: parseFloat(studyHours),
+                        previous_grade: parseFloat(previousGrade),
+                        extra_curricular: parseFloat(extraCurricular),
+                        parent_education: parseFloat(parentEducation)
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    const gradeInfo = getGrade(data.weighted_score);
+                    document.getElementById('result').innerHTML = `
+                        <div class="result success">
+                            <h3>🎯 Your Performance Result</h3>
+                            <div class="prediction" style="color: ${gradeInfo.color}">${gradeInfo.grade} - ${gradeInfo.text}</div>
+                            <div>Confidence: ${data.confidence.toFixed(1)}%</div>
+                            <div style="margin-top: 10px;">Overall Score: ${data.weighted_score.toFixed(1)}%</div>
+                            <div style="margin-top: 10px; font-size: 12px;">
+                                <small>Based on AAMUSTED grading system | 7-Factor Model</small>
+                            </div>
+                            <div style="margin-top: 15px;">
+                                <a href="/login" style="color: var(--primary);">Login to access full dashboard →</a>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('result').innerHTML = `<div class="result" style="background:#f8d7da;">❌ ${data.error || 'Prediction failed'}</div>`;
+                }
+            } catch (error) {
+                document.getElementById('result').innerHTML = `<div class="result" style="background:#f8d7da;">❌ Error: ${error.message}</div>`;
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        });
+        
+        // Add loading animation style
+        const style = document.createElement('style');
+        style.textContent = `
+            .loading {
+                display: inline-block;
+                width: 20px;
+                height: 20px;
+                border: 3px solid #f3f3f3;
+                border-top: 3px solid #667eea;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+                margin-right: 10px;
+            }
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // Check server on load
+        checkServer();
+    </script>
+</body>
+</html>
+'@ | Out-File -FilePath index.html -Encoding utf8
+
+Write-Host "✅ index.html updated to connect to live backend!" -ForegroundColor Green

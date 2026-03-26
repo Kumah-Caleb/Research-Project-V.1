@@ -1,0 +1,30 @@
+@"
+# Python
+__pycache__/
+*.pyc
+*.pkl
+*.db
+*.sqlite
+.venv/
+venv/
+
+# Node.js (to avoid future issues)
+node_modules/
+package.json
+package-lock.json
+server.js
+
+# Data
+*.csv
+instance/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+"@ | Out-File -FilePath .gitignore -Encoding utf8 -Force
+
+Write-Host "✅ .gitignore updated!" -ForegroundColor Green
