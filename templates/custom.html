@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Predictor - AAMUSTED Performance Predictor</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fb; }
+        
+        .navbar {
+            background: linear-gradient(135deg, #1a2a3a 0%, #0f1a24 100%);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .logo { font-size: 1.5rem; font-weight: bold; }
+        .logo span { color: #ffd700; }
+        .nav-links { display: flex; gap: 1.5rem; align-items: center; flex-wrap: wrap; }
+        .nav-links a { color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 8px; }
+        .nav-links a:hover, .nav-links a.active { background: rgba(255,255,255,0.2); }
+        .logout-btn { background: rgba(255,80,60,0.3); border: 1px solid rgba(255,80,60,0.5); padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; }
+        
+        .container { max-width: 900px; margin: 0 auto; padding: 2rem; }
+        
+        .form-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .form-group { margin-bottom: 1.5rem; }
+        label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: #333; }
+        input { width: 100%; padding: 0.8rem; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem; }
+        input:focus { outline: none; border-color: #667eea; }
+        
+        .weight-slider {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        .weight-slider input { flex: 1; }
+        .weight-value { min-width: 50px; text-align: center; font-weight: bold; color: #667eea; }
+        
+        .total-weight {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        .total-weight span { font-weight: bold; font-size: 1.2rem; }
+        .total-weight.valid { color: #28a745; }
+        .total-weight.invalid { color: #dc3545; }
+        
+        .preset-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+        .preset-btn {
+            padding: 0.5rem 1rem;
+            background: #e9ecef;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .preset-btn:hover { background: #667eea; color: white; }
+        
+        .predict-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 1rem;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+        }
+        
+        .result-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            display: none;
+        }
+        .result-card.show { display: block; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        .grade { font-size: 2.5rem; font-weight: bold; margin: 1rem 0; }
+        .score { font-size: 1.5rem; margin: 1rem 0; }
+        .weights-used { margin-top: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 10px; font-size: 0.9rem; }
+        
+        .excellent { color: #28a745; }
+        .good { color: #17a2b8; }
+        .average { color: #ffc107; }
+        .poor { color: #dc3545; }
+        
+        @media (max-width: 768px) {
+            .navbar { flex-direction: column; text-align: center; }
+            .nav-links { justify-content: center; }
+            .container { padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">🎓 AAMUSTED <span>Predictor</span></div>
+        <div class="nav-links">
+            <a href="/dashboard">Dashboard</a>
+            <a href="/predictor">Predictor</a>
+            <a href="/semester">Semester</a>
+            <a href="/weekly">Weekly</a>
+            <a href="/custom" class="active">Custom</a>
+            <a href="/profile">Profile</a>
+            <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="form-card">
+            <h2 style="margin-bottom: 1.5rem;">⚙️ Custom Performance Formula</h2>
+            
+            <div class="preset-buttons">
+                <button class="preset-btn" onclick="loadPreset('balanced')">⚖️ Balanced (25/25/20/15/15)</button>
+                <button class="preset-btn" onclick="loadPreset('exam-focused')">📝 Exam Focus (20/30/20/15/15)</button>
+                <button class="preset-btn" onclick="loadPreset('attendance-focused')">📅 Attendance Focus (40/20/15/15/10)</button>
+                <button class="preset-btn" onclick="loadPreset('study-focused')">⏰ Study Focus (20/20/15/30/15)</button>
+            </div>
+            
+            <div class="total-weight" id="totalWeight">
+                Total Weight: <span id="totalValue">100</span>%
+            </div>
+            
+            <div class="form-group">
+                <label>📅 Attendance Weight (%)</label>
+                <div class="weight-slider">
+                    <input type="range" id="weightAttendance" min="0" max="100" value="25" oninput="updateWeight('attendance', this.value)">
+                    <span class="weight-value" id="weightAttendanceVal">25</span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>📝 Assignments Weight (%)</label>
+                <div class="weight-slider">
+                    <input type="range" id="weightAssignments" min="0" max="100" value="25" oninput="updateWeight('assignments', this.value)">
+                    <span class="weight-value" id="weightAssignmentsVal">25</span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>💬 Engagement Weight (%)</label>
+                <div class="weight-slider">
+                    <input type="range" id="weightEngagement" min="0" max="100" value="20" oninput="updateWeight('engagement', this.value)">
+                    <span class="weight-value" id="weightEngagementVal">20</span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>⏰ Study Hours Weight (%)</label>
+                <div class="weight-slider">
+                    <input type="range" id="weightStudyHours" min="0" max="100" value="15" oninput="updateWeight('studyHours', this.value)">
+                    <span class="weight-value" id="weightStudyHoursVal">15</span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>📊 Previous Grade Weight (%)</label>
+                <div class="weight-slider">
+                    <input type="range" id="weightPrevious" min="0" max="100" value="15" oninput="updateWeight('previous', this.value)">
+                    <span class="weight-value" id="weightPreviousVal">15</span>
+                </div>
+            </div>
+            
+            <hr style="margin: 1.5rem 0;">
+            
+            <div class="form-group">
+                <label>📅 Attendance (%)</label>
+                <input type="number" id="customAttendance" placeholder="Your attendance percentage" step="1">
+            </div>
+            <div class="form-group">
+                <label>📝 Assignments Score (%)</label>
+                <input type="number" id="customAssignments" placeholder="Average assignment score" step="1">
+            </div>
+            <div class="form-group">
+                <label>💬 Engagement Rate (%)</label>
+                <input type="number" id="customEngagement" placeholder="Class engagement rate" step="1">
+            </div>
+            <div class="form-group">
+                <label>⏰ Study Hours per Week</label>
+                <input type="number" id="customStudyHours" placeholder="Average study hours" step="1">
+            </div>
+            <div class="form-group">
+                <label>📊 Previous Grade (%)</label>
+                <input type="number" id="customPreviousGrade" placeholder="Previous semester grade" step="1">
+            </div>
+            
+            <button class="predict-btn" onclick="predictCustom()">🔮 Predict with Custom Formula</button>
+        </div>
+        
+        <div id="resultCard" class="result-card">
+            <h2>🎯 Custom Prediction Result</h2>
+            <div id="predictionGrade" class="grade"></div>
+            <div id="predictionScore" class="score"></div>
+            <div id="weightsUsed" class="weights-used"></div>
+        </div>
+    </div>
+
+    <script>
+        function updateWeight(type, value) {
+            document.getElementById(`weight${type.charAt(0).toUpperCase() + type.slice(1)}Val`).textContent = value;
+            
+            const attendance = parseInt(document.getElementById('weightAttendance').value) || 0;
+            const assignments = parseInt(document.getElementById('weightAssignments').value) || 0;
+            const engagement = parseInt(document.getElementById('weightEngagement').value) || 0;
+            const studyHours = parseInt(document.getElementById('weightStudyHours').value) || 0;
+            const previous = parseInt(document.getElementById('weightPrevious').value) || 0;
+            
+            const total = attendance + assignments + engagement + studyHours + previous;
+            const totalSpan = document.getElementById('totalValue');
+            const totalDiv = document.getElementById('totalWeight');
+            
+            totalSpan.textContent = total;
+            if (total === 100) {
+                totalDiv.className = 'total-weight valid';
+            } else {
+                totalDiv.className = 'total-weight invalid';
+            }
+        }
+        
+        function loadPreset(preset) {
+            if (preset === 'balanced') {
+                document.getElementById('weightAttendance').value = 25;
+                document.getElementById('weightAssignments').value = 25;
+                document.getElementById('weightEngagement').value = 20;
+                document.getElementById('weightStudyHours').value = 15;
+                document.getElementById('weightPrevious').value = 15;
+            } else if (preset === 'exam-focused') {
+                document.getElementById('weightAttendance').value = 20;
+                document.getElementById('weightAssignments').value = 30;
+                document.getElementById('weightEngagement').value = 20;
+                document.getElementById('weightStudyHours').value = 15;
+                document.getElementById('weightPrevious').value = 15;
+            } else if (preset === 'attendance-focused') {
+                document.getElementById('weightAttendance').value = 40;
+                document.getElementById('weightAssignments').value = 20;
+                document.getElementById('weightEngagement').value = 15;
+                document.getElementById('weightStudyHours').value = 15;
+                document.getElementById('weightPrevious').value = 10;
+            } else if (preset === 'study-focused') {
+                document.getElementById('weightAttendance').value = 20;
+                document.getElementById('weightAssignments').value = 20;
+                document.getElementById('weightEngagement').value = 15;
+                document.getElementById('weightStudyHours').value = 30;
+                document.getElementById('weightPrevious').value = 15;
+            }
+            
+            ['attendance', 'assignments', 'engagement', 'studyHours', 'previous'].forEach(type => {
+                const val = document.getElementById(`weight${type.charAt(0).toUpperCase() + type.slice(1)}`).value;
+                document.getElementById(`weight${type.charAt(0).toUpperCase() + type.slice(1)}Val`).textContent = val;
+            });
+            updateWeight();
+        }
+        
+        async function predictCustom() {
+            const attendance = parseInt(document.getElementById('weightAttendance').value) || 0;
+            const assignments = parseInt(document.getElementById('weightAssignments').value) || 0;
+            const engagement = parseInt(document.getElementById('weightEngagement').value) || 0;
+            const studyHours = parseInt(document.getElementById('weightStudyHours').value) || 0;
+            const previous = parseInt(document.getElementById('weightPrevious').value) || 0;
+            
+            const total = attendance + assignments + engagement + studyHours + previous;
+            if (total !== 100) {
+                alert(`Total weight must be 100%. Current total: ${total}%`);
+                return;
+            }
+            
+            const weights = {
+                attendance: attendance / 100,
+                assignments: assignments / 100,
+                engagement: engagement / 100,
+                study_hours: studyHours / 100,
+                previous_grade: previous / 100
+            };
+            
+            const data = {
+                attendance: parseFloat(document.getElementById('customAttendance').value) || 0,
+                assignments: parseFloat(document.getElementById('customAssignments').value) || 0,
+                engagement: parseFloat(document.getElementById('customEngagement').value) || 0,
+                study_hours: parseFloat(document.getElementById('customStudyHours').value) || 0,
+                previous_grade: parseFloat(document.getElementById('customPreviousGrade').value) || 0,
+                weights: weights
+            };
+            
+            const response = await fetch('/api/predict/custom', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            
+            const result = await response.json();
+            
+            const gradeClass = result.grade?.includes('Excellent') ? 'excellent' : 
+                              result.grade?.includes('Good') ? 'good' : 
+                              result.grade?.includes('Average') ? 'average' : 'poor';
+            
+            document.getElementById('predictionGrade').innerHTML = result.grade;
+            document.getElementById('predictionGrade').className = `grade ${gradeClass}`;
+            document.getElementById('predictionScore').innerHTML = `Score: ${result.score?.toFixed(1)}%`;
+            
+            document.getElementById('weightsUsed').innerHTML = `
+                <strong>⚙️ Your Custom Formula:</strong><br>
+                Attendance: ${attendance}% | Assignments: ${assignments}% | Engagement: ${engagement}%<br>
+                Study Hours: ${studyHours}% | Previous Grade: ${previous}%
+            `;
+            
+            document.getElementById('resultCard').classList.add('show');
+        }
+        
+        async function logout() {
+            await fetch('/api/logout', { method: 'POST' });
+            window.location.href = '/';
+        }
+        
+        updateWeight();
+    </script>
+</body>
+</html>

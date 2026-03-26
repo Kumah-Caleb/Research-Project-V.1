@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AAMUSTED Student Performance Predictor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a2a3a 0%, #0f1a24 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 80px 20px;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .hero p {
+            font-size: 20px;
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+
+        .feature-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .feature-card h3 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+
+        .feature-card p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .program-info {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 40px;
+            margin-bottom: 40px;
+        }
+
+        .program-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .program-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            border-left: 4px solid;
+        }
+
+        .program-card.regular {
+            border-left-color: #28a745;
+        }
+
+        .program-card.non-regular {
+            border-left-color: #fd7e14;
+        }
+
+        .program-card h4 {
+            font-size: 20px;
+            margin-bottom: 15px;
+        }
+
+        .program-card ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .program-card li {
+            padding: 8px 0;
+            color: #666;
+        }
+
+        .program-card li:before {
+            content: "✓";
+            color: #28a745;
+            margin-right: 10px;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 40px;
+        }
+
+        .btn {
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: bold;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .btn-outline {
+            border: 2px solid #667eea;
+            color: #667eea;
+        }
+
+        .btn-outline:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .footer {
+            background: #1a2a3a;
+            color: white;
+            text-align: center;
+            padding: 40px;
+            margin-top: 60px;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 32px; }
+            .hero p { font-size: 16px; }
+            .cta-buttons { flex-direction: column; align-items: center; }
+            .btn { width: 200px; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+    <div class="hero">
+        <h1>🎓 AAMUSTED Student Performance Predictor</h1>
+        <p>AI-Powered Academic Performance Prediction for Regular & Non-Regular Programs</p>
+    </div>
+
+    <div class="container">
+        <div class="features">
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>Semester Prediction</h3>
+                <p>Predict your end-of-semester performance based on attendance, assignments, engagement, and study habits</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📅</div>
+                <h3>Weekly Tracking</h3>
+                <p>Track your weekly progress and get real-time feedback on your performance</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">⚙️</div>
+                <h3>Custom Format</h3>
+                <p>Create your own prediction formula with customizable weights for each factor</p>
+            </div>
+        </div>
+
+        <div class="program-info">
+            <h2 style="text-align: center; margin-bottom: 20px;">📚 Programs Supported</h2>
+            <div class="program-grid">
+                <div class="program-card regular">
+                    <h4>🎓 Regular Program</h4>
+                    <ul>
+                        <li>5 days/week (Monday - Friday)</li>
+                        <li>15 weeks per semester</li>
+                        <li>75 lecture days × 3 hours = 225 total hours</li>
+                        <li>Full-time student schedule</li>
+                    </ul>
+                </div>
+                <div class="program-card non-regular">
+                    <h4>🌙 Non-Regular Program</h4>
+                    <ul>
+                        <li>Weekend/Evening classes</li>
+                        <li>2 days/week (Saturday + Sunday/Evening)</li>
+                        <li>30 lecture days × 3 hours = 90 total hours</li>
+                        <li>Working professionals & part-time students</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="cta-buttons">
+            <a href="/login" class="btn btn-primary">🔐 Login</a>
+            <a href="/register" class="btn btn-outline">📝 Register</a>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>© 2024 AAMUSTED Student Performance Predictor | Department of Information Technology Education</p>
+        <p style="margin-top: 10px; font-size: 12px;">Powered by AI & Machine Learning | Accurate predictions based on academic data</p>
+    </div>
+</body>
+</html>

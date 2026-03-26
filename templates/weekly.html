@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekly Tracking - AAMUSTED Performance Predictor</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fb; }
+        
+        .navbar {
+            background: linear-gradient(135deg, #1a2a3a 0%, #0f1a24 100%);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .logo { font-size: 1.5rem; font-weight: bold; }
+        .logo span { color: #ffd700; }
+        .nav-links { display: flex; gap: 1.5rem; align-items: center; flex-wrap: wrap; }
+        .nav-links a { color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 8px; }
+        .nav-links a:hover, .nav-links a.active { background: rgba(255,255,255,0.2); }
+        .logout-btn { background: rgba(255,80,60,0.3); border: 1px solid rgba(255,80,60,0.5); padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; }
+        
+        .container { max-width: 1000px; margin: 0 auto; padding: 2rem; }
+        
+        .week-selector {
+            background: white;
+            border-radius: 15px;
+            padding: 1rem;
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .week-btn {
+            padding: 0.5rem 1rem;
+            background: #e9ecef;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .week-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .week-btn:hover { transform: translateY(-2px); }
+        
+        .form-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .form-group { margin-bottom: 1.5rem; }
+        label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: #333; }
+        input { width: 100%; padding: 0.8rem; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem; }
+        input:focus { outline: none; border-color: #667eea; }
+        
+        .predict-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 1rem;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+        }
+        
+        .result-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            display: none;
+        }
+        .result-card.show { display: block; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        .grade { font-size: 2.5rem; font-weight: bold; margin: 1rem 0; }
+        .score { font-size: 1.5rem; margin: 1rem 0; }
+        .projection { margin-top: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 10px; }
+        .recommendations { text-align: left; margin-top: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 10px; }
+        .recommendations ul { margin-left: 1.5rem; }
+        
+        .excellent { color: #28a745; }
+        .good { color: #17a2b8; }
+        .average { color: #ffc107; }
+        .poor { color: #dc3545; }
+        
+        .progress-bar {
+            background: #e0e0e0;
+            border-radius: 10px;
+            height: 10px;
+            margin: 1rem 0;
+            overflow: hidden;
+        }
+        .progress-fill {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100%;
+            width: 0%;
+            transition: width 0.5s;
+        }
+        
+        @media (max-width: 768px) {
+            .navbar { flex-direction: column; text-align: center; }
+            .nav-links { justify-content: center; }
+            .container { padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">🎓 AAMUSTED <span>Predictor</span></div>
+        <div class="nav-links">
+            <a href="/dashboard">Dashboard</a>
+            <a href="/predictor">Predictor</a>
+            <a href="/semester">Semester</a>
+            <a href="/weekly" class="active">Weekly</a>
+            <a href="/custom">Custom</a>
+            <a href="/profile">Profile</a>
+            <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="week-selector">
+            {% for i in range(1, 16) %}
+            <button class="week-btn {% if i == current_week %}active{% endif %}" onclick="selectWeek({{ i }})">Week {{ i }}</button>
+            {% endfor %}
+        </div>
+        
+        <div class="form-card">
+            <h2 style="margin-bottom: 1.5rem;">📅 Week <span id="weekNumber">{{ current_week }}</span> Performance Tracking</h2>
+            
+            <div class="form-group">
+                <label>Weeks Completed</label>
+                <input type="number" id="weeksCompleted" value="{{ current_week }}" placeholder="Weeks completed so far">
+            </div>
+            
+            <div class="form-group">
+                <label>📅 Weekly Attendance (%)</label>
+                <input type="number" id="weeklyAttendance" placeholder="Attendance % this week" step="1">
+            </div>
+            
+            <div class="form-group">
+                <label>📝 Weekly Assignment Score (%)</label>
+                <input type="number" id="weeklyAssignments" placeholder="Assignment score this week" step="1">
+            </div>
+            
+            <div class="form-group">
+                <label>💬 Weekly Engagement (%)</label>
+                <input type="number" id="weeklyEngagement" placeholder="Engagement rate this week" step="1">
+            </div>
+            
+            <div class="form-group">
+                <label>⏰ Weekly Study Hours</label>
+                <input type="number" id="weeklyStudyHours" placeholder="Hours studied this week" step="1">
+            </div>
+            
+            <div class="form-group">
+                <label>📝 Midterm Grade (%)</label>
+                <input type="number" id="midtermGrade" placeholder="Your midterm exam score" step="1">
+            </div>
+            
+            <button class="predict-btn" onclick="predictWeekly()">🔮 Track This Week</button>
+        </div>
+        
+        <div id="resultCard" class="result-card">
+            <h2>📊 Weekly Performance Report</h2>
+            <div id="predictionGrade" class="grade"></div>
+            <div id="predictionScore" class="score"></div>
+            <div id="projection" class="projection"></div>
+            <div id="recommendations" class="recommendations"></div>
+        </div>
+    </div>
+
+    <script>
+        let weeklyData = {};
+        
+        async function selectWeek(week) {
+            document.querySelectorAll('.week-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('weekNumber').textContent = week;
+            document.getElementById('weeksCompleted').value = week;
+            
+            if (weeklyData[week]) {
+                document.getElementById('weeklyAttendance').value = weeklyData[week].attendance || '';
+                document.getElementById('weeklyAssignments').value = weeklyData[week].assignments || '';
+                document.getElementById('weeklyEngagement').value = weeklyData[week].engagement || '';
+                document.getElementById('weeklyStudyHours').value = weeklyData[week].study_hours || '';
+                document.getElementById('midtermGrade').value = weeklyData[week].midterm || '';
+            } else {
+                document.getElementById('weeklyAttendance').value = '';
+                document.getElementById('weeklyAssignments').value = '';
+                document.getElementById('weeklyEngagement').value = '';
+                document.getElementById('weeklyStudyHours').value = '';
+                document.getElementById('midtermGrade').value = '';
+            }
+        }
+        
+        async function predictWeekly() {
+            const week = parseInt(document.getElementById('weekNumber').textContent);
+            const weeksCompleted = parseFloat(document.getElementById('weeksCompleted').value) || 1;
+            
+            const data = {
+                week_number: week,
+                weeks_completed: weeksCompleted,
+                weekly_attendance: parseFloat(document.getElementById('weeklyAttendance').value) || 0,
+                weekly_assignments: parseFloat(document.getElementById('weeklyAssignments').value) || 0,
+                weekly_engagement: parseFloat(document.getElementById('weeklyEngagement').value) || 0,
+                weekly_study_hours: parseFloat(document.getElementById('weeklyStudyHours').value) || 0,
+                midterm_grade: parseFloat(document.getElementById('midtermGrade').value) || 0
+            };
+            
+            weeklyData[week] = {
+                attendance: data.weekly_attendance,
+                assignments: data.weekly_assignments,
+                engagement: data.weekly_engagement,
+                study_hours: data.weekly_study_hours,
+                midterm: data.midterm_grade
+            };
+            
+            const response = await fetch('/api/predict/weekly', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            
+            const result = await response.json();
+            
+            const gradeClass = result.grade?.includes('Excellent') ? 'excellent' : 
+                              result.grade?.includes('Good') ? 'good' : 
+                              result.grade?.includes('Average') ? 'average' : 'poor';
+            
+            document.getElementById('predictionGrade').innerHTML = result.grade;
+            document.getElementById('predictionGrade').className = `grade ${gradeClass}`;
+            document.getElementById('predictionScore').innerHTML = `Weekly Score: ${result.score?.toFixed(1)}%`;
+            
+            const weeksLeft = 15 - weeksCompleted;
+            const projectedScore = (result.score * weeksCompleted + 75 * weeksLeft) / 15;
+            
+            document.getElementById('projection').innerHTML = `
+                <strong>📈 Semester Projection:</strong><br>
+                Based on current performance, your projected end-of-semester score is <strong>${projectedScore.toFixed(1)}%</strong><br>
+                Weeks completed: ${weeksCompleted}/15 | Weeks remaining: ${weeksLeft}
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: ${(weeksCompleted / 15 * 100)}%"></div>
+                </div>
+            `;
+            
+            if (result.recommendations && result.recommendations.length > 0) {
+                document.getElementById('recommendations').innerHTML = `
+                    <strong>💡 Weekly Recommendations:</strong>
+                    <ul>
+                        ${result.recommendations.map(r => `<li>${r}</li>`).join('')}
+                    </ul>
+                `;
+            }
+            
+            document.getElementById('resultCard').classList.add('show');
+        }
+        
+        async function logout() {
+            await fetch('/api/logout', { method: 'POST' });
+            window.location.href = '/';
+        }
+    </script>
+</body>
+</html>
