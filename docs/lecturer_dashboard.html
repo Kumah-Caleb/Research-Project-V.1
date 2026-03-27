@@ -28,7 +28,8 @@
             border-radius: 8px;
             transition: background 0.3s;
         }
-        .nav-links a:hover, .nav-links a.active { background: rgba(255,255,255,0.2); }
+        .nav-links a:hover { background: rgba(255,255,255,0.2); }
+        .nav-links a.active { background: rgba(255,255,255,0.3); border-bottom: 2px solid #ffd700; }
         .logout-btn {
             background: rgba(255,80,60,0.3);
             border: 1px solid rgba(255,80,60,0.5);
@@ -40,6 +41,7 @@
         .logout-btn:hover { background: rgba(255,80,60,0.5); }
         
         .container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
+        
         .welcome-card {
             background: linear-gradient(135deg, #2c3e50 0%, #1a2a3a 100%);
             color: white;
@@ -47,12 +49,14 @@
             border-radius: 20px;
             margin-bottom: 2rem;
         }
+        
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 1.5rem;
             margin-bottom: 2rem;
         }
+        
         .stat-card {
             background: white;
             padding: 1.5rem;
@@ -62,6 +66,7 @@
         }
         .stat-number { font-size: 2.5rem; font-weight: bold; color: #2c3e50; }
         .stat-label { color: #666; margin-top: 0.5rem; }
+        
         .section-title { font-size: 1.5rem; margin-bottom: 1rem; color: #2c3e50; display: flex; align-items: center; gap: 0.5rem; }
         
         .action-grid {
@@ -70,6 +75,7 @@
             gap: 1.5rem;
             margin-bottom: 2rem;
         }
+        
         .action-card {
             background: white;
             border-radius: 15px;
@@ -119,52 +125,49 @@
     <nav class="navbar">
         <div class="logo">👩‍🏫 AAMUSTED <span>Predictor</span></div>
         <div class="nav-links">
-            <a href="#" onclick="goToDashboard(event)" class="active">Dashboard</a>
-            <a href="#" onclick="goToCourses(event)">My Courses</a>
-            <a href="#" onclick="goToStudents(event)">My Students</a>
-            <a href="#" onclick="goToProfile(event)">Profile</a>
+            <a href="lecturer_dashboard.html" class="active">Dashboard</a>
+            <a href="courses.html">My Courses</a>
+            <a href="students.html">My Students</a>
+            <a href="profile.html">Profile</a>
             <button class="logout-btn" onclick="logout()">🚪 Logout</button>
         </div>
     </nav>
 
-    <div class="container" id="mainContent">
-        <!-- Content will be loaded dynamically -->
-        <div id="dashboardContent">
-            <div class="welcome-card">
-                <h1 id="welcomeMessage">Welcome, Lecturer! 👋</h1>
-                <p>Monitor student performance, create courses, and provide academic guidance</p>
-            </div>
+    <div class="container">
+        <div class="welcome-card">
+            <h1 id="welcomeMessage">Welcome, Lecturer! 👋</h1>
+            <p>Monitor student performance, create courses, and provide academic guidance</p>
+        </div>
 
-            <div class="stats-grid">
-                <div class="stat-card"><div class="stat-number" id="totalStudents">0</div><div class="stat-label">My Students</div></div>
-                <div class="stat-card"><div class="stat-number" id="totalCourses">0</div><div class="stat-label">My Courses</div></div>
-                <div class="stat-card"><div class="stat-number" id="atRiskCount">0</div><div class="stat-label">At-Risk Students</div></div>
-                <div class="stat-card"><div class="stat-number" id="avgPerformance">--</div><div class="stat-label">Avg Performance</div></div>
-            </div>
+        <div class="stats-grid">
+            <div class="stat-card"><div class="stat-number" id="totalStudents">0</div><div class="stat-label">My Students</div></div>
+            <div class="stat-card"><div class="stat-number" id="totalCourses">0</div><div class="stat-label">My Courses</div></div>
+            <div class="stat-card"><div class="stat-number" id="atRiskCount">0</div><div class="stat-label">At-Risk Students</div></div>
+            <div class="stat-card"><div class="stat-number" id="avgPerformance">--</div><div class="stat-label">Avg Performance</div></div>
+        </div>
 
-            <div class="section-title"><span>⚡</span><span>Quick Actions</span></div>
-            <div class="action-grid">
-                <div class="action-card" onclick="goToCourses(event)">
-                    <div class="action-icon">📚</div>
-                    <h3>Create Course</h3>
-                    <p>Add new courses and manage existing ones</p>
-                </div>
-                <div class="action-card" onclick="goToStudents(event)">
-                    <div class="action-icon">👥</div>
-                    <h3>View All Students</h3>
-                    <p>Monitor student performance and predictions</p>
-                </div>
-                <div class="action-card" onclick="goToPredictor(event)">
-                    <div class="action-icon">🔮</div>
-                    <h3>Predict Performance</h3>
-                    <p>Get AI-powered predictions for your students</p>
-                </div>
-            </div>
+        <div class="section-title"><span>⚡</span><span>Quick Actions</span></div>
+        <div class="action-grid">
+            <a href="courses.html" class="action-card">
+                <div class="action-icon">📚</div>
+                <h3>Create Course</h3>
+                <p>Add new courses and manage existing ones</p>
+            </a>
+            <a href="students.html" class="action-card">
+                <div class="action-icon">👥</div>
+                <h3>View All Students</h3>
+                <p>Monitor student performance and predictions</p>
+            </a>
+            <a href="predictor.html" class="action-card">
+                <div class="action-icon">🔮</div>
+                <h3>Predict Performance</h3>
+                <p>Get AI-powered predictions for your students</p>
+            </a>
+        </div>
 
-            <div class="section-title"><span>📋</span><span>My Students</span></div>
-            <div class="students-table">
-                <div id="studentsList"><div class="empty-message">Loading your students...</div></div>
-            </div>
+        <div class="section-title"><span>📋</span><span>My Students</span></div>
+        <div class="students-table">
+            <div id="studentsList"><div class="empty-message">Loading your students...</div></div>
         </div>
     </div>
 
@@ -177,190 +180,28 @@
             window.location.href = 'login.html';
         }
         
-        // Navigation functions - stay on same page, just load content
-        function goToDashboard(e) {
-            if (e) e.preventDefault();
-            loadDashboardContent();
-            updateActiveNav('Dashboard');
-        }
-        
-        function goToCourses(e) {
-            if (e) e.preventDefault();
-            loadCoursesContent();
-            updateActiveNav('My Courses');
-        }
-        
-        function goToStudents(e) {
-            if (e) e.preventDefault();
-            loadStudentsContent();
-            updateActiveNav('My Students');
-        }
-        
-        function goToProfile(e) {
-            if (e) e.preventDefault();
-            loadProfileContent();
-            updateActiveNav('Profile');
-        }
-        
-        function goToPredictor(e) {
-            if (e) e.preventDefault();
-            window.location.href = 'predictor.html';
-        }
-        
-        function updateActiveNav(active) {
-            document.querySelectorAll('.nav-links a').forEach(link => {
-                link.classList.remove('active');
-                if (link.textContent.trim() === active) {
-                    link.classList.add('active');
-                }
-            });
-        }
-        
-        function loadDashboardContent() {
-            const container = document.getElementById('mainContent');
-            container.innerHTML = `
-                <div id="dashboardContent">
-                    <div class="welcome-card">
-                        <h1 id="welcomeMessage">Welcome, ${currentUser?.full_name || 'Lecturer'}! 👋</h1>
-                        <p>Monitor student performance, create courses, and provide academic guidance</p>
-                    </div>
-                    <div class="stats-grid">
-                        <div class="stat-card"><div class="stat-number" id="totalStudents">0</div><div class="stat-label">My Students</div></div>
-                        <div class="stat-card"><div class="stat-number" id="totalCourses">0</div><div class="stat-label">My Courses</div></div>
-                        <div class="stat-card"><div class="stat-number" id="atRiskCount">0</div><div class="stat-label">At-Risk Students</div></div>
-                        <div class="stat-card"><div class="stat-number" id="avgPerformance">--</div><div class="stat-label">Avg Performance</div></div>
-                    </div>
-                    <div class="section-title"><span>⚡</span><span>Quick Actions</span></div>
-                    <div class="action-grid">
-                        <div class="action-card" onclick="goToCourses(event)"><div class="action-icon">📚</div><h3>Create Course</h3><p>Add new courses and manage existing ones</p></div>
-                        <div class="action-card" onclick="goToStudents(event)"><div class="action-icon">👥</div><h3>View All Students</h3><p>Monitor student performance and predictions</p></div>
-                        <div class="action-card" onclick="goToPredictor(event)"><div class="action-icon">🔮</div><h3>Predict Performance</h3><p>Get AI-powered predictions for your students</p></div>
-                    </div>
-                    <div class="section-title"><span>📋</span><span>My Students</span></div>
-                    <div class="students-table"><div id="studentsList"><div class="empty-message">Loading your students...</div></div></div>
-                </div>
-            `;
-            loadStats();
-            loadMyStudents();
-        }
-        
-        async function loadCoursesContent() {
-            const container = document.getElementById('mainContent');
-            container.innerHTML = `
-                <div id="coursesContent">
-                    <button class="create-course-btn" onclick="window.location.href='courses.html'" style="background:#28a745; color:white; border:none; padding:0.8rem 1rem; border-radius:10px; cursor:pointer; margin-bottom:1rem; width:100%;">➕ Create New Course</button>
-                    <h2 style="margin-bottom: 1rem;">📚 My Courses</h2>
-                    <div class="courses-grid" id="myCoursesList"><div class="empty-message">Loading your courses...</div></div>
-                </div>
-            `;
-            await loadLecturerCourses();
-        }
-        
-        async function loadStudentsContent() {
-            const container = document.getElementById('mainContent');
-            container.innerHTML = `
-                <div id="studentsContent">
-                    <h2 style="margin-bottom: 1rem;">👥 My Students</h2>
-                    <div class="students-table"><div id="studentsFullList"><div class="empty-message">Loading students...</div></div></div>
-                </div>
-            `;
-            await loadAllStudents();
-        }
-        
-        async function loadProfileContent() {
-            const container = document.getElementById('mainContent');
-            container.innerHTML = `
-                <div id="profileContent">
-                    <h2 style="margin-bottom: 1rem;">👤 My Profile</h2>
-                    <div class="profile-card" style="background:white; border-radius:15px; padding:1.5rem;">
-                        <p><strong>Name:</strong> ${currentUser?.full_name}</p>
-                        <p><strong>Username:</strong> ${currentUser?.username}</p>
-                        <p><strong>Email:</strong> ${currentUser?.email}</p>
-                        <p><strong>Department:</strong> ${currentUser?.department || 'Not set'}</p>
-                        <button onclick="window.location.href='profile.html'" style="margin-top:1rem; background:#667eea; color:white; border:none; padding:0.5rem 1rem; border-radius:5px; cursor:pointer;">Edit Profile</button>
-                    </div>
-                </div>
-            `;
-        }
-        
-        async function loadLecturerCourses() {
-            try {
-                const response = await fetch(`${API_URL}/api/courses?user_id=${currentUser.id}`);
-                const courses = await response.json();
-                const container = document.getElementById('myCoursesList');
-                if (!courses || courses.length === 0) {
-                    container.innerHTML = '<div class="empty-message">No courses created yet.</div>';
-                    return;
-                }
-                container.innerHTML = `
-                    <div class="courses-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(350px, 1fr)); gap:1.5rem;">
-                        ${courses.map(course => `
-                            <div class="course-card" style="background:white; border-radius:15px; padding:1.5rem;">
-                                <div class="course-code" style="font-size:1.2rem; font-weight:bold; color:#667eea;">${escapeHtml(course.code)}</div>
-                                <div class="course-name">${escapeHtml(course.name)}</div>
-                                <div class="course-info">Credit Hours: ${course.credit_hours}</div>
-                                <div class="lecturer">Created by: You</div>
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
-            } catch (error) {
-                console.error('Error:', error);
+        async function loadUser() {
+            const userStr = localStorage.getItem('currentUser');
+            if (!userStr) {
+                window.location.href = 'login.html';
+                return null;
             }
-        }
-        
-        async function loadAllStudents() {
-            try {
-                const response = await fetch(`${API_URL}/api/my_students?lecturer_id=${currentUser.id}`);
-                const students = await response.json();
-                const container = document.getElementById('studentsFullList');
-                if (!students || students.length === 0) {
-                    container.innerHTML = '<div class="empty-message">No students enrolled in your courses yet.</div>';
-                    return;
-                }
-                container.innerHTML = `
-                    <table style="width:100%; border-collapse:collapse;">
-                        <thead><tr><th>Student Name</th><th>Index Number</th><th>Program</th><th>Enrolled Courses</th><th>Action</th></tr></thead>
-                        <tbody>
-                            ${students.map(s => `
-                                <tr>
-                                    <td>${escapeHtml(s.full_name)}</td>
-                                    <td>${escapeHtml(s.index_number)}</td>
-                                    <td>${s.program_type === 'regular' ? 'Regular' : 'Non-Regular'}</td>
-                                    <td>${s.courses.map(c => c.code).join(', ') || 'None'}</td>
-                                    <td><button class="view-btn" onclick="goToPredictorWithStudent('${s.id}', '${escapeHtml(s.full_name)}')">🔮 Predict</button></td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                `;
-            } catch (error) {
-                console.error('Error:', error);
+            currentUser = JSON.parse(userStr);
+            
+            // Verify user is lecturer
+            if (currentUser.role !== 'lecturer') {
+                window.location.href = 'student_dashboard.html';
+                return null;
             }
+            
+            document.getElementById('welcomeMessage').innerHTML = `Welcome, ${currentUser.full_name || currentUser.username}! 👋`;
+            return currentUser;
         }
         
-        function goToPredictorWithStudent(studentId, studentName) {
+        function predictForStudent(studentId, studentName) {
             localStorage.setItem('selectedStudent', studentId);
             localStorage.setItem('selectedStudentName', studentName);
             window.location.href = 'predictor.html';
-        }
-        
-        async function loadStats() {
-            try {
-                const coursesResponse = await fetch(`${API_URL}/api/courses?user_id=${currentUser.id}`);
-                const courses = await coursesResponse.json();
-                document.getElementById('totalCourses').textContent = courses.length;
-                
-                const studentsResponse = await fetch(`${API_URL}/api/my_students?lecturer_id=${currentUser.id}`);
-                const students = await studentsResponse.json();
-                document.getElementById('totalStudents').textContent = students.length;
-                
-                let atRisk = 0;
-                students.forEach(s => { if ((s.latest_score || 70) < 60) atRisk++; });
-                document.getElementById('atRiskCount').textContent = atRisk;
-            } catch (error) {
-                console.error('Error loading stats:', error);
-            }
         }
         
         async function loadMyStudents() {
@@ -368,29 +209,66 @@
                 const response = await fetch(`${API_URL}/api/my_students?lecturer_id=${currentUser.id}`);
                 const students = await response.json();
                 const container = document.getElementById('studentsList');
+                const totalStudents = document.getElementById('totalStudents');
+                const totalCourses = document.getElementById('totalCourses');
+                const atRiskCount = document.getElementById('atRiskCount');
+                
+                // Load courses count
+                const coursesResponse = await fetch(`${API_URL}/api/courses?user_id=${currentUser.id}`);
+                const courses = await coursesResponse.json();
+                totalCourses.textContent = courses.length;
+                totalStudents.textContent = students.length;
+                
+                let atRisk = 0;
+                let totalScore = 0;
+                let scoreCount = 0;
+                
                 if (!students || students.length === 0) {
-                    container.innerHTML = '<div class="empty-message">No students have enrolled in your courses yet.</div>';
+                    container.innerHTML = '<div class="empty-message">No students have enrolled in your courses yet. Create courses and students will appear here when they enroll.</div>';
+                    atRiskCount.textContent = '0';
+                    document.getElementById('avgPerformance').textContent = '--';
                     return;
                 }
+                
                 container.innerHTML = `
-                    <table style="width:100%; border-collapse:collapse;">
-                        <thead><tr><th>Student Name</th><th>Index Number</th><th>Program</th><th>Enrolled Courses</th><th>Action</th></tr></thead>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Student Name</th>
+                                <th>Index Number</th>
+                                <th>Program</th>
+                                <th>Enrolled Courses</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
                         <tbody>
-                            ${students.slice(0, 5).map(s => `
-                                <tr>
-                                    <td>${escapeHtml(s.full_name)}</td>
-                                    <td>${escapeHtml(s.index_number)}</td>
-                                    <td>${s.program_type === 'regular' ? 'Regular' : 'Non-Regular'}</td>
-                                    <td>${s.courses.map(c => c.code).join(', ') || 'None'}</td>
-                                    <td><button class="view-btn" onclick="goToPredictorWithStudent('${s.id}', '${escapeHtml(s.full_name)}')">🔮 Predict</button></td>
-                                </tr>
-                            `).join('')}
+                            ${students.map(s => {
+                                const score = 70;
+                                totalScore += score;
+                                scoreCount++;
+                                if (score < 60) atRisk++;
+                                const coursesList = s.courses.map(c => c.code).join(', ');
+                                return `
+                                    <tr>
+                                        <td>${escapeHtml(s.full_name)}</td>
+                                        <td>${escapeHtml(s.index_number)}</td>
+                                        <td>${s.program_type === 'regular' ? 'Regular' : 'Non-Regular'}</td>
+                                        <td>${coursesList || 'None'}</td>
+                                        <td><button class="view-btn" onclick="predictForStudent('${s.id}', '${escapeHtml(s.full_name)}')">🔮 Predict</button></td>
+                                    </tr>
+                                `;
+                            }).join('')}
                         </tbody>
                     </table>
-                    ${students.length > 5 ? `<div style="text-align:center; margin-top:1rem;"><button onclick="goToStudents(event)" style="background:#667eea; color:white; border:none; padding:0.5rem 1rem; border-radius:5px;">View All ${students.length} Students →</button></div>` : ''}
                 `;
+                
+                atRiskCount.textContent = atRisk;
+                const avgScore = scoreCount > 0 ? (totalScore / scoreCount).toFixed(1) : 0;
+                document.getElementById('avgPerformance').textContent = avgScore + '%';
+                
             } catch (error) {
-                console.error('Error:', error);
+                console.error('Error loading students:', error);
+                document.getElementById('studentsList').innerHTML = '<div class="empty-message">Error loading student data. Please try again.</div>';
             }
         }
         
@@ -405,17 +283,10 @@
         }
         
         async function init() {
-            const userStr = localStorage.getItem('currentUser');
-            if (!userStr) {
-                window.location.href = 'login.html';
-                return;
+            await loadUser();
+            if (currentUser && currentUser.role === 'lecturer') {
+                await loadMyStudents();
             }
-            currentUser = JSON.parse(userStr);
-            if (currentUser.role !== 'lecturer') {
-                window.location.href = 'student_dashboard.html';
-                return;
-            }
-            loadDashboardContent();
         }
         
         init();
