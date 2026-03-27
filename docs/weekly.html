@@ -69,7 +69,15 @@
         
         .form-group { margin-bottom: 1.5rem; }
         label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: #333; }
-        input { width: 100%; padding: 0.8rem; border: 2px solid #e0e0e0; border-radius: 8px; }
+        input, select { width: 100%; padding: 0.8rem; border: 2px solid #e0e0e0; border-radius: 8px; }
+        
+        .student-info {
+            background: #e3f2fd;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            display: none;
+        }
         
         .predict-btn {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -128,10 +136,21 @@
     <div class="container">
         <a href="predictor.html" class="back-link">← Back to Predictor Options</a>
         
-        <div class="week-selector" id="weekSelector"></div>
+        <div class="student-info" id="studentInfo">
+            <strong>👨‍🎓 Predicting for:</strong> <span id="studentName"></span>
+        </div>
         
         <div class="form-card">
-            <h2 style="margin-bottom: 1.5rem;">📅 Week <span id="weekNumber">1</span> Performance Tracking</h2>
+            <h2 style="margin-bottom: 1.5rem;">📅 Weekly Performance Tracking</h2>
+            
+            <div class="form-group">
+                <label>📚 Select Course</label>
+                <select id="courseSelect">
+                    <option value="">Loading courses...</option>
+                </select>
+            </div>
+            
+            <div class="week-selector" id="weekSelector"></div>
             
             <div class="form-group">
                 <label>Weeks Completed</label>
@@ -177,6 +196,8 @@
     <script>
         const API_URL = 'https://student-performance-predictor7.onrender.com';
         let currentUser = null;
+        let selectedStudentId = null;
+        let courses = [];
         
         function generateWeekButtons() {
             const container = document.getElementById('weekSelector');
@@ -193,16 +214,75 @@
         function selectWeek(week) {
             document.querySelectorAll('.week-btn').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
-            document.getElementById('weekNumber').textContent = week;
             document.getElementById('weeksCompleted').value = week;
         }
         
+        function loadUser() {
+            const userStr = localStorage.getItem('currentUser');
+            if (!userStr) {
+                window.location.href = 'login.html';
+                return null;
+            }
+            currentUser = JSON.parse(userStr);
+            
+            selectedStudentId = localStorage.getItem('selectedStudent');
+            if (selectedStudentId && currentUser.role === 'lecturer') {
+                document.getElementById('studentInfo').style.display = 'block';
+                document.getElementById('studentName').textContent = 'Student';
+                loadStudentCourses(selectedStudentId);
+            } else {
+                loadMyCourses();
+            }
+            return currentUser;
+        }
+        
+        async function loadStudentCourses(studentId) {
+            try {
+                const coursesRes = await fetch(`${API_URL}/api/courses?user_id=${studentId}`);
+                courses = await coursesRes.json();
+                
+                const courseSelect = document.getElementById('courseSelect');
+                if (courses.length === 0) {
+                    courseSelect.innerHTML = '<option value="">No courses enrolled</option>';
+                } else {
+                    courseSelect.innerHTML = '<option value="">Select a course</option>' + 
+                        courses.map(c => `<option value="${c.id}">${c.code} - ${c.name}</option>`).join('');
+                }
+            } catch (error) {
+                console.error('Error loading courses:', error);
+            }
+        }
+        
+        async function loadMyCourses() {
+            try {
+                const response = await fetch(`${API_URL}/api/courses?user_id=${currentUser.id}`);
+                courses = await response.json();
+                
+                const courseSelect = document.getElementById('courseSelect');
+                if (courses.length === 0) {
+                    courseSelect.innerHTML = '<option value="">No courses enrolled</option>';
+                } else {
+                    courseSelect.innerHTML = '<option value="">Select a course</option>' + 
+                        courses.map(c => `<option value="${c.id}">${c.code} - ${c.name}</option>`).join('');
+                }
+            } catch (error) {
+                console.error('Error loading courses:', error);
+            }
+        }
+        
         async function predictWeekly() {
-            const week = parseInt(document.getElementById('weekNumber').textContent);
+            const courseId = document.getElementById('courseSelect').value;
+            if (!courseId) {
+                alert('Please select a course');
+                return;
+            }
+            
+            const week = parseInt(document.querySelector('.week-btn.active')?.textContent?.split(' ')[1] || 1);
             const weeksCompleted = parseFloat(document.getElementById('weeksCompleted').value) || 1;
             
             const data = {
-                user_id: currentUser?.id,
+                user_id: selectedStudentId || currentUser.id,
+                course_id: courseId,
                 week_number: week,
                 weeks_completed: weeksCompleted,
                 weekly_attendance: parseFloat(document.getElementById('weeklyAttendance').value) || 0,
@@ -242,18 +322,9 @@
             }
         }
         
-        function loadUser() {
-            const userStr = localStorage.getItem('currentUser');
-            if (!userStr) {
-                window.location.href = 'login.html';
-                return null;
-            }
-            currentUser = JSON.parse(userStr);
-            return currentUser;
-        }
-        
         async function logout() {
             localStorage.removeItem('currentUser');
+            localStorage.removeItem('selectedStudent');
             window.location.href = 'login.html';
         }
         

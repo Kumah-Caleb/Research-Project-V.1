@@ -47,7 +47,15 @@
         
         .form-group { margin-bottom: 1.5rem; }
         label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: #333; }
-        input { width: 100%; padding: 0.8rem; border: 2px solid #e0e0e0; border-radius: 8px; }
+        input, select { width: 100%; padding: 0.8rem; border: 2px solid #e0e0e0; border-radius: 8px; }
+        
+        .student-info {
+            background: #e3f2fd;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            display: none;
+        }
         
         .weight-slider {
             display: flex;
@@ -125,8 +133,19 @@
     <div class="container">
         <a href="predictor.html" class="back-link">← Back to Predictor Options</a>
         
+        <div class="student-info" id="studentInfo">
+            <strong>👨‍🎓 Predicting for:</strong> <span id="studentName"></span>
+        </div>
+        
         <div class="form-card">
             <h2 style="margin-bottom: 1.5rem;">⚙️ Custom Performance Formula</h2>
+            
+            <div class="form-group">
+                <label>📚 Select Course</label>
+                <select id="courseSelect">
+                    <option value="">Loading courses...</option>
+                </select>
+            </div>
             
             <div class="total-weight" id="totalWeight">
                 Total Weight: <span id="totalValue">100</span>%
@@ -205,6 +224,8 @@
     <script>
         const API_URL = 'https://student-performance-predictor7.onrender.com';
         let currentUser = null;
+        let selectedStudentId = null;
+        let courses = [];
         
         function updateWeight() {
             const attendance = parseInt(document.getElementById('weightAttendance').value) || 0;
@@ -230,7 +251,66 @@
             }
         }
         
+        function loadUser() {
+            const userStr = localStorage.getItem('currentUser');
+            if (!userStr) {
+                window.location.href = 'login.html';
+                return null;
+            }
+            currentUser = JSON.parse(userStr);
+            
+            selectedStudentId = localStorage.getItem('selectedStudent');
+            if (selectedStudentId && currentUser.role === 'lecturer') {
+                document.getElementById('studentInfo').style.display = 'block';
+                document.getElementById('studentName').textContent = 'Student';
+                loadStudentCourses(selectedStudentId);
+            } else {
+                loadMyCourses();
+            }
+            return currentUser;
+        }
+        
+        async function loadStudentCourses(studentId) {
+            try {
+                const coursesRes = await fetch(`${API_URL}/api/courses?user_id=${studentId}`);
+                courses = await coursesRes.json();
+                
+                const courseSelect = document.getElementById('courseSelect');
+                if (courses.length === 0) {
+                    courseSelect.innerHTML = '<option value="">No courses enrolled</option>';
+                } else {
+                    courseSelect.innerHTML = '<option value="">Select a course</option>' + 
+                        courses.map(c => `<option value="${c.id}">${c.code} - ${c.name}</option>`).join('');
+                }
+            } catch (error) {
+                console.error('Error loading courses:', error);
+            }
+        }
+        
+        async function loadMyCourses() {
+            try {
+                const response = await fetch(`${API_URL}/api/courses?user_id=${currentUser.id}`);
+                courses = await response.json();
+                
+                const courseSelect = document.getElementById('courseSelect');
+                if (courses.length === 0) {
+                    courseSelect.innerHTML = '<option value="">No courses enrolled</option>';
+                } else {
+                    courseSelect.innerHTML = '<option value="">Select a course</option>' + 
+                        courses.map(c => `<option value="${c.id}">${c.code} - ${c.name}</option>`).join('');
+                }
+            } catch (error) {
+                console.error('Error loading courses:', error);
+            }
+        }
+        
         async function predictCustom() {
+            const courseId = document.getElementById('courseSelect').value;
+            if (!courseId) {
+                alert('Please select a course');
+                return;
+            }
+            
             const attendance = parseInt(document.getElementById('weightAttendance').value) || 0;
             const assignments = parseInt(document.getElementById('weightAssignments').value) || 0;
             const engagement = parseInt(document.getElementById('weightEngagement').value) || 0;
@@ -252,7 +332,8 @@
             };
             
             const data = {
-                user_id: currentUser?.id,
+                user_id: selectedStudentId || currentUser.id,
+                course_id: courseId,
                 attendance: parseFloat(document.getElementById('customAttendance').value) || 0,
                 assignments: parseFloat(document.getElementById('customAssignments').value) || 0,
                 engagement: parseFloat(document.getElementById('customEngagement').value) || 0,
@@ -288,18 +369,9 @@
             }
         }
         
-        function loadUser() {
-            const userStr = localStorage.getItem('currentUser');
-            if (!userStr) {
-                window.location.href = 'login.html';
-                return null;
-            }
-            currentUser = JSON.parse(userStr);
-            return currentUser;
-        }
-        
         async function logout() {
             localStorage.removeItem('currentUser');
+            localStorage.removeItem('selectedStudent');
             window.location.href = 'login.html';
         }
         

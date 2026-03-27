@@ -49,8 +49,22 @@
         
         .form-group { margin-bottom: 1.5rem; }
         label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: #333; }
-        input { width: 100%; padding: 0.8rem; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem; }
-        input:focus { outline: none; border-color: #667eea; }
+        input, select {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        input:focus, select:focus { outline: none; border-color: #667eea; }
+        
+        .student-info {
+            background: #e3f2fd;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            display: none;
+        }
         
         .predict-btn {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -118,6 +132,17 @@
         <div class="form-card">
             <h2 style="margin-bottom: 1.5rem;">📚 Semester Performance Prediction</h2>
             
+            <div class="student-info" id="studentInfo">
+                <strong>👨‍🎓 Predicting for:</strong> <span id="studentName"></span>
+            </div>
+            
+            <div class="form-group">
+                <label>📚 Select Course</label>
+                <select id="courseSelect">
+                    <option value="">Loading courses...</option>
+                </select>
+            </div>
+            
             <div class="form-group">
                 <label>📅 Lectures Attended (hours)</label>
                 <input type="number" id="lecturesAttended" placeholder="Total hours attended so far" step="1">
@@ -161,6 +186,8 @@
     <script>
         const API_URL = 'https://student-performance-predictor7.onrender.com';
         let currentUser = null;
+        let selectedStudentId = null;
+        let courses = [];
         
         function loadUser() {
             const userStr = localStorage.getItem('currentUser');
@@ -169,12 +196,69 @@
                 return null;
             }
             currentUser = JSON.parse(userStr);
+            
+            // Check if lecturer is predicting for a student
+            selectedStudentId = localStorage.getItem('selectedStudent');
+            if (selectedStudentId && currentUser.role === 'lecturer') {
+                document.getElementById('studentInfo').style.display = 'block';
+                document.getElementById('studentName').textContent = 'Student: ' + (selectedStudentId);
+                // Load student's enrolled courses
+                loadStudentCourses(selectedStudentId);
+            } else {
+                loadMyCourses();
+            }
             return currentUser;
         }
         
+        async function loadStudentCourses(studentId) {
+            try {
+                // Get all courses and enrollments
+                const coursesRes = await fetch(`${API_URL}/api/courses?user_id=${studentId}`);
+                const studentCourses = await coursesRes.json();
+                courses = studentCourses;
+                
+                const courseSelect = document.getElementById('courseSelect');
+                if (courses.length === 0) {
+                    courseSelect.innerHTML = '<option value="">No courses enrolled</option>';
+                } else {
+                    courseSelect.innerHTML = '<option value="">Select a course</option>' + 
+                        courses.map(c => `<option value="${c.id}">${c.code} - ${c.name}</option>`).join('');
+                }
+            } catch (error) {
+                console.error('Error loading student courses:', error);
+            }
+        }
+        
+        async function loadMyCourses() {
+            try {
+                const response = await fetch(`${API_URL}/api/courses?user_id=${currentUser.id}`);
+                courses = await response.json();
+                
+                const courseSelect = document.getElementById('courseSelect');
+                if (courses.length === 0) {
+                    courseSelect.innerHTML = '<option value="">No courses enrolled</option>';
+                } else {
+                    courseSelect.innerHTML = '<option value="">Select a course</option>' + 
+                        courses.map(c => `<option value="${c.id}">${c.code} - ${c.name}</option>`).join('');
+                }
+            } catch (error) {
+                console.error('Error loading courses:', error);
+            }
+        }
+        
         async function predictSemester() {
+            const courseId = document.getElementById('courseSelect').value;
+            if (!courseId) {
+                alert('Please select a course');
+                return;
+            }
+            
+            const selectedCourse = courses.find(c => c.id === courseId);
+            
             const data = {
-                user_id: currentUser?.id,
+                user_id: selectedStudentId || currentUser.id,
+                course_id: courseId,
+                course_name: selectedCourse?.name,
                 lectures_attended: parseFloat(document.getElementById('lecturesAttended').value) || 0,
                 total_assignments: parseFloat(document.getElementById('totalAssignments').value) || 0,
                 assignments_completed: parseFloat(document.getElementById('assignmentsCompleted').value) || 0,
@@ -218,10 +302,8 @@
         }
         
         async function logout() {
-            try {
-                await fetch(`${API_URL}/api/logout`, { method: 'POST' });
-            } catch(e) {}
             localStorage.removeItem('currentUser');
+            localStorage.removeItem('selectedStudent');
             window.location.href = 'login.html';
         }
         
