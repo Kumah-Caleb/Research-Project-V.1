@@ -134,50 +134,48 @@ async function handleRegister(event) {
 async function loadDashboard() {
     if (!authToken) return;
     
+    showLoading();
+    
     try {
-        // Load courses
-        const coursesResponse = await fetch(`${API_BASE_URL}/api/student/${currentUser.id}/courses`, {
+        // Load dashboard stats
+        const statsResponse = await fetch(`${API_BASE_URL}/api/dashboard/stats`, {
             headers: {
                 'Authorization': `Bearer ${authToken}`
             }
         });
-        const coursesData = await coursesResponse.json();
+        const statsData = await statsResponse.json();
         
-        // Load predictions
-        const predictionsResponse = await fetch(`${API_BASE_URL}/api/student/${currentUser.id}/predictions`, {
-            headers: {
-                'Authorization': `Bearer ${authToken}`
+        if (statsData.success) {
+            // Update stats
+            document.getElementById('totalCourses').textContent = statsData.stats.total_courses || 0;
+            document.getElementById('avgScore').textContent = Math.round(statsData.stats.avg_score || 0) + '%';
+            document.getElementById('highPerformance').textContent = statsData.stats.high_performance || 0;
+            document.getElementById('atRisk').textContent = statsData.stats.at_risk || 0;
+            
+            // Display recent predictions
+            if (statsData.recent_predictions && statsData.recent_predictions.length > 0) {
+                displayRecentPredictions(statsData.recent_predictions);
+            } else {
+                document.getElementById('recentPredictions').innerHTML = '<p>No predictions yet. Make your first prediction!</p>';
             }
-        });
-        const predictionsData = await predictionsResponse.json();
-        
-        // Update stats
-        document.getElementById('totalCourses').textContent = coursesData.count || 0;
-        
-        if (predictionsData.predictions && predictionsData.predictions.length > 0) {
-            const avgScore = predictionsData.predictions.reduce((sum, p) => sum + p.predicted_score, 0) / predictionsData.predictions.length;
-            document.getElementById('avgScore').textContent = Math.round(avgScore) + '%';
-            
-            const highPerformance = predictionsData.predictions.filter(p => p.predicted_grade === 'A' || p.predicted_grade === 'B').length;
-            document.getElementById('highPerformance').textContent = highPerformance;
-            
-            const atRisk = predictionsData.predictions.filter(p => p.predicted_grade === 'F').length;
-            document.getElementById('atRisk').textContent = atRisk;
-            
-            // Show recent predictions
-            displayRecentPredictions(predictionsData.predictions.slice(0, 5));
         }
+        
+        // Also load courses for the courses page
+        await loadCourses();
+        
     } catch (error) {
         console.error('Dashboard error:', error);
         showToast('Failed to load dashboard data', 'error');
+    } finally {
+        hideLoading();
     }
 }
 
-// Display recent predictions
+// Display recent predictions on dashboard
 function displayRecentPredictions(predictions) {
     const container = document.getElementById('recentPredictions');
     
-    if (predictions.length === 0) {
+    if (!predictions || predictions.length === 0) {
         container.innerHTML = '<p>No predictions yet. Make your first prediction!</p>';
         return;
     }
@@ -186,6 +184,7 @@ function displayRecentPredictions(predictions) {
         <div class="history-item">
             <div class="history-course">
                 <strong>${pred.course_code}</strong> - ${pred.course_name}
+                <div><small>${new Date(pred.created_at).toLocaleDateString()}</small></div>
             </div>
             <div>
                 <span class="history-score">${pred.predicted_score}%</span>
@@ -199,8 +198,6 @@ function displayRecentPredictions(predictions) {
 async function loadCourses() {
     if (!authToken) return;
     
-    showLoading();
-    
     try {
         const response = await fetch(`${API_BASE_URL}/api/student/${currentUser.id}/courses`, {
             headers: {
@@ -212,14 +209,9 @@ async function loadCourses() {
         
         if (data.success) {
             displayCourses(data.courses);
-        } else {
-            showToast(data.error || 'Failed to load courses', 'error');
         }
     } catch (error) {
         console.error('Courses error:', error);
-        showToast('Network error', 'error');
-    } finally {
-        hideLoading();
     }
 }
 
@@ -227,7 +219,7 @@ async function loadCourses() {
 function displayCourses(courses) {
     const container = document.getElementById('coursesList');
     
-    if (courses.length === 0) {
+    if (!courses || courses.length === 0) {
         container.innerHTML = '<p>No courses found. Please contact your academic advisor.</p>';
         return;
     }
@@ -268,6 +260,8 @@ function filterCourses() {
 async function loadPredictionHistory() {
     if (!authToken) return;
     
+    showLoading();
+    
     try {
         const response = await fetch(`${API_BASE_URL}/api/student/${currentUser.id}/predictions`, {
             headers: {
@@ -279,9 +273,14 @@ async function loadPredictionHistory() {
         
         if (data.success && data.predictions) {
             displayPredictionHistory(data.predictions);
+        } else {
+            document.getElementById('predictionHistory').innerHTML = '<p>No predictions yet. Make your first prediction!</p>';
         }
     } catch (error) {
         console.error('History error:', error);
+        showToast('Failed to load prediction history', 'error');
+    } finally {
+        hideLoading();
     }
 }
 
@@ -289,7 +288,7 @@ async function loadPredictionHistory() {
 function displayPredictionHistory(predictions) {
     const container = document.getElementById('predictionHistory');
     
-    if (predictions.length === 0) {
+    if (!predictions || predictions.length === 0) {
         container.innerHTML = '<p>No predictions yet. Start by making a prediction!</p>';
         return;
     }
@@ -299,7 +298,7 @@ function displayPredictionHistory(predictions) {
             <div class="history-course">
                 <strong>${pred.course_code}</strong> - ${pred.course_name}
                 <div class="course-credits">${pred.credits} Credits</div>
-                <small>${new Date(pred.created_at).toLocaleDateString()}</small>
+                <small>${new Date(pred.created_at).toLocaleDateString()} at ${new Date(pred.created_at).toLocaleTimeString()}</small>
             </div>
             <div>
                 <span class="history-score">${pred.predicted_score}%</span>
@@ -318,7 +317,8 @@ async function makePrediction(event) {
         course_code: document.getElementById('courseCode').value,
         course_name: document.getElementById('courseName').value,
         credits: parseInt(document.getElementById('credits').value),
-        semester: document.getElementById('semester').value
+        semester: document.getElementById('semester').value,
+        academic_year: new Date().getFullYear().toString()
     };
     
     showLoading();
@@ -338,8 +338,11 @@ async function makePrediction(event) {
         if (data.success) {
             displayPredictionResult(data.prediction);
             document.getElementById('predictionForm').reset();
-            loadPredictionHistory();
-            loadDashboard(); // Refresh dashboard stats
+            
+            // Refresh all data
+            await loadPredictionHistory();
+            await loadDashboard();
+            
             showToast('Prediction generated successfully!', 'success');
         } else {
             showToast(data.error || 'Prediction failed', 'error');
@@ -359,16 +362,17 @@ function displayPredictionResult(prediction) {
     container.innerHTML = `
         <div class="prediction-card">
             <h3>Prediction Result</h3>
-            <div class="prediction-score">${prediction.score}%</div>
-            <div class="prediction-grade grade-${prediction.grade}">Grade: ${prediction.grade}</div>
+            <div><strong>${prediction.course_code}</strong> - ${prediction.course_name}</div>
+            <div class="prediction-score">${prediction.predicted_score}%</div>
+            <div class="prediction-grade grade-${prediction.predicted_grade}">Grade: ${prediction.predicted_grade}</div>
             <div class="prediction-recommendation">
                 <strong>Recommendation:</strong> ${prediction.recommendation}
             </div>
-            <div class="confidence">
-                <strong>Confidence Level:</strong> ${prediction.confidence}%
-            </div>
         </div>
     `;
+    
+    // Scroll to result
+    container.scrollIntoView({ behavior: 'smooth' });
 }
 
 // Load user profile
@@ -390,6 +394,9 @@ function showPredictionForm(courseCode, courseName, credits) {
     document.getElementById('courseName').value = courseName;
     document.getElementById('credits').value = credits;
     document.getElementById('predictionResult').innerHTML = '';
+    
+    // Also load prediction history
+    loadPredictionHistory();
     
     // Scroll to form
     document.querySelector('.prediction-form').scrollIntoView({ behavior: 'smooth' });
@@ -446,13 +453,19 @@ function showToast(message, type = 'info') {
 
 // Loading indicators
 function showLoading() {
-    const loader = document.createElement('div');
-    loader.className = 'loading-overlay';
-    loader.innerHTML = '<div class="spinner"></div>';
-    document.body.appendChild(loader);
+    let loader = document.querySelector('.loading-overlay');
+    if (!loader) {
+        loader = document.createElement('div');
+        loader.className = 'loading-overlay';
+        loader.innerHTML = '<div class="spinner"></div>';
+        document.body.appendChild(loader);
+    }
+    loader.style.display = 'flex';
 }
 
 function hideLoading() {
     const loader = document.querySelector('.loading-overlay');
-    if (loader) loader.remove();
+    if (loader) {
+        loader.style.display = 'none';
+    }
 }
