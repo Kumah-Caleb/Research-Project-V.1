@@ -21,22 +21,9 @@
         .logo { font-size: 1.5rem; font-weight: bold; }
         .logo span { color: #ffd700; }
         .nav-links { display: flex; gap: 1.5rem; align-items: center; flex-wrap: wrap; }
-        .nav-links a {
-            color: white;
-            text-decoration: none;
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            transition: background 0.3s;
-        }
+        .nav-links a { color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 8px; }
         .nav-links a:hover, .nav-links a.active { background: rgba(255,255,255,0.2); }
-        .logout-btn {
-            background: rgba(255,80,60,0.3);
-            border: 1px solid rgba(255,80,60,0.5);
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-        .logout-btn:hover { background: rgba(255,80,60,0.5); }
+        .logout-btn { background: rgba(255,80,60,0.3); border: 1px solid rgba(255,80,60,0.5); padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; }
         
         .container { max-width: 800px; margin: 0 auto; padding: 2rem; }
         
@@ -189,36 +176,35 @@
         let selectedStudentId = null;
         let courses = [];
         
-        function loadUser() {
+        function logout() { localStorage.clear(); window.location.href = 'login.html'; }
+        
+        async function loadUser() {
             const userStr = localStorage.getItem('currentUser');
-            if (!userStr) {
-                window.location.href = 'login.html';
-                return null;
-            }
+            if (!userStr) { window.location.href = 'login.html'; return null; }
             currentUser = JSON.parse(userStr);
             
             // Check if lecturer is predicting for a student
             selectedStudentId = localStorage.getItem('selectedStudent');
+            const selectedStudentName = localStorage.getItem('selectedStudentName');
+            
             if (selectedStudentId && currentUser.role === 'lecturer') {
                 document.getElementById('studentInfo').style.display = 'block';
-                document.getElementById('studentName').textContent = 'Student: ' + (selectedStudentId);
-                // Load student's enrolled courses
-                loadStudentCourses(selectedStudentId);
+                document.getElementById('studentName').innerHTML = selectedStudentName || 'Student';
+                await loadStudentCourses(selectedStudentId);
             } else {
-                loadMyCourses();
+                await loadMyCourses();
             }
             return currentUser;
         }
         
         async function loadStudentCourses(studentId) {
             try {
-                // Get all courses and enrollments
-                const coursesRes = await fetch(`${API_URL}/api/courses?user_id=${studentId}`);
-                const studentCourses = await coursesRes.json();
-                courses = studentCourses;
+                // Get courses the student is enrolled in
+                const response = await fetch(`${API_URL}/api/courses?user_id=${studentId}`);
+                courses = await response.json();
                 
                 const courseSelect = document.getElementById('courseSelect');
-                if (courses.length === 0) {
+                if (!courses || courses.length === 0) {
                     courseSelect.innerHTML = '<option value="">No courses enrolled</option>';
                 } else {
                     courseSelect.innerHTML = '<option value="">Select a course</option>' + 
@@ -226,6 +212,7 @@
                 }
             } catch (error) {
                 console.error('Error loading student courses:', error);
+                document.getElementById('courseSelect').innerHTML = '<option value="">Error loading courses</option>';
             }
         }
         
@@ -235,14 +222,19 @@
                 courses = await response.json();
                 
                 const courseSelect = document.getElementById('courseSelect');
-                if (courses.length === 0) {
-                    courseSelect.innerHTML = '<option value="">No courses enrolled</option>';
+                if (!courses || courses.length === 0) {
+                    if (currentUser.role === 'student') {
+                        courseSelect.innerHTML = '<option value="">No courses enrolled. Go to My Courses to enroll!</option>';
+                    } else {
+                        courseSelect.innerHTML = '<option value="">No courses created. Go to My Courses to create!</option>';
+                    }
                 } else {
                     courseSelect.innerHTML = '<option value="">Select a course</option>' + 
                         courses.map(c => `<option value="${c.id}">${c.code} - ${c.name}</option>`).join('');
                 }
             } catch (error) {
                 console.error('Error loading courses:', error);
+                document.getElementById('courseSelect').innerHTML = '<option value="">Error loading courses</option>';
             }
         }
         
@@ -301,20 +293,7 @@
             }
         }
         
-                        // SIMPLE WORKING LOGOUT
-        function logout() {
-            localStorage.clear();
-            window.location.href = 'login.html';
-        }/api/logout`, { method: 'POST' });
-            } catch(e) {}
-            localStorage.clear();
-            window.location.href = 'login.html';
-        }
-        
         loadUser();
     </script>
 </body>
 </html>
-
-
-
