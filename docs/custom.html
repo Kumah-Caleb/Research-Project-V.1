@@ -369,9 +369,11 @@
             }
         }
         
-                async function logout() {
-            try {
-                await fetch(`${API_URL}/api/logout`, { method: 'POST' });
+                        // SIMPLE WORKING LOGOUT
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'login.html';
+        }/api/logout`, { method: 'POST' });
             } catch(e) {}
             localStorage.clear();
             window.location.href = 'login.html';
@@ -382,4 +384,5 @@
     </script>
 </body>
 </html>
+
 
