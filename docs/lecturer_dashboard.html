@@ -52,7 +52,11 @@
             transition: background 0.3s;
         }
 
-        .nav-links a:hover, .nav-links a.active {
+        .nav-links a:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .nav-links a.active {
             background: rgba(255,255,255,0.2);
         }
 
@@ -62,6 +66,10 @@
             padding: 0.5rem 1rem;
             border-radius: 8px;
             cursor: pointer;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,80,60,0.5);
         }
 
         .container {
@@ -99,6 +107,15 @@
             color: #2c3e50;
         }
 
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
         .action-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -110,13 +127,18 @@
             background: white;
             border-radius: 15px;
             padding: 1.5rem;
+            text-align: center;
             cursor: pointer;
             transition: transform 0.3s;
-            text-align: center;
+            text-decoration: none;
+            display: block;
+            color: inherit;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
 
         .action-card:hover {
             transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
         }
 
         .action-icon {
@@ -124,11 +146,62 @@
             margin-bottom: 1rem;
         }
 
+        .action-card h3 {
+            margin-bottom: 0.5rem;
+            color: #2c3e50;
+        }
+
+        .action-card p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .management-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .management-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.3s;
+            text-decoration: none;
+            display: block;
+            color: inherit;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .management-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .management-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .management-card h4 {
+            margin-bottom: 0.5rem;
+            color: #2c3e50;
+        }
+
+        .management-card p {
+            color: #666;
+            font-size: 0.85rem;
+        }
+
         .students-table {
             background: white;
             border-radius: 15px;
             overflow-x: auto;
             padding: 1rem;
+            margin-top: 1rem;
         }
 
         table {
@@ -151,28 +224,38 @@
         .risk-moderate { color: #fd7e14; }
         .risk-low { color: #28a745; }
 
+        .view-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 0.3rem 0.8rem;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
         @media (max-width: 768px) {
             .navbar { flex-direction: column; text-align: center; }
             .nav-links { justify-content: center; }
+            .container { padding: 1rem; }
         }
     </style>
 </head>
 <body>
     <nav class="navbar">
-        <div class="logo">ðŸ‘©â€ðŸ« AAMUSTED <span>Predictor</span></div>
+        <div class="logo">👩‍🏫 AAMUSTED <span>Predictor</span></div>
         <div class="nav-links">
-            <a href="/dashboard" class="active">Dashboard</a>
-            <a href="/students">My Students</a>
-            <a href="/courses">My Courses</a>
-            <a href="/profile">Profile</a>
-            <button class="logout-btn" onclick="logout()">ðŸšª Logout</button>
+            <a href="lecturer_dashboard.html" class="active">Dashboard</a>
+            <a href="courses.html">My Courses</a>
+            <a href="students.html">My Students</a>
+            <a href="profile.html">Profile</a>
+            <button class="logout-btn" onclick="logout()">🚪 Logout</button>
         </div>
     </nav>
 
     <div class="container">
         <div class="welcome-card">
-            <h1>Welcome, Prof. {{ user.full_name }}! ðŸ‘‹</h1>
-            <p>Monitor student performance and provide academic guidance</p>
+            <h1 id="welcomeMessage">Welcome, Lecturer! 👋</h1>
+            <p>Monitor student performance, create courses, and provide academic guidance</p>
         </div>
 
         <div class="stats-grid">
@@ -190,30 +273,63 @@
             </div>
             <div class="stat-card">
                 <div class="stat-number" id="avgPerformance">--</div>
-                <div class="stat-label">Average Class Performance</div>
+                <div class="stat-label">Average Performance</div>
             </div>
         </div>
 
+        <!-- Quick Actions Section -->
+        <div class="section-title">
+            <span>⚡</span>
+            <span>Quick Actions</span>
+        </div>
         <div class="action-grid">
-            <div class="action-card" onclick="location.href='/courses'">
-                <div class="action-icon">ðŸ“š</div>
+            <a href="courses.html" class="action-card">
+                <div class="action-icon">📚</div>
                 <h3>Create Course</h3>
                 <p>Add new courses and manage existing ones</p>
-            </div>
-            <div class="action-card" onclick="location.href='/students'">
-                <div class="action-icon">ðŸ‘¥</div>
-                <h3>View Students</h3>
+            </a>
+
+            <a href="students.html" class="action-card">
+                <div class="action-icon">👥</div>
+                <h3>View All Students</h3>
                 <p>Monitor student performance and predictions</p>
-            </div>
-            <div class="action-card" onclick="location.href='/predictor'">
-                <div class="action-icon">ðŸ”®</div>
-                <h3>Predict Student Performance</h3>
+            </a>
+
+            <a href="predictor.html" class="action-card">
+                <div class="action-icon">🔮</div>
+                <h3>Predict Performance</h3>
                 <p>Get AI-powered predictions for your students</p>
-            </div>
+            </a>
         </div>
 
+        <!-- Management Section -->
+        <div class="section-title">
+            <span>📋</span>
+            <span>Academic Management</span>
+        </div>
+        <div class="management-grid">
+            <a href="courses.html" class="management-card">
+                <div class="management-icon">📚</div>
+                <h4>Course Management</h4>
+                <p>Create, edit, and manage your courses</p>
+            </a>
+
+            <a href="students.html" class="management-card">
+                <div class="management-icon">👥</div>
+                <h4>Student Records</h4>
+                <p>View and manage all enrolled students</p>
+            </a>
+
+            <a href="profile.html" class="management-card">
+                <div class="management-icon">👤</div>
+                <h4>My Profile</h4>
+                <p>Update your personal information</p>
+            </a>
+        </div>
+
+        <!-- Recent Students Section -->
         <div class="students-table">
-            <h3 style="margin-bottom: 1rem;">ðŸ“Š Recent Student Activity</h3>
+            <h3 style="margin-bottom: 1rem;">📊 Recent Student Activity</h3>
             <div id="studentsList">
                 <p style="text-align: center; padding: 2rem;">Loading student data...</p>
             </div>
@@ -221,16 +337,48 @@
     </div>
 
     <script>
+        const API_URL = 'https://student-performance-predictor7.onrender.com';
+        
+        function loadUserData() {
+            const userStr = localStorage.getItem('currentUser');
+            if (!userStr) {
+                window.location.href = 'login.html';
+                return null;
+            }
+            const user = JSON.parse(userStr);
+            document.getElementById('welcomeMessage').innerHTML = `Welcome, ${user.full_name || user.username}! 👋`;
+            return user;
+        }
+        
         async function loadLecturerData() {
             try {
-                const response = await fetch('/api/students');
-                const students = await response.json();
+                // Load students from localStorage or backend
+                const studentsStr = localStorage.getItem('students');
+                let students = studentsStr ? JSON.parse(studentsStr) : [];
+                
+                // If no students, create demo data
+                if (students.length === 0) {
+                    students = [
+                        { id: '1', full_name: 'John Doe', index_number: '2024/IT/001', latest_score: 85, program_type: 'regular' },
+                        { id: '2', full_name: 'Jane Smith', index_number: '2024/IT/002', latest_score: 62, program_type: 'regular' },
+                        { id: '3', full_name: 'Michael Johnson', index_number: '2024/IT/003', latest_score: 45, program_type: 'non-regular' },
+                        { id: '4', full_name: 'Sarah Williams', index_number: '2024/IT/004', latest_score: 78, program_type: 'regular' },
+                        { id: '5', full_name: 'David Brown', index_number: '2024/IT/005', latest_score: 55, program_type: 'non-regular' }
+                    ];
+                    localStorage.setItem('students', JSON.stringify(students));
+                }
+                
+                // Load courses
+                const coursesStr = localStorage.getItem('courses');
+                let courses = coursesStr ? JSON.parse(coursesStr) : [];
                 
                 const container = document.getElementById('studentsList');
                 const totalStudents = document.getElementById('totalStudents');
+                const totalCourses = document.getElementById('totalCourses');
                 const atRiskCount = document.getElementById('atRiskCount');
                 
                 totalStudents.textContent = students.length;
+                totalCourses.textContent = courses.length;
                 
                 let atRisk = 0;
                 let totalScore = 0;
@@ -239,22 +387,30 @@
                     container.innerHTML = `
                         <table>
                             <thead>
-                                <tr><th>Student Name</th><th>Index Number</th><th>Latest Score</th><th>Status</th><th>Action</th></tr>
+                                <tr>
+                                    <th>Student Name</th>
+                                    <th>Index Number</th>
+                                    <th>Program</th>
+                                    <th>Latest Score</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
                             </thead>
                             <tbody>
                                 ${students.map(s => {
-                                    const latestScore = s.latest_score || 0;
-                                    totalScore += latestScore;
-                                    if (latestScore < 60) atRisk++;
-                                    const statusClass = latestScore >= 70 ? 'risk-low' : (latestScore >= 50 ? 'risk-moderate' : 'risk-high');
-                                    const statusText = latestScore >= 70 ? 'Good' : (latestScore >= 50 ? 'At Risk' : 'Critical');
+                                    const score = s.latest_score || 0;
+                                    totalScore += score;
+                                    if (score < 60) atRisk++;
+                                    const statusClass = score >= 70 ? 'risk-low' : (score >= 50 ? 'risk-moderate' : 'risk-high');
+                                    const statusText = score >= 70 ? 'Good' : (score >= 50 ? 'At Risk' : 'Critical');
                                     return `
                                         <tr>
                                             <td>${s.full_name}</td>
                                             <td>${s.index_number || 'N/A'}</td>
-                                            <td>${latestScore.toFixed(1)}%</td>
+                                            <td>${s.program_type === 'regular' ? 'Regular' : 'Non-Regular'}</td>
+                                            <td class="${statusClass}">${score.toFixed(1)}%</td>
                                             <td class="${statusClass}">${statusText}</td>
-                                            <td><button onclick="viewStudent('${s.id}')">View Details</button></td>
+                                            <td><button class="view-btn" onclick="viewStudent('${s.id}')">View Details</button></td>
                                         </tr>
                                     `;
                                 }).join('')}
@@ -262,25 +418,35 @@
                         </table>
                     `;
                     atRiskCount.textContent = atRisk;
-                    const avgScore = (totalScore / students.length).toFixed(1);
+                    const avgScore = students.length > 0 ? (totalScore / students.length).toFixed(1) : 0;
                     document.getElementById('avgPerformance').textContent = avgScore + '%';
                 } else {
                     container.innerHTML = '<p style="text-align: center; padding: 2rem;">No students enrolled yet</p>';
                 }
             } catch (error) {
                 console.error('Error loading lecturer data:', error);
+                document.getElementById('studentsList').innerHTML = '<p style="text-align: center; padding: 2rem;">Unable to load student data</p>';
             }
         }
         
         function viewStudent(studentId) {
-            window.location.href = `/students?view=${studentId}`;
+            // Store selected student in localStorage and redirect to predictor
+            localStorage.setItem('selectedStudent', studentId);
+            window.location.href = 'predictor.html';
         }
         
-        async async function logout() {
-            await fetch('/api/logout', { method: 'POST' });
-            window.location.href = '/';
+        async function logout() {
+            try {
+                await fetch(`${API_URL}/api/logout`, { method: 'POST' });
+            } catch(e) {}
+            localStorage.removeItem('currentUser');
+            localStorage.removeItem('students');
+            localStorage.removeItem('courses');
+            window.location.href = 'login.html';
         }
         
+        // Initialize
+        loadUserData();
         loadLecturerData();
     </script>
 </body>
