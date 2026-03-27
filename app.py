@@ -343,7 +343,7 @@ def api_history():
     predictions = load_data(PREDICTIONS_FILE)
     return jsonify(predictions.get(user_id, []))
 
-# ✅ FIXED PROFILE ENDPOINT - Added both GET and PUT methods
+# ✅ PROFILE ENDPOINT - Single definition
 @app.route('/api/profile', methods=['GET', 'PUT', 'OPTIONS'])
 def api_profile():
     """Get or update user profile - supports GET and PUT"""
@@ -400,6 +400,7 @@ def api_profile():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
+# ============ RUN APP ============
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
     print("=" * 50)
