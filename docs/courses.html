@@ -175,6 +175,12 @@
         const API_URL = 'https://student-performance-predictor7.onrender.com';
         let currentUser = null;
         
+        // SIMPLE WORKING LOGOUT - SINGLE FUNCTION
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'login.html';
+        }
+        
         async function loadUser() {
             const userStr = localStorage.getItem('currentUser');
             if (!userStr) {
@@ -375,23 +381,8 @@
             });
         }
         
-                        // SIMPLE WORKING LOGOUT
-        function logout() {
-            localStorage.clear();
-            window.location.href = 'login.html';
-        }/api/logout`, { method: 'POST' });
-            } catch(e) {}
-            localStorage.clear();
-            window.location.href = 'login.html';
-        }/api/logout`, { method: 'POST' });
-            } catch(e) {}
-            localStorage.removeItem('currentUser');
-            window.location.href = 'login.html';
-        }
-        
+        // Initialize
         loadUser();
     </script>
 </body>
 </html>
-
-
