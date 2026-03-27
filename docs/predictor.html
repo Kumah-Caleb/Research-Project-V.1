@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -107,27 +107,27 @@
 </head>
 <body>
     <nav class="navbar">
-        <div class="logo">🎓 AAMUSTED <span>Predictor</span></div>
+        <div class="logo">ðŸŽ“ AAMUSTED <span>Predictor</span></div>
         <div class="nav-links">
-            <a href="/dashboard">Dashboard</a>
+            <a href="student_dashboard.html">Dashboard</a>
             <a href="/predictor" class="active">Predictor</a>
-            <a href="/courses">Courses</a>
-            <a href="/history">History</a>
-            <a href="/profile">Profile</a>
-            <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+            <a href="courses.html">Courses</a>
+            <a href="history.html">History</a>
+            <a href="profile.html">Profile</a>
+            <button class="logout-btn" onclick="logout()">ðŸšª Logout</button>
         </div>
     </nav>
 
     <div class="container">
         <div class="format-tabs">
-            <button class="format-tab active" onclick="switchFormat('semester')">📚 Semester Prediction</button>
-            <button class="format-tab" onclick="switchFormat('weekly')">📅 Weekly Tracking</button>
-            <button class="format-tab" onclick="switchFormat('custom')">⚙️ Custom Format</button>
+            <button class="format-tab active" onclick="switchFormat('semester')">ðŸ“š Semester Prediction</button>
+            <button class="format-tab" onclick="switchFormat('weekly')">ðŸ“… Weekly Tracking</button>
+            <button class="format-tab" onclick="switchFormat('custom')">âš™ï¸ Custom Format</button>
         </div>
 
         <!-- Semester Prediction Form -->
         <div id="semesterForm" class="prediction-form active">
-            <h2 style="margin-bottom: 1.5rem;">📚 Semester Performance Prediction</h2>
+            <h2 style="margin-bottom: 1.5rem;">ðŸ“š Semester Performance Prediction</h2>
             <div class="form-group">
                 <label>Select Course</label>
                 <select id="semesterCourse">
@@ -138,35 +138,35 @@
                 </select>
             </div>
             <div class="form-group">
-                <label>📅 Lectures Attended (hours)</label>
+                <label>ðŸ“… Lectures Attended (hours)</label>
                 <input type="number" id="lecturesAttended" placeholder="Total hours attended so far" step="1">
                 <small>Total possible: {{ calendar.get_total_lecture_hours(user.program_type) }} hours this semester</small>
             </div>
             <div class="form-group">
-                <label>📝 Assignments</label>
+                <label>ðŸ“ Assignments</label>
                 <input type="number" id="totalAssignments" placeholder="Total assignments given" step="1">
                 <input type="number" id="assignmentsCompleted" placeholder="Assignments completed" step="1" style="margin-top: 0.5rem;">
                 <input type="number" id="assignmentsScore" placeholder="Average assignment score (%)" step="1" style="margin-top: 0.5rem;">
             </div>
             <div class="form-group">
-                <label>💬 Class Engagement</label>
+                <label>ðŸ’¬ Class Engagement</label>
                 <input type="number" id="totalEngagements" placeholder="Total engagement opportunities" step="1">
                 <input type="number" id="engagementsParticipated" placeholder="Engagements participated" step="1" style="margin-top: 0.5rem;">
             </div>
             <div class="form-group">
-                <label>⏰ Weekly Study Hours</label>
+                <label>â° Weekly Study Hours</label>
                 <input type="number" id="studyHours" placeholder="Average study hours per week" step="1">
             </div>
             <div class="form-group">
-                <label>📊 Previous Grade (%)</label>
+                <label>ðŸ“Š Previous Grade (%)</label>
                 <input type="number" id="previousGrade" placeholder="Your grade from previous semester" step="1">
             </div>
-            <button class="predict-btn" onclick="predictSemester()">🔮 Predict Semester Performance</button>
+            <button class="predict-btn" onclick="predictSemester()">ðŸ”® Predict Semester Performance</button>
         </div>
 
         <!-- Weekly Tracking Form -->
         <div id="weeklyForm" class="prediction-form">
-            <h2 style="margin-bottom: 1.5rem;">📅 Weekly Performance Tracking</h2>
+            <h2 style="margin-bottom: 1.5rem;">ðŸ“… Weekly Performance Tracking</h2>
             <div class="form-group">
                 <label>Week Number</label>
                 <input type="number" id="weekNumber" value="{{ current_week }}" placeholder="Current week">
@@ -176,31 +176,31 @@
                 <input type="number" id="weeksCompleted" value="1" placeholder="Weeks completed so far">
             </div>
             <div class="form-group">
-                <label>📅 Weekly Attendance (%)</label>
+                <label>ðŸ“… Weekly Attendance (%)</label>
                 <input type="number" id="weeklyAttendance" placeholder="Attendance % this week" step="1">
             </div>
             <div class="form-group">
-                <label>📝 Weekly Assignment Score (%)</label>
+                <label>ðŸ“ Weekly Assignment Score (%)</label>
                 <input type="number" id="weeklyAssignments" placeholder="Assignment score this week" step="1">
             </div>
             <div class="form-group">
-                <label>💬 Weekly Engagement (%)</label>
+                <label>ðŸ’¬ Weekly Engagement (%)</label>
                 <input type="number" id="weeklyEngagement" placeholder="Engagement rate this week" step="1">
             </div>
             <div class="form-group">
-                <label>⏰ Weekly Study Hours</label>
+                <label>â° Weekly Study Hours</label>
                 <input type="number" id="weeklyStudyHours" placeholder="Hours studied this week" step="1">
             </div>
             <div class="form-group">
-                <label>📝 Midterm Grade (%)</label>
+                <label>ðŸ“ Midterm Grade (%)</label>
                 <input type="number" id="midtermGrade" placeholder="Your midterm exam score" step="1">
             </div>
-            <button class="predict-btn" onclick="predictWeekly()">🔮 Predict Weekly Performance</button>
+            <button class="predict-btn" onclick="predictWeekly()">ðŸ”® Predict Weekly Performance</button>
         </div>
 
         <!-- Custom Format Form -->
         <div id="customForm" class="prediction-form">
-            <h2 style="margin-bottom: 1.5rem;">⚙️ Custom Performance Formula</h2>
+            <h2 style="margin-bottom: 1.5rem;">âš™ï¸ Custom Performance Formula</h2>
             <div class="form-group">
                 <label>Custom Weights (Total should be 100%)</label>
                 <div style="display: grid; gap: 0.5rem;">
@@ -212,31 +212,31 @@
                 </div>
             </div>
             <div class="form-group">
-                <label>📅 Attendance (%)</label>
+                <label>ðŸ“… Attendance (%)</label>
                 <input type="number" id="customAttendance" placeholder="Your attendance percentage" step="1">
             </div>
             <div class="form-group">
-                <label>📝 Assignments Score (%)</label>
+                <label>ðŸ“ Assignments Score (%)</label>
                 <input type="number" id="customAssignments" placeholder="Average assignment score" step="1">
             </div>
             <div class="form-group">
-                <label>💬 Engagement Rate (%)</label>
+                <label>ðŸ’¬ Engagement Rate (%)</label>
                 <input type="number" id="customEngagement" placeholder="Class engagement rate" step="1">
             </div>
             <div class="form-group">
-                <label>⏰ Study Hours per Week</label>
+                <label>â° Study Hours per Week</label>
                 <input type="number" id="customStudyHours" placeholder="Average study hours" step="1">
             </div>
             <div class="form-group">
-                <label>📊 Previous Grade (%)</label>
+                <label>ðŸ“Š Previous Grade (%)</label>
                 <input type="number" id="customPreviousGrade" placeholder="Previous semester grade" step="1">
             </div>
-            <button class="predict-btn" onclick="predictCustom()">🔮 Predict with Custom Formula</button>
+            <button class="predict-btn" onclick="predictCustom()">ðŸ”® Predict with Custom Formula</button>
         </div>
 
         <!-- Result Display -->
         <div id="resultCard" class="result-card">
-            <h2>🎯 Prediction Result</h2>
+            <h2>ðŸŽ¯ Prediction Result</h2>
             <div id="predictionGrade" class="grade"></div>
             <div id="predictionScore" class="score"></div>
             <div id="recommendations" class="recommendations"></div>
@@ -337,7 +337,7 @@
             
             if (result.recommendations && result.recommendations.length > 0) {
                 document.getElementById('recommendations').innerHTML = `
-                    <strong>💡 Recommendations:</strong>
+                    <strong>ðŸ’¡ Recommendations:</strong>
                     <ul>
                         ${result.recommendations.map(r => `<li>${r}</li>`).join('')}
                     </ul>

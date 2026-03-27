@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -101,21 +101,21 @@
 </head>
 <body>
     <nav class="navbar">
-        <div class="logo">🎓 AAMUSTED <span>Predictor</span></div>
+        <div class="logo">ðŸŽ“ AAMUSTED <span>Predictor</span></div>
         <div class="nav-links">
-            <a href="/dashboard">Dashboard</a>
+            <a href="student_dashboard.html">Dashboard</a>
             <a href="/predictor">Predictor</a>
-            <a href="/courses">Courses</a>
-            <a href="/history">History</a>
+            <a href="courses.html">Courses</a>
+            <a href="history.html">History</a>
             <a href="/profile" class="active">Profile</a>
-            <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+            <button class="logout-btn" onclick="logout()">ðŸšª Logout</button>
         </div>
     </nav>
 
     <div class="container">
         <div class="profile-card">
             <div class="profile-header">
-                <div class="avatar">👤</div>
+                <div class="avatar">ðŸ‘¤</div>
                 <div class="profile-name">{{ user.full_name }}</div>
                 <div>{{ user.role|capitalize }}</div>
             </div>
@@ -137,9 +137,9 @@
                     <div class="info-label">Program Type</div>
                     <div class="info-value">
                         {% if user.program_type == 'regular' %}
-                        🎓 Regular (5 days/week)
+                        ðŸŽ“ Regular (5 days/week)
                         {% else %}
-                        🌙 Non-Regular (Weekend/Evening)
+                        ðŸŒ™ Non-Regular (Weekend/Evening)
                         {% endif %}
                     </div>
                 </div>
@@ -155,7 +155,7 @@
                     <div class="info-label">Member Since</div>
                     <div class="info-value">{{ user_data.created_at or 'Recently' }}</div>
                 </div>
-                <button class="edit-btn" onclick="toggleEdit()">✏️ Edit Profile</button>
+                <button class="edit-btn" onclick="toggleEdit()">âœï¸ Edit Profile</button>
             </div>
             
             <div id="editProfile" class="edit-form">
@@ -192,7 +192,7 @@
                         <option value="non-regular" {% if user.program_type == 'non-regular' %}selected{% endif %}>Non-Regular (Weekend/Evening)</option>
                     </select>
                 </div>
-                <button class="save-btn" onclick="saveProfile()">💾 Save Changes</button>
+                <button class="save-btn" onclick="saveProfile()">ðŸ’¾ Save Changes</button>
                 <button class="edit-btn" style="background: #6c757d; margin-top: 0.5rem;" onclick="toggleEdit()">Cancel</button>
             </div>
         </div>

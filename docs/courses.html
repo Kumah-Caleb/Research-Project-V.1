@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -116,20 +116,20 @@
 </head>
 <body>
     <nav class="navbar">
-        <div class="logo">🎓 AAMUSTED <span>Predictor</span></div>
+        <div class="logo">ðŸŽ“ AAMUSTED <span>Predictor</span></div>
         <div class="nav-links">
-            <a href="/dashboard">Dashboard</a>
+            <a href="student_dashboard.html">Dashboard</a>
             <a href="/predictor">Predictor</a>
             <a href="/courses" class="active">Courses</a>
-            <a href="/history">History</a>
-            <a href="/profile">Profile</a>
-            <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+            <a href="history.html">History</a>
+            <a href="profile.html">Profile</a>
+            <button class="logout-btn" onclick="logout()">ðŸšª Logout</button>
         </div>
     </nav>
 
     <div class="container">
         <div id="lecturerSection" style="display: none;">
-            <button class="create-course-btn" onclick="toggleAddCourse()">➕ Create New Course</button>
+            <button class="create-course-btn" onclick="toggleAddCourse()">âž• Create New Course</button>
             
             <div id="addCourseCard" class="add-course-card">
                 <h3 style="margin-bottom: 1rem;">Create New Course</h3>
@@ -156,12 +156,12 @@
             </div>
         </div>
         
-        <h2 style="margin-bottom: 1rem;">📚 My Courses</h2>
+        <h2 style="margin-bottom: 1rem;">ðŸ“š My Courses</h2>
         <div class="courses-grid" id="myCourses"></div>
         
         <div id="studentSection" style="display: none;">
             <div class="available-courses">
-                <h3 style="margin-bottom: 1rem;">📖 Available Courses to Enroll</h3>
+                <h3 style="margin-bottom: 1rem;">ðŸ“– Available Courses to Enroll</h3>
                 <div id="availableCourses"></div>
             </div>
         </div>
