@@ -102,12 +102,13 @@
     </div>
 
     <script>
+        // ✅ CORRECT API URL - no trailing slash
         const API_URL = 'https://student-performance-predictor7.onrender.com';
         
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const username = document.getElementById('username').value;
+            const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
             const errorDiv = document.getElementById('errorMsg');
             const btn = document.getElementById('loginBtn');
@@ -124,6 +125,7 @@
             btn.innerHTML = '<span class="loading"></span> Logging in...';
             
             try {
+                // ✅ Correct endpoint: /api/login (not /login)
                 const response = await fetch(`${API_URL}/api/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -131,6 +133,7 @@
                 });
                 
                 const result = await response.json();
+                console.log('Login response:', result);
                 
                 if (result.success) {
                     // Save user to localStorage
@@ -143,14 +146,14 @@
                         window.location.href = 'student_dashboard.html';
                     }
                 } else {
-                    errorDiv.textContent = result.error || 'Invalid credentials. Please check your username and password.';
+                    errorDiv.textContent = result.error || 'Invalid credentials';
                     errorDiv.style.display = 'block';
                     btn.disabled = false;
                     btn.innerHTML = 'Login';
                 }
             } catch (error) {
                 console.error('Login error:', error);
-                errorDiv.textContent = 'Network error. Please try again.';
+                errorDiv.textContent = 'Network error: ' + error.message;
                 errorDiv.style.display = 'block';
                 btn.disabled = false;
                 btn.innerHTML = 'Login';
