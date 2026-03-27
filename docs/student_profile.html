@@ -190,6 +190,13 @@
             font-weight: 500;
         }
         
+        /* Button Container */
+        .button-container {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
         /* Edit Form */
         .edit-form {
             display: none;
@@ -240,7 +247,7 @@
         }
         
         /* Buttons */
-        .edit-btn, .save-btn, .cancel-btn {
+        .edit-btn, .save-btn, .cancel-btn, .storage-btn {
             padding: 0.8rem 1.5rem;
             border: none;
             border-radius: 10px;
@@ -248,13 +255,12 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
-            margin-top: 1rem;
         }
         
         .edit-btn {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            width: 100%;
+            flex: 1;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -264,6 +270,20 @@
         .edit-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(102,126,234,0.4);
+        }
+        
+        .storage-btn {
+            background: #6c757d;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        
+        .storage-btn:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
         }
         
         .save-btn {
@@ -380,6 +400,23 @@
             margin-top: 0.3rem;
         }
         
+        /* Debug Panel */
+        .debug-panel {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: #333;
+            color: #0f0;
+            font-family: monospace;
+            font-size: 10px;
+            padding: 5px;
+            border-radius: 5px;
+            z-index: 9999;
+            max-width: 300px;
+            word-break: break-all;
+            display: none;
+        }
+        
         /* Responsive */
         @media (max-width: 768px) {
             .navbar {
@@ -410,6 +447,10 @@
             
             .avatar {
                 font-size: 3rem;
+            }
+            
+            .button-container {
+                flex-direction: column;
             }
         }
     </style>
@@ -472,9 +513,14 @@
                     <div class="info-value" id="viewLevel">-</div>
                 </div>
                 
-                <button class="edit-btn" onclick="showEditForm()">
-                    ✏️ Edit Profile
-                </button>
+                <div class="button-container">
+                    <button class="edit-btn" onclick="showEditForm()">
+                        ✏️ Edit Profile
+                    </button>
+                    <button class="storage-btn" onclick="checkStorage()">
+                        🔍 Check Storage
+                    </button>
+                </div>
             </div>
             
             <!-- Edit Profile Mode -->
@@ -538,6 +584,46 @@
         const API_URL = 'https://student-performance-predictor7.onrender.com';
         let currentUser = null;
         
+        // Storage Check Function
+        function checkStorage() {
+            const token = localStorage.getItem('token');
+            const user = localStorage.getItem('currentUser');
+            
+            console.log('=== STORAGE DEBUG ===');
+            console.log('Token exists:', !!token);
+            console.log('Token value:', token ? token.substring(0, 50) + '...' : 'null');
+            console.log('User data exists:', !!user);
+            
+            if (user) {
+                try {
+                    const userData = JSON.parse(user);
+                    console.log('User data:', userData);
+                    
+                    // Create detailed alert message
+                    let message = `✅ Logged in as: ${userData.username}\n`;
+                    message += `Role: ${userData.role || 'Student'}\n`;
+                    message += `Name: ${userData.full_name || 'Not set'}\n`;
+                    message += `Email: ${userData.email || 'Not set'}\n`;
+                    message += `Department: ${userData.department || 'Not set'}\n`;
+                    message += `Level: ${userData.level || 'Not set'}\n`;
+                    message += `\nToken: ${token ? 'Present ✅' : 'Missing ❌'}`;
+                    
+                    alert(message);
+                    
+                    // Also show in console for more details
+                    console.table(userData);
+                    
+                } catch(e) {
+                    console.error('Error parsing user data:', e);
+                    alert('❌ Error parsing user data. Check console for details.');
+                }
+            } else {
+                alert('❌ No user data found!\n\nPlease login first.\nClick OK to go to login page.');
+                console.log('No user data found, redirecting to login...');
+                window.location.href = 'login.html';
+            }
+        }
+        
         // Load user data from localStorage
         function loadUserData() {
             const userStr = localStorage.getItem('currentUser');
@@ -545,7 +631,8 @@
             
             console.log('Loading student profile...', {
                 hasUser: !!userStr,
-                hasToken: !!token
+                hasToken: !!token,
+                page: 'student_profile.html'
             });
             
             if (!userStr || !token) {
@@ -553,9 +640,9 @@
                 document.getElementById('profileName').textContent = 'Not Logged In';
                 document.getElementById('profileRole').innerHTML = '⚠️ Please Login';
                 
-                // Disable edit button
+                // Disable edit button but keep storage check button
                 const editBtn = document.querySelector('.edit-btn');
-                if (editBtn) editBtn.style.display = 'none';
+                if (editBtn) editBtn.style.opacity = '0.5';
                 return;
             }
             
@@ -605,6 +692,8 @@
                 const coursesResult = await coursesResponse.json();
                 if (coursesResult.success) {
                     document.getElementById('statCourses').textContent = coursesResult.count || '0';
+                } else {
+                    document.getElementById('statCourses').textContent = '0';
                 }
                 
                 // Fetch predictions count
@@ -614,6 +703,8 @@
                 const predictionsResult = await predictionsResponse.json();
                 if (predictionsResult.success) {
                     document.getElementById('statPredictions').textContent = predictionsResult.count || '0';
+                } else {
+                    document.getElementById('statPredictions').textContent = '0';
                 }
                 
                 // Fetch attendance rate
@@ -623,6 +714,8 @@
                 const attendanceResult = await attendanceResponse.json();
                 if (attendanceResult.success) {
                     document.getElementById('statAttendance').textContent = (attendanceResult.rate || '0') + '%';
+                } else {
+                    document.getElementById('statAttendance').textContent = '0%';
                 }
                 
             } catch (error) {
@@ -636,6 +729,10 @@
         
         // Show edit form
         function showEditForm() {
+            if (!currentUser) {
+                showMessage('Please login to edit profile', 'error');
+                return;
+            }
             document.getElementById('viewProfile').style.display = 'none';
             document.getElementById('editProfile').classList.add('show');
             document.getElementById('messageBox').style.display = 'none';
