@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -129,10 +129,20 @@
             margin-top: 0.5rem;
         }
 
+        /* Quick Actions Section */
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
         /* Prediction Cards */
         .prediction-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
             gap: 1.5rem;
             margin-bottom: 2rem;
         }
@@ -144,10 +154,14 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
             transition: transform 0.3s;
             cursor: pointer;
+            text-decoration: none;
+            display: block;
+            color: inherit;
         }
 
         .prediction-card:hover {
             transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
         }
 
         .prediction-icon {
@@ -163,6 +177,7 @@
         .prediction-card p {
             color: #666;
             margin-bottom: 1rem;
+            font-size: 0.9rem;
         }
 
         .card-btn {
@@ -173,6 +188,47 @@
             border-radius: 8px;
             cursor: pointer;
             width: 100%;
+            font-size: 0.9rem;
+        }
+
+        /* Management Grid */
+        .management-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .management-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.3s;
+            text-decoration: none;
+            display: block;
+            color: inherit;
+        }
+
+        .management-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .management-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .management-card h4 {
+            margin-bottom: 0.5rem;
+            color: #2c3e50;
+        }
+
+        .management-card p {
+            color: #666;
+            font-size: 0.85rem;
         }
 
         /* Recent Activity */
@@ -180,6 +236,7 @@
             background: white;
             border-radius: 15px;
             padding: 1.5rem;
+            margin-top: 1rem;
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
 
@@ -194,6 +251,11 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            cursor: pointer;
+        }
+
+        .activity-item:hover {
+            background: #f8f9fa;
         }
 
         .activity-item:last-child {
@@ -216,6 +278,7 @@
             border-radius: 15px;
             padding: 1.5rem;
             margin-top: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
 
         .week-info {
@@ -253,18 +316,18 @@
     <nav class="navbar">
         <div class="logo">🎓 AAMUSTED <span>Predictor</span></div>
         <div class="nav-links">
-            <a href="/dashboard" class="active">Dashboard</a>
-            <a href="/predictor">Predictor</a>
-            <a href="/courses">My Courses</a>
-            <a href="/history">History</a>
-            <a href="/profile">Profile</a>
+            <a href="student_dashboard.html" class="active">Dashboard</a>
+            <a href="predictor.html">Predictor</a>
+            <a href="courses.html">My Courses</a>
+            <a href="history.html">History</a>
+            <a href="profile.html">Profile</a>
             <button class="logout-btn" onclick="logout()">🚪 Logout</button>
         </div>
     </nav>
 
     <div class="container">
         <div class="welcome-card">
-            <h1 id="welcomeName">Welcome, Student! 👋</h1>
+            <h1 id="welcomeMessage">Welcome, Student! 👋</h1>
             <p>Track your academic performance and get AI-powered predictions</p>
             <div class="program-badge" id="programBadge">🎓 Regular Program (5 days/week)</div>
         </div>
@@ -288,46 +351,60 @@
             </div>
         </div>
 
+        <!-- Prediction Features Section -->
+        <div class="section-title">
+            <span>🔮</span>
+            <span>Prediction Tools</span>
+        </div>
         <div class="prediction-grid">
-            <div class="prediction-card" onclick="location.href='/semester'">
+            <a href="semester.html" class="prediction-card">
                 <div class="prediction-icon">📚</div>
                 <h3>Semester Prediction</h3>
-                <p>Predict your end-of-semester performance based on:</p>
-                <ul style="margin-top: 0.5rem; padding-left: 1.5rem; color: #666;">
-                    <li>Attendance (lectures attended)</li>
-                    <li>Assignments (completion & quality)</li>
-                    <li>Class engagement</li>
-                    <li>Study hours</li>
-                </ul>
-                <button class="card-btn">Predict Now →</button>
-            </div>
+                <p>Predict your end-of-semester performance based on attendance, assignments, engagement, and study hours</p>
+                <div class="card-btn">Predict Now →</div>
+            </a>
 
-            <div class="prediction-card" onclick="location.href='/weekly'">
+            <a href="weekly.html" class="prediction-card">
                 <div class="prediction-icon">📅</div>
                 <h3>Weekly Tracking</h3>
-                <p>Track your weekly progress and get real-time feedback</p>
-                <ul style="margin-top: 0.5rem; padding-left: 1.5rem; color: #666;">
-                    <li>Weekly attendance rate</li>
-                    <li>Assignment completion</li>
-                    <li>Class participation</li>
-                    <li>Study hours tracking</li>
-                </ul>
-                <button class="card-btn">Track Weekly →</button>
-            </div>
+                <p>Track your weekly progress and get real-time feedback on your performance throughout the semester</p>
+                <div class="card-btn">Track Weekly →</div>
+            </a>
 
-            <div class="prediction-card" onclick="location.href='/custom'">
+            <a href="custom.html" class="prediction-card">
                 <div class="prediction-icon">⚙️</div>
                 <h3>Custom Format</h3>
-                <p>Create your own prediction formula with custom weights</p>
-                <ul style="margin-top: 0.5rem; padding-left: 1.5rem; color: #666;">
-                    <li>Set your own weightage</li>
-                    <li>Custom metrics</li>
-                    <li>Personalized formula</li>
-                </ul>
-                <button class="card-btn">Customize →</button>
-            </div>
+                <p>Create your own prediction formula with customizable weights for attendance, assignments, and more</p>
+                <div class="card-btn">Customize →</div>
+            </a>
         </div>
 
+        <!-- Management Section -->
+        <div class="section-title">
+            <span>📋</span>
+            <span>Academic Management</span>
+        </div>
+        <div class="management-grid">
+            <a href="courses.html" class="management-card">
+                <div class="management-icon">📚</div>
+                <h4>My Courses</h4>
+                <p>View enrolled courses and browse available courses to enroll</p>
+            </a>
+
+            <a href="history.html" class="management-card">
+                <div class="management-icon">📊</div>
+                <h4>Prediction History</h4>
+                <p>View all your past predictions and track your progress over time</p>
+            </a>
+
+            <a href="profile.html" class="management-card">
+                <div class="management-icon">👤</div>
+                <h4>My Profile</h4>
+                <p>Update your personal information and view your academic details</p>
+            </a>
+        </div>
+
+        <!-- Recent Activity -->
         <div class="activity-section">
             <h3>📊 Recent Predictions</h3>
             <div id="recentPredictions">
@@ -335,9 +412,10 @@
             </div>
         </div>
 
+        <!-- Academic Calendar -->
         <div class="calendar-widget">
-            <h3>📅 Academic Calendar</h3>
-            <div class="week-info" id="weekInfo">
+            <h3>📅 AAMUSTED Academic Calendar</h3>
+            <div class="week-info">
                 <strong id="weekText">Loading...</strong>
                 <div class="progress-bar">
                     <div class="progress-fill" id="progressFill" style="width: 0%"></div>
@@ -348,13 +426,11 @@
     </div>
 
     <script>
-        // Get user data from localStorage (set during login)
-        let currentUser = null;
+        const API_URL = 'https://student-performance-predictor7.onrender.com';
         
         function getCurrentWeek() {
             const today = new Date();
-            // AAMUSTED semester starts in late August
-            const semesterStart = new Date(today.getFullYear(), 7, 26); // August 26
+            const semesterStart = new Date(today.getFullYear(), 7, 26);
             const diffDays = Math.floor((today - semesterStart) / (1000 * 60 * 60 * 24));
             let week = Math.floor(diffDays / 7) + 1;
             if (week < 1) week = 1;
@@ -364,54 +440,46 @@
         
         function loadUserData() {
             const userStr = localStorage.getItem('currentUser');
-            if (userStr) {
-                currentUser = JSON.parse(userStr);
-                document.getElementById('welcomeName').innerHTML = `Welcome, ${currentUser.full_name || currentUser.username}! 👋`;
-                
-                const programType = currentUser.program_type || 'regular';
-                const programBadge = document.getElementById('programBadge');
-                if (programType === 'regular') {
-                    programBadge.innerHTML = '🎓 Regular Program (5 days/week)';
-                } else {
-                    programBadge.innerHTML = '🌙 Non-Regular Program (Weekend/Evening)';
-                }
+            if (!userStr) {
+                window.location.href = 'login.html';
+                return null;
             }
+            const user = JSON.parse(userStr);
+            document.getElementById('welcomeMessage').innerHTML = `Welcome, ${user.full_name || user.username}! 👋`;
+            const programBadge = document.getElementById('programBadge');
+            if (user.program_type === 'regular') {
+                programBadge.innerHTML = '🎓 Regular Program (5 days/week)';
+            } else {
+                programBadge.innerHTML = '🌙 Non-Regular Program (Weekend/Evening)';
+            }
+            return user;
         }
         
-        async function loadDashboardData() {
-            try {
-                // Load predictions from localStorage
-                const predictionsStr = localStorage.getItem('predictions');
-                const predictions = predictionsStr ? JSON.parse(predictionsStr) : [];
-                
-                const recentDiv = document.getElementById('recentPredictions');
-                const statsCount = document.getElementById('predictionsCount');
-                
-                if (predictions.length > 0) {
-                    statsCount.textContent = predictions.length;
-                    
-                    // Calculate average score
-                    let totalScore = 0;
-                    predictions.forEach(p => totalScore += p.score || p.weighted_score || 0);
-                    const avgScore = (totalScore / predictions.length).toFixed(1);
-                    document.getElementById('avgScore').textContent = avgScore + '%';
-                    
-                    // Display recent predictions
-                    recentDiv.innerHTML = predictions.slice(0, 5).map(p => `
-                        <div class="activity-item" onclick="viewPrediction(${JSON.stringify(p).replace(/"/g, '&quot;')})">
-                            <div>
-                                <strong>${p.grade || p.prediction || 'Prediction'}</strong>
-                                <div class="activity-date">${new Date(p.date).toLocaleDateString()}</div>
-                            </div>
-                            <div class="activity-score">${(p.score || p.weighted_score || 0).toFixed(1)}%</div>
+        function loadDashboardData() {
+            const predictionsStr = localStorage.getItem('predictions');
+            const predictions = predictionsStr ? JSON.parse(predictionsStr) : [];
+            document.getElementById('predictionsCount').textContent = predictions.length;
+            
+            if (predictions.length > 0) {
+                let totalScore = 0;
+                predictions.forEach(p => totalScore += p.score || p.weighted_score || 0);
+                const avgScore = (totalScore / predictions.length).toFixed(1);
+                document.getElementById('avgScore').textContent = avgScore + '%';
+            }
+            
+            const recentDiv = document.getElementById('recentPredictions');
+            if (predictions.length > 0) {
+                recentDiv.innerHTML = predictions.slice(0, 5).map(p => `
+                    <div class="activity-item" onclick="location.href='history.html'">
+                        <div>
+                            <strong>${p.grade || p.prediction || 'Prediction'}</strong>
+                            <div class="activity-date">${new Date(p.date).toLocaleDateString()}</div>
                         </div>
-                    `).join('');
-                } else {
-                    recentDiv.innerHTML = '<p style="text-align: center; color: #999; padding: 2rem;">No predictions yet. Start by making your first prediction!</p>';
-                }
-            } catch (error) {
-                console.error('Error loading dashboard data:', error);
-                document.getElementById('recentPredictions').innerHTML = '<p style="text-align: center; color: #999; padding: 2rem;">Unable to load predictions. Start by making your first prediction!</p>';
+                        <div class="activity-score">${(p.score || p.weighted_score || 0).toFixed(1)}%</div>
+                    </div>
+                `).join('');
+            } else {
+                recentDiv.innerHTML = '<p style="text-align: center; color: #999; padding: 2rem;">No predictions yet. Start by making your first prediction!</p>';
             }
         }
         
@@ -434,20 +502,12 @@
             }
         }
         
-        function viewPrediction(prediction) {
-            // Show prediction details in a modal or console
-            alert(`Prediction: ${prediction.grade || prediction.prediction}\nScore: ${(prediction.score || prediction.weighted_score || 0).toFixed(1)}%\nDate: ${new Date(prediction.date).toLocaleString()}`);
-        }
-        
         async function logout() {
             try {
-                await fetch('/api/logout', { method: 'POST' });
-            } catch (e) {
-                console.log('Logout error:', e);
-            }
+                await fetch(`${API_URL}/api/logout`, { method: 'POST' });
+            } catch(e) {}
             localStorage.removeItem('currentUser');
-            localStorage.removeItem('predictions');
-            window.location.href = '/';
+            window.location.href = 'login.html';
         }
         
         // Initialize
