@@ -190,6 +190,7 @@
             
             // Verify user is lecturer
             if (currentUser.role !== 'lecturer') {
+                alert('This page is for lecturers only. Redirecting to student dashboard...');
                 window.location.href = 'student_dashboard.html';
                 return null;
             }
