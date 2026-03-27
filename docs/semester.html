@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Semester Prediction - AAMUSTED</title>
+    <title>Semester Prediction - AAMUSTED Performance Predictor</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fb; }
@@ -21,9 +21,22 @@
         .logo { font-size: 1.5rem; font-weight: bold; }
         .logo span { color: #ffd700; }
         .nav-links { display: flex; gap: 1.5rem; align-items: center; flex-wrap: wrap; }
-        .nav-links a { color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 8px; }
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: background 0.3s;
+        }
         .nav-links a:hover, .nav-links a.active { background: rgba(255,255,255,0.2); }
-        .logout-btn { background: rgba(255,80,60,0.3); border: 1px solid rgba(255,80,60,0.5); padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; }
+        .logout-btn {
+            background: rgba(255,80,60,0.3);
+            border: 1px solid rgba(255,80,60,0.5);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .logout-btn:hover { background: rgba(255,80,60,0.5); }
         
         .container { max-width: 800px; margin: 0 auto; padding: 2rem; }
         
@@ -38,12 +51,6 @@
         label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: #333; }
         input { width: 100%; padding: 0.8rem; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem; }
         input:focus { outline: none; border-color: #667eea; }
-        
-        .info-text {
-            font-size: 0.85rem;
-            color: #666;
-            margin-top: 0.25rem;
-        }
         
         .predict-btn {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -65,21 +72,25 @@
             text-align: center;
             display: none;
         }
-        
         .result-card.show { display: block; animation: fadeIn 0.5s; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         
         .grade { font-size: 2.5rem; font-weight: bold; margin: 1rem 0; }
         .score { font-size: 1.5rem; margin: 1rem 0; }
-        .metrics { text-align: left; margin-top: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 10px; }
         .recommendations { text-align: left; margin-top: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 10px; }
         .recommendations ul { margin-left: 1.5rem; }
-        .recommendations li { margin: 0.5rem 0; }
         
         .excellent { color: #28a745; }
         .good { color: #17a2b8; }
         .average { color: #ffc107; }
         .poor { color: #dc3545; }
+        
+        .back-link {
+            display: inline-block;
+            margin-bottom: 1rem;
+            color: #667eea;
+            text-decoration: none;
+        }
         
         @media (max-width: 768px) {
             .navbar { flex-direction: column; text-align: center; }
@@ -92,34 +103,25 @@
     <nav class="navbar">
         <div class="logo">🎓 AAMUSTED <span>Predictor</span></div>
         <div class="nav-links">
-            <a href="/dashboard">Dashboard</a>
-            <a href="/predictor">Predictor</a>
-            <a href="/semester" class="active">Semester</a>
-            <a href="/weekly">Weekly</a>
-            <a href="/custom">Custom</a>
-            <a href="/profile">Profile</a>
+            <a href="student_dashboard.html">Dashboard</a>
+            <a href="predictor.html">Predictor</a>
+            <a href="courses.html">My Courses</a>
+            <a href="history.html">History</a>
+            <a href="profile.html">Profile</a>
             <button class="logout-btn" onclick="logout()">🚪 Logout</button>
         </div>
     </nav>
 
     <div class="container">
+        <a href="predictor.html" class="back-link">← Back to Predictor Options</a>
+        
         <div class="form-card">
             <h2 style="margin-bottom: 1.5rem;">📚 Semester Performance Prediction</h2>
             
             <div class="form-group">
-                <label>Select Course</label>
-                <select id="courseId">
-                    <option value="">Select a course (optional)</option>
-                    {% for course in courses %}
-                    <option value="{{ course.id }}">{{ course.code }} - {{ course.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            
-            <div class="form-group">
                 <label>📅 Lectures Attended (hours)</label>
                 <input type="number" id="lecturesAttended" placeholder="Total hours attended so far" step="1">
-                <div class="info-text">Total possible: {{ calendar.get_total_lecture_hours(user.program_type) }} hours this semester</div>
+                <small style="color: #666;">Total possible: 225 hours (Regular) or 90 hours (Non-Regular)</small>
             </div>
             
             <div class="form-group">
@@ -145,21 +147,34 @@
                 <input type="number" id="previousGrade" placeholder="Your grade from previous semester" step="1">
             </div>
             
-            <button class="predict-btn" onclick="predict()">🔮 Predict Semester Performance</button>
+            <button class="predict-btn" onclick="predictSemester()">🔮 Predict Semester Performance</button>
         </div>
         
         <div id="resultCard" class="result-card">
             <h2>🎯 Prediction Result</h2>
             <div id="predictionGrade" class="grade"></div>
             <div id="predictionScore" class="score"></div>
-            <div id="metrics" class="metrics"></div>
             <div id="recommendations" class="recommendations"></div>
         </div>
     </div>
 
     <script>
-        async function predict() {
+        const API_URL = 'https://student-performance-predictor7.onrender.com';
+        let currentUser = null;
+        
+        function loadUser() {
+            const userStr = localStorage.getItem('currentUser');
+            if (!userStr) {
+                window.location.href = 'login.html';
+                return null;
+            }
+            currentUser = JSON.parse(userStr);
+            return currentUser;
+        }
+        
+        async function predictSemester() {
             const data = {
+                user_id: currentUser?.id,
                 lectures_attended: parseFloat(document.getElementById('lecturesAttended').value) || 0,
                 total_assignments: parseFloat(document.getElementById('totalAssignments').value) || 0,
                 assignments_completed: parseFloat(document.getElementById('assignmentsCompleted').value) || 0,
@@ -167,11 +182,10 @@
                 total_engagements: parseFloat(document.getElementById('totalEngagements').value) || 0,
                 engagements_participated: parseFloat(document.getElementById('engagementsParticipated').value) || 0,
                 study_hours: parseFloat(document.getElementById('studyHours').value) || 0,
-                previous_grade: parseFloat(document.getElementById('previousGrade').value) || 0,
-                course_id: document.getElementById('courseId').value
+                previous_grade: parseFloat(document.getElementById('previousGrade').value) || 0
             };
             
-            const response = await fetch('/api/predict/semester', {
+            const response = await fetch(`${API_URL}/api/predict`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
@@ -179,41 +193,39 @@
             
             const result = await response.json();
             
-            const gradeClass = result.grade?.includes('Excellent') ? 'excellent' : 
-                              result.grade?.includes('Good') ? 'good' : 
-                              result.grade?.includes('Average') ? 'average' : 'poor';
-            
-            document.getElementById('predictionGrade').innerHTML = result.grade;
-            document.getElementById('predictionGrade').className = `grade ${gradeClass}`;
-            document.getElementById('predictionScore').innerHTML = `Score: ${result.score?.toFixed(1)}%`;
-            
-            if (result.metrics) {
-                document.getElementById('metrics').innerHTML = `
-                    <strong>📊 Performance Metrics:</strong><br>
-                    Attendance: ${result.metrics.attendance_percentage?.toFixed(1)}%<br>
-                    Assignment Completion: ${result.metrics.assignment_completion?.toFixed(1)}%<br>
-                    Assignment Quality: ${result.metrics.assignments_quality?.toFixed(1)}%<br>
-                    Engagement Rate: ${result.metrics.engagement_rate?.toFixed(1)}%<br>
-                    Lectures Attended: ${result.metrics.lectures_attended}/${result.metrics.total_lectures} hours
-                `;
+            if (result.success) {
+                const gradeClass = result.grade?.includes('Excellent') ? 'excellent' : 
+                                  result.grade?.includes('Good') ? 'good' : 
+                                  result.grade?.includes('Average') ? 'average' : 'poor';
+                
+                document.getElementById('predictionGrade').innerHTML = result.grade;
+                document.getElementById('predictionGrade').className = `grade ${gradeClass}`;
+                document.getElementById('predictionScore').innerHTML = `Score: ${result.score?.toFixed(1)}%`;
+                
+                if (result.recommendations && result.recommendations.length > 0) {
+                    document.getElementById('recommendations').innerHTML = `
+                        <strong>💡 Recommendations:</strong>
+                        <ul>
+                            ${result.recommendations.map(r => `<li>${r}</li>`).join('')}
+                        </ul>
+                    `;
+                }
+                
+                document.getElementById('resultCard').classList.add('show');
+            } else {
+                alert('Prediction failed: ' + (result.error || 'Unknown error'));
             }
-            
-            if (result.recommendations && result.recommendations.length > 0) {
-                document.getElementById('recommendations').innerHTML = `
-                    <strong>💡 Personalized Recommendations:</strong>
-                    <ul>
-                        ${result.recommendations.map(r => `<li>${r}</li>`).join('')}
-                    </ul>
-                `;
-            }
-            
-            document.getElementById('resultCard').classList.add('show');
         }
         
         async function logout() {
-            await fetch('/api/logout', { method: 'POST' });
-            window.location.href = '/';
+            try {
+                await fetch(`${API_URL}/api/logout`, { method: 'POST' });
+            } catch(e) {}
+            localStorage.removeItem('currentUser');
+            window.location.href = 'login.html';
         }
+        
+        loadUser();
     </script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -21,9 +21,20 @@
         .logo { font-size: 1.5rem; font-weight: bold; }
         .logo span { color: #ffd700; }
         .nav-links { display: flex; gap: 1.5rem; align-items: center; flex-wrap: wrap; }
-        .nav-links a { color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 8px; }
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+        }
         .nav-links a:hover, .nav-links a.active { background: rgba(255,255,255,0.2); }
-        .logout-btn { background: rgba(255,80,60,0.3); border: 1px solid rgba(255,80,60,0.5); padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; }
+        .logout-btn {
+            background: rgba(255,80,60,0.3);
+            border: 1px solid rgba(255,80,60,0.5);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+        }
         
         .container { max-width: 900px; margin: 0 auto; padding: 2rem; }
         
@@ -32,13 +43,11 @@
             border-radius: 20px;
             padding: 2rem;
             margin-bottom: 2rem;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
         
         .form-group { margin-bottom: 1.5rem; }
         label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: #333; }
-        input { width: 100%; padding: 0.8rem; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem; }
-        input:focus { outline: none; border-color: #667eea; }
+        input { width: 100%; padding: 0.8rem; border: 2px solid #e0e0e0; border-radius: 8px; }
         
         .weight-slider {
             display: flex;
@@ -56,25 +65,8 @@
             text-align: center;
             margin-bottom: 1.5rem;
         }
-        .total-weight span { font-weight: bold; font-size: 1.2rem; }
         .total-weight.valid { color: #28a745; }
         .total-weight.invalid { color: #dc3545; }
-        
-        .preset-buttons {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-            flex-wrap: wrap;
-        }
-        .preset-btn {
-            padding: 0.5rem 1rem;
-            background: #e9ecef;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        .preset-btn:hover { background: #667eea; color: white; }
         
         .predict-btn {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -82,8 +74,6 @@
             border: none;
             padding: 1rem;
             border-radius: 10px;
-            font-size: 1.1rem;
-            font-weight: bold;
             cursor: pointer;
             width: 100%;
         }
@@ -95,22 +85,27 @@
             text-align: center;
             display: none;
         }
-        .result-card.show { display: block; animation: fadeIn 0.5s; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .result-card.show { display: block; }
         
-        .grade { font-size: 2.5rem; font-weight: bold; margin: 1rem 0; }
-        .score { font-size: 1.5rem; margin: 1rem 0; }
-        .weights-used { margin-top: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 10px; font-size: 0.9rem; }
+        .grade { font-size: 2rem; font-weight: bold; margin: 1rem 0; }
+        .score { font-size: 1.2rem; margin: 1rem 0; }
+        .weights-used { margin-top: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 10px; }
         
         .excellent { color: #28a745; }
         .good { color: #17a2b8; }
         .average { color: #ffc107; }
         .poor { color: #dc3545; }
         
+        .back-link {
+            display: inline-block;
+            margin-bottom: 1rem;
+            color: #667eea;
+            text-decoration: none;
+        }
+        
         @media (max-width: 768px) {
             .navbar { flex-direction: column; text-align: center; }
             .nav-links { justify-content: center; }
-            .container { padding: 1rem; }
         }
     </style>
 </head>
@@ -118,26 +113,20 @@
     <nav class="navbar">
         <div class="logo">🎓 AAMUSTED <span>Predictor</span></div>
         <div class="nav-links">
-            <a href="/dashboard">Dashboard</a>
-            <a href="/predictor">Predictor</a>
-            <a href="/semester">Semester</a>
-            <a href="/weekly">Weekly</a>
-            <a href="/custom" class="active">Custom</a>
-            <a href="/profile">Profile</a>
+            <a href="student_dashboard.html">Dashboard</a>
+            <a href="predictor.html">Predictor</a>
+            <a href="courses.html">My Courses</a>
+            <a href="history.html">History</a>
+            <a href="profile.html">Profile</a>
             <button class="logout-btn" onclick="logout()">🚪 Logout</button>
         </div>
     </nav>
 
     <div class="container">
+        <a href="predictor.html" class="back-link">← Back to Predictor Options</a>
+        
         <div class="form-card">
             <h2 style="margin-bottom: 1.5rem;">⚙️ Custom Performance Formula</h2>
-            
-            <div class="preset-buttons">
-                <button class="preset-btn" onclick="loadPreset('balanced')">⚖️ Balanced (25/25/20/15/15)</button>
-                <button class="preset-btn" onclick="loadPreset('exam-focused')">📝 Exam Focus (20/30/20/15/15)</button>
-                <button class="preset-btn" onclick="loadPreset('attendance-focused')">📅 Attendance Focus (40/20/15/15/10)</button>
-                <button class="preset-btn" onclick="loadPreset('study-focused')">⏰ Study Focus (20/20/15/30/15)</button>
-            </div>
             
             <div class="total-weight" id="totalWeight">
                 Total Weight: <span id="totalValue">100</span>%
@@ -146,35 +135,35 @@
             <div class="form-group">
                 <label>📅 Attendance Weight (%)</label>
                 <div class="weight-slider">
-                    <input type="range" id="weightAttendance" min="0" max="100" value="25" oninput="updateWeight('attendance', this.value)">
+                    <input type="range" id="weightAttendance" min="0" max="100" value="25" oninput="updateWeight()">
                     <span class="weight-value" id="weightAttendanceVal">25</span>
                 </div>
             </div>
             <div class="form-group">
                 <label>📝 Assignments Weight (%)</label>
                 <div class="weight-slider">
-                    <input type="range" id="weightAssignments" min="0" max="100" value="25" oninput="updateWeight('assignments', this.value)">
+                    <input type="range" id="weightAssignments" min="0" max="100" value="25" oninput="updateWeight()">
                     <span class="weight-value" id="weightAssignmentsVal">25</span>
                 </div>
             </div>
             <div class="form-group">
                 <label>💬 Engagement Weight (%)</label>
                 <div class="weight-slider">
-                    <input type="range" id="weightEngagement" min="0" max="100" value="20" oninput="updateWeight('engagement', this.value)">
+                    <input type="range" id="weightEngagement" min="0" max="100" value="20" oninput="updateWeight()">
                     <span class="weight-value" id="weightEngagementVal">20</span>
                 </div>
             </div>
             <div class="form-group">
                 <label>⏰ Study Hours Weight (%)</label>
                 <div class="weight-slider">
-                    <input type="range" id="weightStudyHours" min="0" max="100" value="15" oninput="updateWeight('studyHours', this.value)">
+                    <input type="range" id="weightStudyHours" min="0" max="100" value="15" oninput="updateWeight()">
                     <span class="weight-value" id="weightStudyHoursVal">15</span>
                 </div>
             </div>
             <div class="form-group">
                 <label>📊 Previous Grade Weight (%)</label>
                 <div class="weight-slider">
-                    <input type="range" id="weightPrevious" min="0" max="100" value="15" oninput="updateWeight('previous', this.value)">
+                    <input type="range" id="weightPrevious" min="0" max="100" value="15" oninput="updateWeight()">
                     <span class="weight-value" id="weightPreviousVal">15</span>
                 </div>
             </div>
@@ -214,59 +203,31 @@
     </div>
 
     <script>
-        function updateWeight(type, value) {
-            document.getElementById(`weight${type.charAt(0).toUpperCase() + type.slice(1)}Val`).textContent = value;
-            
+        const API_URL = 'https://student-performance-predictor7.onrender.com';
+        let currentUser = null;
+        
+        function updateWeight() {
             const attendance = parseInt(document.getElementById('weightAttendance').value) || 0;
             const assignments = parseInt(document.getElementById('weightAssignments').value) || 0;
             const engagement = parseInt(document.getElementById('weightEngagement').value) || 0;
             const studyHours = parseInt(document.getElementById('weightStudyHours').value) || 0;
             const previous = parseInt(document.getElementById('weightPrevious').value) || 0;
             
-            const total = attendance + assignments + engagement + studyHours + previous;
-            const totalSpan = document.getElementById('totalValue');
-            const totalDiv = document.getElementById('totalWeight');
+            document.getElementById('weightAttendanceVal').textContent = attendance;
+            document.getElementById('weightAssignmentsVal').textContent = assignments;
+            document.getElementById('weightEngagementVal').textContent = engagement;
+            document.getElementById('weightStudyHoursVal').textContent = studyHours;
+            document.getElementById('weightPreviousVal').textContent = previous;
             
-            totalSpan.textContent = total;
+            const total = attendance + assignments + engagement + studyHours + previous;
+            document.getElementById('totalValue').textContent = total;
+            
+            const totalDiv = document.getElementById('totalWeight');
             if (total === 100) {
                 totalDiv.className = 'total-weight valid';
             } else {
                 totalDiv.className = 'total-weight invalid';
             }
-        }
-        
-        function loadPreset(preset) {
-            if (preset === 'balanced') {
-                document.getElementById('weightAttendance').value = 25;
-                document.getElementById('weightAssignments').value = 25;
-                document.getElementById('weightEngagement').value = 20;
-                document.getElementById('weightStudyHours').value = 15;
-                document.getElementById('weightPrevious').value = 15;
-            } else if (preset === 'exam-focused') {
-                document.getElementById('weightAttendance').value = 20;
-                document.getElementById('weightAssignments').value = 30;
-                document.getElementById('weightEngagement').value = 20;
-                document.getElementById('weightStudyHours').value = 15;
-                document.getElementById('weightPrevious').value = 15;
-            } else if (preset === 'attendance-focused') {
-                document.getElementById('weightAttendance').value = 40;
-                document.getElementById('weightAssignments').value = 20;
-                document.getElementById('weightEngagement').value = 15;
-                document.getElementById('weightStudyHours').value = 15;
-                document.getElementById('weightPrevious').value = 10;
-            } else if (preset === 'study-focused') {
-                document.getElementById('weightAttendance').value = 20;
-                document.getElementById('weightAssignments').value = 20;
-                document.getElementById('weightEngagement').value = 15;
-                document.getElementById('weightStudyHours').value = 30;
-                document.getElementById('weightPrevious').value = 15;
-            }
-            
-            ['attendance', 'assignments', 'engagement', 'studyHours', 'previous'].forEach(type => {
-                const val = document.getElementById(`weight${type.charAt(0).toUpperCase() + type.slice(1)}`).value;
-                document.getElementById(`weight${type.charAt(0).toUpperCase() + type.slice(1)}Val`).textContent = val;
-            });
-            updateWeight();
         }
         
         async function predictCustom() {
@@ -291,6 +252,7 @@
             };
             
             const data = {
+                user_id: currentUser?.id,
                 attendance: parseFloat(document.getElementById('customAttendance').value) || 0,
                 assignments: parseFloat(document.getElementById('customAssignments').value) || 0,
                 engagement: parseFloat(document.getElementById('customEngagement').value) || 0,
@@ -299,7 +261,7 @@
                 weights: weights
             };
             
-            const response = await fetch('/api/predict/custom', {
+            const response = await fetch(`${API_URL}/api/predict`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
@@ -307,28 +269,41 @@
             
             const result = await response.json();
             
-            const gradeClass = result.grade?.includes('Excellent') ? 'excellent' : 
-                              result.grade?.includes('Good') ? 'good' : 
-                              result.grade?.includes('Average') ? 'average' : 'poor';
-            
-            document.getElementById('predictionGrade').innerHTML = result.grade;
-            document.getElementById('predictionGrade').className = `grade ${gradeClass}`;
-            document.getElementById('predictionScore').innerHTML = `Score: ${result.score?.toFixed(1)}%`;
-            
-            document.getElementById('weightsUsed').innerHTML = `
-                <strong>⚙️ Your Custom Formula:</strong><br>
-                Attendance: ${attendance}% | Assignments: ${assignments}% | Engagement: ${engagement}%<br>
-                Study Hours: ${studyHours}% | Previous Grade: ${previous}%
-            `;
-            
-            document.getElementById('resultCard').classList.add('show');
+            if (result.success) {
+                const gradeClass = result.grade?.includes('Excellent') ? 'excellent' : 
+                                  result.grade?.includes('Good') ? 'good' : 
+                                  result.grade?.includes('Average') ? 'average' : 'poor';
+                
+                document.getElementById('predictionGrade').innerHTML = result.grade;
+                document.getElementById('predictionGrade').className = `grade ${gradeClass}`;
+                document.getElementById('predictionScore').innerHTML = `Score: ${result.score?.toFixed(1)}%`;
+                
+                document.getElementById('weightsUsed').innerHTML = `
+                    <strong>⚙️ Your Custom Formula:</strong><br>
+                    Attendance: ${attendance}% | Assignments: ${assignments}% | Engagement: ${engagement}%<br>
+                    Study Hours: ${studyHours}% | Previous Grade: ${previous}%
+                `;
+                
+                document.getElementById('resultCard').classList.add('show');
+            }
+        }
+        
+        function loadUser() {
+            const userStr = localStorage.getItem('currentUser');
+            if (!userStr) {
+                window.location.href = 'login.html';
+                return null;
+            }
+            currentUser = JSON.parse(userStr);
+            return currentUser;
         }
         
         async function logout() {
-            await fetch('/api/logout', { method: 'POST' });
-            window.location.href = '/';
+            localStorage.removeItem('currentUser');
+            window.location.href = 'login.html';
         }
         
+        loadUser();
         updateWeight();
     </script>
 </body>

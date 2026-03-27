@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Performance Predictor - AAMUSTED</title>
+    <title>Predictor - AAMUSTED Performance Predictor</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fb; }
@@ -21,9 +21,20 @@
         .logo { font-size: 1.5rem; font-weight: bold; }
         .logo span { color: #ffd700; }
         .nav-links { display: flex; gap: 1.5rem; align-items: center; flex-wrap: wrap; }
-        .nav-links a { color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 8px; }
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+        }
         .nav-links a:hover, .nav-links a.active { background: rgba(255,255,255,0.2); }
-        .logout-btn { background: rgba(255,80,60,0.3); border: 1px solid rgba(255,80,60,0.5); padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; }
+        .logout-btn {
+            background: rgba(255,80,60,0.3);
+            border: 1px solid rgba(255,80,60,0.5);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+        }
         
         .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
         
@@ -32,6 +43,7 @@
             gap: 1rem;
             margin-bottom: 2rem;
             flex-wrap: wrap;
+            justify-content: center;
         }
         .format-tab {
             padding: 1rem 2rem;
@@ -47,312 +59,99 @@
             color: white;
         }
         
-        .prediction-form {
+        .prediction-card {
             background: white;
-            border-radius: 20px;
+            border-radius: 15px;
             padding: 2rem;
-            margin-bottom: 2rem;
-            display: none;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.3s;
+            text-decoration: none;
+            display: block;
+            color: inherit;
         }
-        .prediction-form.active { display: block; }
+        .prediction-card:hover { transform: translateY(-5px); }
         
-        .form-group { margin-bottom: 1.5rem; }
-        label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: #333; }
-        input, select { width: 100%; padding: 0.8rem; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem; }
-        input:focus { outline: none; border-color: #667eea; }
+        .prediction-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
         
-        .predict-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .prediction-icon { font-size: 3rem; margin-bottom: 1rem; }
+        .card-btn {
+            background: #667eea;
             color: white;
             border: none;
-            padding: 1rem 2rem;
-            border-radius: 10px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            cursor: pointer;
-            width: 100%;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            display: inline-block;
         }
-        
-        .result-card {
-            background: white;
-            border-radius: 20px;
-            padding: 2rem;
-            margin-top: 2rem;
-            display: none;
-            text-align: center;
-        }
-        .result-card.show { display: block; animation: fadeIn 0.5s; }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .grade { font-size: 3rem; font-weight: bold; margin: 1rem 0; }
-        .score { font-size: 2rem; margin: 1rem 0; }
-        .recommendations { text-align: left; margin-top: 1.5rem; padding: 1rem; background: #f8f9fa; border-radius: 10px; }
-        .recommendations li { margin: 0.5rem 0; margin-left: 1.5rem; }
-        
-        .excellent { color: #28a745; }
-        .good { color: #17a2b8; }
-        .average { color: #ffc107; }
-        .poor { color: #dc3545; }
         
         @media (max-width: 768px) {
             .navbar { flex-direction: column; text-align: center; }
             .nav-links { justify-content: center; }
-            .format-tabs { justify-content: center; }
         }
     </style>
 </head>
 <body>
     <nav class="navbar">
-        <div class="logo">ðŸŽ“ AAMUSTED <span>Predictor</span></div>
+        <div class="logo">🎓 AAMUSTED <span>Predictor</span></div>
         <div class="nav-links">
             <a href="student_dashboard.html">Dashboard</a>
-            <a href="/predictor" class="active">Predictor</a>
-            <a href="courses.html">Courses</a>
+            <a href="predictor.html" class="active">Predictor</a>
+            <a href="courses.html">My Courses</a>
             <a href="history.html">History</a>
             <a href="profile.html">Profile</a>
-            <button class="logout-btn" onclick="logout()">ðŸšª Logout</button>
+            <button class="logout-btn" onclick="logout()">🚪 Logout</button>
         </div>
     </nav>
 
     <div class="container">
-        <div class="format-tabs">
-            <button class="format-tab active" onclick="switchFormat('semester')">ðŸ“š Semester Prediction</button>
-            <button class="format-tab" onclick="switchFormat('weekly')">ðŸ“… Weekly Tracking</button>
-            <button class="format-tab" onclick="switchFormat('custom')">âš™ï¸ Custom Format</button>
-        </div>
+        <h2 style="margin-bottom: 1rem;">🔮 Choose Your Prediction Method</h2>
+        
+        <div class="prediction-grid">
+            <a href="semester.html" class="prediction-card">
+                <div class="prediction-icon">📚</div>
+                <h3>Semester Prediction</h3>
+                <p>Predict your end-of-semester performance based on attendance, assignments, engagement, and study hours</p>
+                <div class="card-btn">Predict Now →</div>
+            </a>
 
-        <!-- Semester Prediction Form -->
-        <div id="semesterForm" class="prediction-form active">
-            <h2 style="margin-bottom: 1.5rem;">ðŸ“š Semester Performance Prediction</h2>
-            <div class="form-group">
-                <label>Select Course</label>
-                <select id="semesterCourse">
-                    <option value="">Select a course (optional)</option>
-                    {% for course in courses %}
-                    <option value="{{ course.id }}">{{ course.code }} - {{ course.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="form-group">
-                <label>ðŸ“… Lectures Attended (hours)</label>
-                <input type="number" id="lecturesAttended" placeholder="Total hours attended so far" step="1">
-                <small>Total possible: {{ calendar.get_total_lecture_hours(user.program_type) }} hours this semester</small>
-            </div>
-            <div class="form-group">
-                <label>ðŸ“ Assignments</label>
-                <input type="number" id="totalAssignments" placeholder="Total assignments given" step="1">
-                <input type="number" id="assignmentsCompleted" placeholder="Assignments completed" step="1" style="margin-top: 0.5rem;">
-                <input type="number" id="assignmentsScore" placeholder="Average assignment score (%)" step="1" style="margin-top: 0.5rem;">
-            </div>
-            <div class="form-group">
-                <label>ðŸ’¬ Class Engagement</label>
-                <input type="number" id="totalEngagements" placeholder="Total engagement opportunities" step="1">
-                <input type="number" id="engagementsParticipated" placeholder="Engagements participated" step="1" style="margin-top: 0.5rem;">
-            </div>
-            <div class="form-group">
-                <label>â° Weekly Study Hours</label>
-                <input type="number" id="studyHours" placeholder="Average study hours per week" step="1">
-            </div>
-            <div class="form-group">
-                <label>ðŸ“Š Previous Grade (%)</label>
-                <input type="number" id="previousGrade" placeholder="Your grade from previous semester" step="1">
-            </div>
-            <button class="predict-btn" onclick="predictSemester()">ðŸ”® Predict Semester Performance</button>
-        </div>
+            <a href="weekly.html" class="prediction-card">
+                <div class="prediction-icon">📅</div>
+                <h3>Weekly Tracking</h3>
+                <p>Track your weekly progress and get real-time feedback on your performance throughout the semester</p>
+                <div class="card-btn">Track Weekly →</div>
+            </a>
 
-        <!-- Weekly Tracking Form -->
-        <div id="weeklyForm" class="prediction-form">
-            <h2 style="margin-bottom: 1.5rem;">ðŸ“… Weekly Performance Tracking</h2>
-            <div class="form-group">
-                <label>Week Number</label>
-                <input type="number" id="weekNumber" value="{{ current_week }}" placeholder="Current week">
-            </div>
-            <div class="form-group">
-                <label>Weeks Completed</label>
-                <input type="number" id="weeksCompleted" value="1" placeholder="Weeks completed so far">
-            </div>
-            <div class="form-group">
-                <label>ðŸ“… Weekly Attendance (%)</label>
-                <input type="number" id="weeklyAttendance" placeholder="Attendance % this week" step="1">
-            </div>
-            <div class="form-group">
-                <label>ðŸ“ Weekly Assignment Score (%)</label>
-                <input type="number" id="weeklyAssignments" placeholder="Assignment score this week" step="1">
-            </div>
-            <div class="form-group">
-                <label>ðŸ’¬ Weekly Engagement (%)</label>
-                <input type="number" id="weeklyEngagement" placeholder="Engagement rate this week" step="1">
-            </div>
-            <div class="form-group">
-                <label>â° Weekly Study Hours</label>
-                <input type="number" id="weeklyStudyHours" placeholder="Hours studied this week" step="1">
-            </div>
-            <div class="form-group">
-                <label>ðŸ“ Midterm Grade (%)</label>
-                <input type="number" id="midtermGrade" placeholder="Your midterm exam score" step="1">
-            </div>
-            <button class="predict-btn" onclick="predictWeekly()">ðŸ”® Predict Weekly Performance</button>
-        </div>
-
-        <!-- Custom Format Form -->
-        <div id="customForm" class="prediction-form">
-            <h2 style="margin-bottom: 1.5rem;">âš™ï¸ Custom Performance Formula</h2>
-            <div class="form-group">
-                <label>Custom Weights (Total should be 100%)</label>
-                <div style="display: grid; gap: 0.5rem;">
-                    <label>Attendance Weight (%) <input type="number" id="weightAttendance" value="25" step="1"></label>
-                    <label>Assignments Weight (%) <input type="number" id="weightAssignments" value="25" step="1"></label>
-                    <label>Engagement Weight (%) <input type="number" id="weightEngagement" value="20" step="1"></label>
-                    <label>Study Hours Weight (%) <input type="number" id="weightStudyHours" value="15" step="1"></label>
-                    <label>Previous Grade Weight (%) <input type="number" id="weightPrevious" value="15" step="1"></label>
-                </div>
-            </div>
-            <div class="form-group">
-                <label>ðŸ“… Attendance (%)</label>
-                <input type="number" id="customAttendance" placeholder="Your attendance percentage" step="1">
-            </div>
-            <div class="form-group">
-                <label>ðŸ“ Assignments Score (%)</label>
-                <input type="number" id="customAssignments" placeholder="Average assignment score" step="1">
-            </div>
-            <div class="form-group">
-                <label>ðŸ’¬ Engagement Rate (%)</label>
-                <input type="number" id="customEngagement" placeholder="Class engagement rate" step="1">
-            </div>
-            <div class="form-group">
-                <label>â° Study Hours per Week</label>
-                <input type="number" id="customStudyHours" placeholder="Average study hours" step="1">
-            </div>
-            <div class="form-group">
-                <label>ðŸ“Š Previous Grade (%)</label>
-                <input type="number" id="customPreviousGrade" placeholder="Previous semester grade" step="1">
-            </div>
-            <button class="predict-btn" onclick="predictCustom()">ðŸ”® Predict with Custom Formula</button>
-        </div>
-
-        <!-- Result Display -->
-        <div id="resultCard" class="result-card">
-            <h2>ðŸŽ¯ Prediction Result</h2>
-            <div id="predictionGrade" class="grade"></div>
-            <div id="predictionScore" class="score"></div>
-            <div id="recommendations" class="recommendations"></div>
+            <a href="custom.html" class="prediction-card">
+                <div class="prediction-icon">⚙️</div>
+                <h3>Custom Format</h3>
+                <p>Create your own prediction formula with customizable weights for attendance, assignments, and more</p>
+                <div class="card-btn">Customize →</div>
+            </a>
         </div>
     </div>
 
     <script>
-        function switchFormat(format) {
-            document.querySelectorAll('.prediction-form').forEach(form => form.classList.remove('active'));
-            document.querySelectorAll('.format-tab').forEach(tab => tab.classList.remove('active'));
-            
-            document.getElementById(format + 'Form').classList.add('active');
-            event.target.classList.add('active');
-            document.getElementById('resultCard').classList.remove('show');
-        }
-        
-        async function predictSemester() {
-            const data = {
-                lectures_attended: parseFloat(document.getElementById('lecturesAttended').value) || 0,
-                total_assignments: parseFloat(document.getElementById('totalAssignments').value) || 0,
-                assignments_completed: parseFloat(document.getElementById('assignmentsCompleted').value) || 0,
-                assignments_score: parseFloat(document.getElementById('assignmentsScore').value) || 0,
-                total_engagements: parseFloat(document.getElementById('totalEngagements').value) || 0,
-                engagements_participated: parseFloat(document.getElementById('engagementsParticipated').value) || 0,
-                study_hours: parseFloat(document.getElementById('studyHours').value) || 0,
-                previous_grade: parseFloat(document.getElementById('previousGrade').value) || 0,
-                course_id: document.getElementById('semesterCourse').value
-            };
-            
-            const response = await fetch('/api/predict/semester', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-            
-            const result = await response.json();
-            displayResult(result);
-        }
-        
-        async function predictWeekly() {
-            const data = {
-                week_number: parseFloat(document.getElementById('weekNumber').value) || 1,
-                weeks_completed: parseFloat(document.getElementById('weeksCompleted').value) || 1,
-                weekly_attendance: parseFloat(document.getElementById('weeklyAttendance').value) || 0,
-                weekly_assignments: parseFloat(document.getElementById('weeklyAssignments').value) || 0,
-                weekly_engagement: parseFloat(document.getElementById('weeklyEngagement').value) || 0,
-                weekly_study_hours: parseFloat(document.getElementById('weeklyStudyHours').value) || 0,
-                midterm_grade: parseFloat(document.getElementById('midtermGrade').value) || 0
-            };
-            
-            const response = await fetch('/api/predict/weekly', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-            
-            const result = await response.json();
-            displayResult(result);
-        }
-        
-        async function predictCustom() {
-            const weights = {
-                attendance: parseFloat(document.getElementById('weightAttendance').value) / 100,
-                assignments: parseFloat(document.getElementById('weightAssignments').value) / 100,
-                engagement: parseFloat(document.getElementById('weightEngagement').value) / 100,
-                study_hours: parseFloat(document.getElementById('weightStudyHours').value) / 100,
-                previous_grade: parseFloat(document.getElementById('weightPrevious').value) / 100
-            };
-            
-            const data = {
-                attendance: parseFloat(document.getElementById('customAttendance').value) || 0,
-                assignments: parseFloat(document.getElementById('customAssignments').value) || 0,
-                engagement: parseFloat(document.getElementById('customEngagement').value) || 0,
-                study_hours: parseFloat(document.getElementById('customStudyHours').value) || 0,
-                previous_grade: parseFloat(document.getElementById('customPreviousGrade').value) || 0,
-                weights: weights
-            };
-            
-            const response = await fetch('/api/predict/custom', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-            
-            const result = await response.json();
-            displayResult(result);
-        }
-        
-        function displayResult(result) {
-            const gradeClass = result.prediction?.toLowerCase() || 
-                              (result.grade?.includes('Excellent') ? 'excellent' : 
-                               result.grade?.includes('Good') ? 'good' : 
-                               result.grade?.includes('Average') ? 'average' : 'poor');
-            
-            document.getElementById('predictionGrade').innerHTML = result.grade || result.prediction;
-            document.getElementById('predictionGrade').className = `grade ${gradeClass}`;
-            document.getElementById('predictionScore').innerHTML = `Score: ${result.score?.toFixed(1) || result.weighted_score?.toFixed(1)}%`;
-            
-            if (result.recommendations && result.recommendations.length > 0) {
-                document.getElementById('recommendations').innerHTML = `
-                    <strong>ðŸ’¡ Recommendations:</strong>
-                    <ul>
-                        ${result.recommendations.map(r => `<li>${r}</li>`).join('')}
-                    </ul>
-                `;
-            } else {
-                document.getElementById('recommendations').innerHTML = '';
+        function loadUser() {
+            const userStr = localStorage.getItem('currentUser');
+            if (!userStr) {
+                window.location.href = 'login.html';
+                return null;
             }
-            
-            document.getElementById('resultCard').classList.add('show');
+            return JSON.parse(userStr);
         }
         
         async function logout() {
-            await fetch('/api/logout', { method: 'POST' });
-            window.location.href = '/';
+            localStorage.removeItem('currentUser');
+            window.location.href = 'login.html';
         }
+        
+        loadUser();
     </script>
 </body>
 </html>
