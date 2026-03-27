@@ -53,16 +53,8 @@
             margin-top: 10px;
         }
         .login-btn:hover { opacity: 0.9; }
-        .register-link {
-            text-align: center;
-            margin-top: 20px;
-            color: #666;
-        }
-        .register-link a {
-            color: #667eea;
-            text-decoration: none;
-            font-weight: bold;
-        }
+        .register-link { text-align: center; margin-top: 20px; color: #666; }
+        .register-link a { color: #667eea; text-decoration: none; font-weight: bold; }
         .error-message {
             background: #f8d7da;
             color: #721c24;
@@ -164,6 +156,17 @@
                 btn.innerHTML = 'Login';
             }
         });
+        
+        // Check if already logged in
+        const savedUser = localStorage.getItem('currentUser');
+        if (savedUser) {
+            const user = JSON.parse(savedUser);
+            if (user.role === 'lecturer') {
+                window.location.href = 'lecturer_dashboard.html';
+            } else {
+                window.location.href = 'student_dashboard.html';
+            }
+        }
     </script>
 </body>
 </html>

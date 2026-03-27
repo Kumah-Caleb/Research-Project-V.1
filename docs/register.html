@@ -58,7 +58,6 @@
         .register-btn:hover { opacity: 0.9; }
         .login-link { text-align: center; margin-top: 20px; color: #666; }
         .login-link a { color: #667eea; text-decoration: none; font-weight: bold; }
-        .login-link a:hover { text-decoration: underline; }
         .error-message {
             background: #f8d7da;
             color: #721c24;
@@ -86,14 +85,6 @@
             margin-right: 10px;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .back-link {
-            display: inline-block;
-            margin-bottom: 20px;
-            color: #667eea;
-            text-decoration: none;
-            font-size: 14px;
-        }
-        .back-link:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
@@ -225,11 +216,11 @@
                 const result = await response.json();
                 
                 if (result.success) {
-                    successDiv.textContent = '✅ Account created successfully! Redirecting to login page...';
-                    successDiv.style.display = 'block';
-                    
-                    // Save user info to localStorage
+                    // Save user to localStorage for session
                     localStorage.setItem('currentUser', JSON.stringify(result.user));
+                    
+                    successDiv.textContent = '✅ Account created successfully! Redirecting to login...';
+                    successDiv.style.display = 'block';
                     
                     // Redirect to login page after 2 seconds
                     setTimeout(() => {
@@ -252,4 +243,3 @@
     </script>
 </body>
 </html>
-
