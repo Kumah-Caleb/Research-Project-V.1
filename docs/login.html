@@ -53,8 +53,16 @@
             margin-top: 10px;
         }
         .login-btn:hover { opacity: 0.9; }
-        .register-link { text-align: center; margin-top: 20px; color: #666; }
-        .register-link a { color: #667eea; text-decoration: none; font-weight: bold; }
+        .register-link {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+        }
+        .register-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: bold;
+        }
         .error-message {
             background: #f8d7da;
             color: #721c24;
@@ -74,14 +82,6 @@
             margin-right: 10px;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .demo-info {
-            background: #e3f2fd;
-            padding: 12px;
-            border-radius: 10px;
-            margin-top: 20px;
-            font-size: 12px;
-            text-align: center;
-        }
     </style>
 </head>
 <body>
@@ -104,11 +104,7 @@
                 <button type="submit" class="login-btn" id="loginBtn">Login</button>
             </form>
             <div class="register-link">
-                Don't have an account? <a href="/register.html">Register here</a>
-            </div>
-            <div class="demo-info">
-                <strong>📌 Demo Accounts:</strong><br>
-                Register first, then login with your credentials
+                Don't have an account? <a href="register.html">Register here</a>
             </div>
         </div>
     </div>
@@ -150,9 +146,9 @@
                     
                     // Redirect based on role
                     if (result.user.role === 'lecturer') {
-                        window.location.href = '/lecturer_dashboard.html';
+                        window.location.href = 'lecturer_dashboard.html';
                     } else {
-                        window.location.href = '/student_dashboard.html';
+                        window.location.href = 'student_dashboard.html';
                     }
                 } else {
                     errorDiv.textContent = result.error || 'Invalid credentials';

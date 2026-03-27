@@ -58,6 +58,7 @@
         .register-btn:hover { opacity: 0.9; }
         .login-link { text-align: center; margin-top: 20px; color: #666; }
         .login-link a { color: #667eea; text-decoration: none; font-weight: bold; }
+        .login-link a:hover { text-decoration: underline; }
         .error-message {
             background: #f8d7da;
             color: #721c24;
@@ -85,12 +86,20 @@
             margin-right: 10px;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #667eea;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .back-link:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
     <div class="register-container">
         <div class="header">
-            <h1>ðŸ“ Create Account</h1>
+            <h1>📝 Create Account</h1>
             <p>Join AAMUSTED Performance Predictor</p>
         </div>
         <div class="form-container">
@@ -124,8 +133,8 @@
                 <div class="form-group">
                     <label>Program Type</label>
                     <div class="radio-group">
-                        <label class="radio-option"><input type="radio" name="programType" value="regular" checked> ðŸŽ“ Regular (5 days/week)</label>
-                        <label class="radio-option"><input type="radio" name="programType" value="non-regular"> ðŸŒ™ Non-Regular (Weekend/Evening)</label>
+                        <label class="radio-option"><input type="radio" name="programType" value="regular" checked> 🎓 Regular (5 days/week)</label>
+                        <label class="radio-option"><input type="radio" name="programType" value="non-regular"> 🌙 Non-Regular (Weekend/Evening)</label>
                     </div>
                 </div>
                 <div class="form-group">
@@ -152,20 +161,19 @@
                 <div class="form-group">
                     <label>Role</label>
                     <div class="radio-group">
-                        <label class="radio-option"><input type="radio" name="role" value="student" checked> ðŸ‘¨â€ðŸŽ“ Student</label>
-                        <label class="radio-option"><input type="radio" name="role" value="lecturer"> ðŸ‘©â€ðŸ« Lecturer</label>
+                        <label class="radio-option"><input type="radio" name="role" value="student" checked> 👨‍🎓 Student</label>
+                        <label class="radio-option"><input type="radio" name="role" value="lecturer"> 👩‍🏫 Lecturer</label>
                     </div>
                 </div>
                 <button type="submit" class="register-btn" id="registerBtn">Create Account</button>
             </form>
             <div class="login-link">
-                Already have an account? <a href="/login.html">Login here</a>
+                Already have an account? <a href="login.html">Login here</a>
             </div>
         </div>
     </div>
 
     <script>
-        // âœ… CORRECT BACKEND URL - This is what was tested and works!
         const API_URL = 'https://student-performance-predictor7.onrender.com';
         
         document.getElementById('registerForm').addEventListener('submit', async (e) => {
@@ -207,8 +215,6 @@
                 role: document.querySelector('input[name="role"]:checked').value
             };
             
-            console.log('Sending to:', `${API_URL}/api/register`);
-            
             try {
                 const response = await fetch(`${API_URL}/api/register`, {
                     method: 'POST',
@@ -217,15 +223,18 @@
                 });
                 
                 const result = await response.json();
-                console.log('Response:', result);
                 
                 if (result.success) {
-                    successDiv.textContent = 'âœ… Account created! Redirecting to login...';
+                    successDiv.textContent = '✅ Account created successfully! Redirecting to login page...';
                     successDiv.style.display = 'block';
+                    
+                    // Save user info to localStorage
                     localStorage.setItem('currentUser', JSON.stringify(result.user));
+                    
+                    // Redirect to login page after 2 seconds
                     setTimeout(() => {
-                        window.location.href = '/login.html';
-                    }, 1500);
+                        window.location.href = 'login.html';
+                    }, 2000);
                 } else {
                     errorDiv.textContent = result.error || 'Registration failed';
                     errorDiv.style.display = 'block';
@@ -233,8 +242,8 @@
                     btn.innerHTML = 'Create Account';
                 }
             } catch (error) {
-                console.error('Error:', error);
-                errorDiv.textContent = 'Error: ' + error.message;
+                console.error('Registration error:', error);
+                errorDiv.textContent = 'Network error. Please try again.';
                 errorDiv.style.display = 'block';
                 btn.disabled = false;
                 btn.innerHTML = 'Create Account';
@@ -243,3 +252,4 @@
     </script>
 </body>
 </html>
+
