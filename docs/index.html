@@ -165,6 +165,34 @@
             color: white;
         }
 
+        .welcome-back {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 40px;
+            display: none;
+        }
+
+        .welcome-back h2 {
+            margin-bottom: 15px;
+        }
+
+        .dashboard-btn {
+            background: white;
+            color: #28a745;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 15px;
+            text-decoration: none;
+            display: inline-block;
+        }
+
         .footer {
             background: #1a2a3a;
             color: white;
@@ -188,6 +216,13 @@
     </div>
 
     <div class="container">
+        <!-- Welcome Back Banner for Returning Users -->
+        <div id="welcomeBackBanner" class="welcome-back">
+            <h2>👋 Welcome Back!</h2>
+            <p id="userNameDisplay">We missed you!</p>
+            <a href="#" id="goToDashboardBtn" class="dashboard-btn">Go to Dashboard →</a>
+        </div>
+
         <div class="features">
             <div class="feature-card">
                 <div class="feature-icon">📊</div>
@@ -230,7 +265,7 @@
             </div>
         </div>
 
-        <div class="cta-buttons">
+        <div class="cta-buttons" id="ctaButtons">
             <a href="login.html" class="btn btn-primary">🔐 Login</a>
             <a href="register.html" class="btn btn-outline">📝 Register</a>
         </div>
@@ -240,7 +275,36 @@
         <p>© 2024 AAMUSTED Student Performance Predictor | Department of Information Technology Education</p>
         <p style="margin-top: 10px; font-size: 12px;">Powered by AI & Machine Learning | Accurate predictions based on academic data</p>
     </div>
+
+    <script>
+        // Check if user is already logged in
+        function checkLoggedInUser() {
+            const savedUser = localStorage.getItem('currentUser');
+            const welcomeBanner = document.getElementById('welcomeBackBanner');
+            const ctaButtons = document.getElementById('ctaButtons');
+            
+            if (savedUser) {
+                const user = JSON.parse(savedUser);
+                
+                // Show welcome back banner
+                welcomeBanner.style.display = 'block';
+                document.getElementById('userNameDisplay').innerHTML = `Welcome back, ${user.full_name || user.username}!`;
+                
+                // Hide login/register buttons
+                ctaButtons.style.display = 'none';
+                
+                // Set dashboard link based on role
+                const dashboardLink = document.getElementById('goToDashboardBtn');
+                if (user.role === 'lecturer') {
+                    dashboardLink.href = 'lecturer_dashboard.html';
+                } else {
+                    dashboardLink.href = 'student_dashboard.html';
+                }
+            }
+        }
+        
+        // Run on page load
+        checkLoggedInUser();
+    </script>
 </body>
 </html>
-
-
