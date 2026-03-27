@@ -21,7 +21,7 @@
         .logo { font-size: 1.5rem; font-weight: bold; }
         .logo span { color: #ffd700; }
         .nav-links { display: flex; gap: 1.5rem; align-items: center; flex-wrap: wrap; }
-        .nav-links a { color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 8px; }
+        .nav-links a { color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 8px; transition: background 0.3s; }
         .nav-links a:hover, .nav-links a.active { background: rgba(255,255,255,0.2); }
         .logout-btn {
             background: rgba(255,80,60,0.3);
@@ -35,6 +35,7 @@
         .logout-btn:hover { background: rgba(255,80,60,0.5); }
         
         .container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
+        
         .welcome-card {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -42,25 +43,34 @@
             border-radius: 20px;
             margin-bottom: 2rem;
         }
+        
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 1.5rem;
             margin-bottom: 2rem;
         }
+        
         .stat-card {
             background: white;
             padding: 1.5rem;
             border-radius: 15px;
             text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
+        
         .stat-number { font-size: 2.5rem; font-weight: bold; color: #667eea; }
+        .stat-label { color: #666; margin-top: 0.5rem; }
+        
+        .section-title { font-size: 1.5rem; margin-bottom: 1rem; color: #2c3e50; display: flex; align-items: center; gap: 0.5rem; }
+        
         .prediction-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
             gap: 1.5rem;
             margin-bottom: 2rem;
         }
+        
         .prediction-card {
             background: white;
             border-radius: 15px;
@@ -71,14 +81,17 @@
             display: block;
             color: inherit;
             transition: transform 0.3s;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
         .prediction-card:hover { transform: translateY(-5px); }
+        
         .management-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 1.5rem;
             margin-bottom: 2rem;
         }
+        
         .management-card {
             background: white;
             border-radius: 15px;
@@ -89,14 +102,18 @@
             display: block;
             color: inherit;
             transition: transform 0.3s;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
         .management-card:hover { transform: translateY(-5px); }
+        
         .activity-section, .calendar-widget {
             background: white;
             border-radius: 15px;
             padding: 1.5rem;
             margin-top: 1rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
+        
         .progress-bar {
             background: #e0e0e0;
             border-radius: 10px;
@@ -107,9 +124,26 @@
         .progress-fill {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             height: 100%;
+            transition: width 0.3s;
         }
+        
+        .card-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            display: inline-block;
+            width: 100%;
+        }
+        
+        .management-icon, .prediction-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+        
         @media (max-width: 768px) {
             .navbar { flex-direction: column; text-align: center; }
+            .nav-links { justify-content: center; }
+            .container { padding: 1rem; }
         }
     </style>
 </head>
@@ -139,12 +173,14 @@
             <div class="stat-card"><div class="stat-number" id="avgScore">--</div><div class="stat-label">Avg Score</div></div>
         </div>
 
+        <div class="section-title"><span>🔮</span><span>Prediction Tools</span></div>
         <div class="prediction-grid">
-            <a href="semester.html" class="prediction-card"><div class="prediction-icon">📚</div><h3>Semester Prediction</h3><p>Predict your end-of-semester performance</p><div class="card-btn" style="background:#667eea;color:white;padding:0.5rem;border-radius:8px;margin-top:1rem;">Predict Now →</div></a>
-            <a href="weekly.html" class="prediction-card"><div class="prediction-icon">📅</div><h3>Weekly Tracking</h3><p>Track your weekly progress</p><div class="card-btn" style="background:#667eea;color:white;padding:0.5rem;border-radius:8px;margin-top:1rem;">Track Weekly →</div></a>
-            <a href="custom.html" class="prediction-card"><div class="prediction-icon">⚙️</div><h3>Custom Format</h3><p>Create your own prediction formula</p><div class="card-btn" style="background:#667eea;color:white;padding:0.5rem;border-radius:8px;margin-top:1rem;">Customize →</div></a>
+            <a href="semester.html" class="prediction-card"><div class="prediction-icon">📚</div><h3>Semester Prediction</h3><p>Predict your end-of-semester performance</p><div class="card-btn">Predict Now →</div></a>
+            <a href="weekly.html" class="prediction-card"><div class="prediction-icon">📅</div><h3>Weekly Tracking</h3><p>Track your weekly progress</p><div class="card-btn">Track Weekly →</div></a>
+            <a href="custom.html" class="prediction-card"><div class="prediction-icon">⚙️</div><h3>Custom Format</h3><p>Create your own prediction formula</p><div class="card-btn">Customize →</div></a>
         </div>
 
+        <div class="section-title"><span>📋</span><span>Academic Management</span></div>
         <div class="management-grid">
             <a href="courses.html" class="management-card"><div class="management-icon">📚</div><h4>My Courses</h4><p>View and manage your courses</p></a>
             <a href="history.html" class="management-card"><div class="management-icon">📊</div><h4>Prediction History</h4><p>View all your past predictions</p></a>
@@ -157,6 +193,14 @@
 
     <script>
         const API_URL = 'https://student-performance-predictor7.onrender.com';
+        
+        // WORKING LOGOUT FUNCTION - Clears everything and redirects to login
+        function logout() {
+            // Clear all localStorage data
+            localStorage.clear();
+            // Redirect to login page
+            window.location.href = 'login.html';
+        }
         
         function getCurrentWeek() {
             const today = new Date();
@@ -212,31 +256,10 @@
             document.getElementById('weeksMessage').innerHTML = weeksRemaining > 0 ? `⏰ ${weeksRemaining} weeks remaining` : '🎉 Semester break!';
         }
         
-        // ✅ WORKING LOGOUT FUNCTION
-                // WORKING LOGOUT FUNCTION - Clears all data
-        async function logout() {
-            try {
-                await fetch(`${API_URL}/api/logout`, { method: 'POST' });
-            } catch(e) {
-                console.log('Logout error:', e);
-            }
-            // Clear ALL localStorage data
-            localStorage.clear();
-            // Redirect to login
-            window.location.href = 'login.html';
-        }/api/logout`, { method: 'POST' });
-            } catch(e) {
-                console.log('Logout error:', e);
-            }
-            localStorage.removeItem('currentUser');
-            localStorage.removeItem('predictions');
-            window.location.href = 'login.html';
-        }
-        
+        // Initialize
         loadUserData();
         loadDashboardData();
         updateCalendar();
     </script>
 </body>
 </html>
-
