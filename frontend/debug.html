@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug - Registered Users</title>
+    <style>
+        body { font-family: monospace; padding: 20px; }
+        pre { background: #f0f0f0; padding: 10px; border-radius: 5px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Registered Users (Debug)</h1>
+    <div id="users"></div>
+    <script>
+        const API_URL = 'http://localhost:3000';
+        
+        async function loadUsers() {
+            try {
+                const response = await fetch(`${API_URL}/api/students`);
+                const users = await response.json();
+                document.getElementById('users').innerHTML = '<pre>' + JSON.stringify(users, null, 2) + '</pre>';
+            } catch (error) {
+                document.getElementById('users').innerHTML = '<p>Error loading users: ' + error.message + '</p>';
+            }
+        }
+        
+        loadUsers();
+    </script>
+</body>
+</html>

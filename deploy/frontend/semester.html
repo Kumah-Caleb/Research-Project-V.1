@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Semester Prediction - AAMUSTED Performance Predictor</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fb; }
+        
+        .navbar {
+            background: linear-gradient(135deg, #1a2a3a 0%, #0f1a24 100%);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .logo { font-size: 1.5rem; font-weight: bold; }
+        .logo span { color: #ffd700; }
+        .nav-links { display: flex; gap: 1.5rem; align-items: center; flex-wrap: wrap; }
+        .nav-links a { color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 8px; }
+        .nav-links a:hover, .nav-links a.active { background: rgba(255,255,255,0.2); }
+        .logout-btn { background: rgba(255,80,60,0.3); border: 1px solid rgba(255,80,60,0.5); padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; }
+        
+        .container { max-width: 800px; margin: 0 auto; padding: 2rem; }
+        
+        .form-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .form-group { margin-bottom: 1.5rem; }
+        label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: #333; }
+        input, select {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        input:focus, select:focus { outline: none; border-color: #667eea; }
+        
+        .student-info {
+            background: #e3f2fd;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            display: none;
+        }
+        
+        .predict-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 1rem;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+        }
+        
+        .result-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            margin-top: 2rem;
+            text-align: center;
+            display: none;
+        }
+        .result-card.show { display: block; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        .grade { font-size: 2.5rem; font-weight: bold; margin: 1rem 0; }
+        .score { font-size: 1.5rem; margin: 1rem 0; }
+        .recommendations { text-align: left; margin-top: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 10px; }
+        .recommendations ul { margin-left: 1.5rem; }
+        
+        .excellent { color: #28a745; }
+        .good { color: #17a2b8; }
+        .average { color: #ffc107; }
+        .poor { color: #dc3545; }
+        
+        .back-link {
+            display: inline-block;
+            margin-bottom: 1rem;
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        @media (max-width: 768px) {
+            .navbar { flex-direction: column; text-align: center; }
+            .nav-links { justify-content: center; }
+            .container { padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">?? AAMUSTED <span>Predictor</span></div>
+        <div class="nav-links">
+            <a href="student_dashboard.html">Dashboard</a>
+            <a href="predictor.html">Predictor</a>
+            <a href="courses.html">My Courses</a>
+            <a href="history.html">History</a>
+            <a href="profile.html">Profile</a>
+            <button class="logout-btn" onclick="logout()">?? Logout</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <a href="predictor.html" class="back-link">? Back to Predictor Options</a>
+        
+        <div class="form-card">
+            <h2 style="margin-bottom: 1.5rem;">?? Semester Performance Prediction</h2>
+            
+            <div class="student-info" id="studentInfo">
+                <strong>????? Predicting for:</strong> <span id="studentName"></span>
+            </div>
+            
+            <div class="form-group">
+                <label>?? Select Course</label>
+                <select id="courseSelect">
+                    <option value="">Loading courses...</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>?? Lectures Attended (hours)</label>
+                <input type="number" id="lecturesAttended" placeholder="Total hours attended so far" step="1">
+                <small style="color: #666;">Total possible: 225 hours (Regular) or 90 hours (Non-Regular)</small>
+            </div>
+            
+            <div class="form-group">
+                <label>?? Assignments</label>
+                <input type="number" id="totalAssignments" placeholder="Total assignments given" step="1">
+                <input type="number" id="assignmentsCompleted" placeholder="Assignments completed" step="1" style="margin-top: 0.5rem;">
+                <input type="number" id="assignmentsScore" placeholder="Average assignment score (%)" step="1" style="margin-top: 0.5rem;">
+            </div>
+            
+            <div class="form-group">
+                <label>?? Class Engagement</label>
+                <input type="number" id="totalEngagements" placeholder="Total engagement opportunities" step="1">
+                <input type="number" id="engagementsParticipated" placeholder="Engagements participated" step="1" style="margin-top: 0.5rem;">
+            </div>
+            
+            <div class="form-group">
+                <label>? Weekly Study Hours</label>
+                <input type="number" id="studyHours" placeholder="Average study hours per week" step="1">
+            </div>
+            
+            <div class="form-group">
+                <label>?? Previous Grade (%)</label>
+                <input type="number" id="previousGrade" placeholder="Your grade from previous semester" step="1">
+            </div>
+            
+            <button class="predict-btn" onclick="predictSemester()">?? Predict Semester Performance</button>
+        </div>
+        
+        <div id="resultCard" class="result-card">
+            <h2>?? Prediction Result</h2>
+            <div id="predictionGrade" class="grade"></div>
+            <div id="predictionScore" class="score"></div>
+            <div id="recommendations" class="recommendations"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000';
+        let currentUser = null;
+        let selectedStudentId = null;
+        let courses = [];
+        
+        function logout() { localStorage.clear(); window.location.href = 'login.html'; }
+        
+        async function loadUser() {
+            const userStr = localStorage.getItem('currentUser');
+            if (!userStr) { window.location.href = 'login.html'; return null; }
+            currentUser = JSON.parse(userStr);
+            
+            // Check if lecturer is predicting for a student
+            selectedStudentId = localStorage.getItem('selectedStudent');
+            const selectedStudentName = localStorage.getItem('selectedStudentName');
+            
+            if (selectedStudentId && currentUser.role === 'lecturer') {
+                document.getElementById('studentInfo').style.display = 'block';
+                document.getElementById('studentName').innerHTML = selectedStudentName || 'Student';
+                await loadStudentCourses(selectedStudentId);
+            } else {
+                await loadMyCourses();
+            }
+            return currentUser;
+        }
+        
+        async function loadStudentCourses(studentId) {
+            try {
+                // Get courses the student is enrolled in
+                const response = await fetch(`${API_URL}/api/courses?user_id=${studentId}`);
+                courses = await response.json();
+                
+                const courseSelect = document.getElementById('courseSelect');
+                if (!courses || courses.length === 0) {
+                    courseSelect.innerHTML = '<option value="">No courses enrolled</option>';
+                } else {
+                    courseSelect.innerHTML = '<option value="">Select a course</option>' + 
+                        courses.map(c => `<option value="${c.id}">${c.code} - ${c.name}</option>`).join('');
+                }
+            } catch (error) {
+                console.error('Error loading student courses:', error);
+                document.getElementById('courseSelect').innerHTML = '<option value="">Error loading courses</option>';
+            }
+        }
+        
+        async function loadMyCourses() {
+            try {
+                const response = await fetch(`${API_URL}/api/courses?user_id=${currentUser.id}`);
+                courses = await response.json();
+                
+                const courseSelect = document.getElementById('courseSelect');
+                if (!courses || courses.length === 0) {
+                    if (currentUser.role === 'student') {
+                        courseSelect.innerHTML = '<option value="">No courses enrolled. Go to My Courses to enroll!</option>';
+                    } else {
+                        courseSelect.innerHTML = '<option value="">No courses created. Go to My Courses to create!</option>';
+                    }
+                } else {
+                    courseSelect.innerHTML = '<option value="">Select a course</option>' + 
+                        courses.map(c => `<option value="${c.id}">${c.code} - ${c.name}</option>`).join('');
+                }
+            } catch (error) {
+                console.error('Error loading courses:', error);
+                document.getElementById('courseSelect').innerHTML = '<option value="">Error loading courses</option>';
+            }
+        }
+        
+        async function predictSemester() {
+            const courseId = document.getElementById('courseSelect').value;
+            if (!courseId) {
+                alert('Please select a course');
+                return;
+            }
+            
+            const selectedCourse = courses.find(c => c.id === courseId);
+            
+            const data = {
+                user_id: selectedStudentId || currentUser.id,
+                course_id: courseId,
+                course_name: selectedCourse?.name,
+                lectures_attended: parseFloat(document.getElementById('lecturesAttended').value) || 0,
+                total_assignments: parseFloat(document.getElementById('totalAssignments').value) || 0,
+                assignments_completed: parseFloat(document.getElementById('assignmentsCompleted').value) || 0,
+                assignments_score: parseFloat(document.getElementById('assignmentsScore').value) || 0,
+                total_engagements: parseFloat(document.getElementById('totalEngagements').value) || 0,
+                engagements_participated: parseFloat(document.getElementById('engagementsParticipated').value) || 0,
+                study_hours: parseFloat(document.getElementById('studyHours').value) || 0,
+                previous_grade: parseFloat(document.getElementById('previousGrade').value) || 0
+            };
+            
+            const response = await fetch(`${API_URL}/api/predict`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                const gradeClass = result.grade?.includes('Excellent') ? 'excellent' : 
+                                  result.grade?.includes('Good') ? 'good' : 
+                                  result.grade?.includes('Average') ? 'average' : 'poor';
+                
+                document.getElementById('predictionGrade').innerHTML = result.grade;
+                document.getElementById('predictionGrade').className = `grade ${gradeClass}`;
+                document.getElementById('predictionScore').innerHTML = `Score: ${result.score?.toFixed(1)}%`;
+                
+                if (result.recommendations && result.recommendations.length > 0) {
+                    document.getElementById('recommendations').innerHTML = `
+                        <strong>?? Recommendations:</strong>
+                        <ul>
+                            ${result.recommendations.map(r => `<li>${r}</li>`).join('')}
+                        </ul>
+                    `;
+                }
+                
+                document.getElementById('resultCard').classList.add('show');
+            } else {
+                alert('Prediction failed: ' + (result.error || 'Unknown error'));
+            }
+        }
+        
+        loadUser();
+    </script>
+</body>
+</html>

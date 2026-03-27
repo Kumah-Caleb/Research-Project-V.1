@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - Lecturer - AAMUSTED Performance Predictor</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fb; }
+        
+        .navbar {
+            background: linear-gradient(135deg, #1a2a3a 0%, #0f1a24 100%);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .logo { font-size: 1.5rem; font-weight: bold; }
+        .logo span { color: #ffd700; }
+        .nav-links { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: background 0.3s;
+        }
+        .nav-links a:hover { background: rgba(255,255,255,0.2); }
+        .nav-links a.active { background: rgba(255,255,255,0.3); border-bottom: 2px solid #ffd700; }
+        .logout-btn {
+            background: rgba(255,80,60,0.3);
+            border: 1px solid rgba(255,80,60,0.5);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            color: white;
+        }
+        
+        .container { max-width: 800px; margin: 0 auto; padding: 2rem; }
+        
+        .profile-card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .profile-header {
+            background: linear-gradient(135deg, #2c3e50 0%, #1a2a3a 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+        .avatar { font-size: 4rem; margin-bottom: 1rem; }
+        .profile-name { font-size: 1.5rem; margin-bottom: 0.5rem; }
+        
+        .profile-info, .edit-form {
+            padding: 2rem;
+        }
+        
+        .info-group {
+            display: flex;
+            padding: 1rem 0;
+            border-bottom: 1px solid #eee;
+        }
+        .info-label { width: 150px; font-weight: bold; color: #666; }
+        .info-value { flex: 1; color: #333; }
+        
+        .edit-form { display: none; }
+        .edit-form.show { display: block; }
+        
+        .form-group { margin-bottom: 1rem; }
+        label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: #333; }
+        input, select {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        
+        .edit-btn, .save-btn, .cancel-btn {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 1rem;
+            margin-right: 1rem;
+        }
+        .edit-btn {
+            background: linear-gradient(135deg, #2c3e50 0%, #1a2a3a 100%);
+            color: white;
+            width: 100%;
+        }
+        .save-btn { background: #28a745; color: white; }
+        .cancel-btn { background: #6c757d; color: white; }
+        
+        .message {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+        .message.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .message.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        
+        .back-link {
+            display: inline-block;
+            margin-bottom: 1rem;
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        @media (max-width: 768px) {
+            .navbar { flex-direction: column; text-align: center; }
+            .info-group { flex-direction: column; gap: 0.5rem; }
+            .info-label { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">????? AAMUSTED <span>Predictor</span></div>
+        <div class="nav-links">
+            <a href="lecturer_dashboard.html">Dashboard</a>
+            <a href="lecturer_courses.html">My Courses</a>
+            <a href="lecturer_students.html">My Students</a>
+            <a href="lecturer_profile.html" class="active">Profile</a>
+            <button class="logout-btn" onclick="logout()">?? Logout</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <a href="lecturer_dashboard.html" class="back-link">? Back to Dashboard</a>
+        
+        <div class="profile-card">
+            <div class="profile-header">
+                <div class="avatar">?????</div>
+                <div class="profile-name" id="profileName">Loading...</div>
+                <div id="profileRole">Lecturer</div>
+            </div>
+            
+            <div id="messageBox" class="message"></div>
+            
+            <div id="viewProfile" class="profile-info">
+                <div class="info-group"><div class="info-label">Username</div><div class="info-value" id="viewUsername">-</div></div>
+                <div class="info-group"><div class="info-label">Full Name</div><div class="info-value" id="viewFullName">-</div></div>
+                <div class="info-group"><div class="info-label">Email</div><div class="info-value" id="viewEmail">-</div></div>
+                <div class="info-group"><div class="info-label">Staff ID</div><div class="info-value" id="viewIndex">-</div></div>
+                <div class="info-group"><div class="info-label">Department</div><div class="info-value" id="viewDepartment">-</div></div>
+                <div class="info-group"><div class="info-label">Title</div><div class="info-value" id="viewLevel">-</div></div>
+                <button class="edit-btn" onclick="showEditForm()">?? Edit Profile</button>
+            </div>
+            
+            <div id="editProfile" class="edit-form">
+                <div class="form-group"><label>Full Name</label><input type="text" id="editFullName"></div>
+                <div class="form-group"><label>Email</label><input type="email" id="editEmail"></div>
+                <div class="form-group"><label>Staff ID</label><input type="text" id="editIndexNumber"></div>
+                <div class="form-group"><label>Department</label><input type="text" id="editDepartment"></div>
+                <div class="form-group"><label>Title</label><select id="editLevel"><option value="Junior Lecturer">Junior Lecturer</option><option value="Lecturer">Lecturer</option><option value="Senior Lecturer">Senior Lecturer</option><option value="Associate Professor">Associate Professor</option><option value="Professor">Professor</option></select></div>
+                <button class="save-btn" onclick="saveProfile()">?? Save Changes</button>
+                <button class="cancel-btn" onclick="cancelEdit()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000';
+        let currentUser = null;
+        
+        function logout() { localStorage.clear(); window.location.href = 'login.html'; }
+        
+        function loadUserData() {
+            const userStr = localStorage.getItem('currentUser');
+            if (!userStr) { 
+                window.location.href = 'login.html'; 
+                return; 
+            }
+            currentUser = JSON.parse(userStr);
+            
+            console.log('Loaded user:', currentUser);
+            
+            document.getElementById('profileName').textContent = currentUser.full_name || currentUser.username;
+            document.getElementById('viewUsername').textContent = currentUser.username;
+            document.getElementById('viewFullName').textContent = currentUser.full_name || 'Not set';
+            document.getElementById('viewEmail').textContent = currentUser.email || 'Not set';
+            document.getElementById('viewIndex').textContent = currentUser.index_number || 'Not set';
+            document.getElementById('viewDepartment').textContent = currentUser.department || 'Not set';
+            document.getElementById('viewLevel').textContent = currentUser.level || 'Not set';
+            
+            document.getElementById('editFullName').value = currentUser.full_name || '';
+            document.getElementById('editEmail').value = currentUser.email || '';
+            document.getElementById('editIndexNumber').value = currentUser.index_number || '';
+            document.getElementById('editDepartment').value = currentUser.department || '';
+            document.getElementById('editLevel').value = currentUser.level || 'Lecturer';
+        }
+        
+        function showEditForm() { 
+            document.getElementById('viewProfile').style.display = 'none'; 
+            document.getElementById('editProfile').classList.add('show'); 
+        }
+        
+        function cancelEdit() { 
+            document.getElementById('viewProfile').style.display = 'block'; 
+            document.getElementById('editProfile').classList.remove('show'); 
+            document.getElementById('messageBox').style.display = 'none'; 
+        }
+        
+        function showMessage(text, type) {
+            const msgBox = document.getElementById('messageBox');
+            msgBox.textContent = text;
+            msgBox.className = `message ${type}`;
+            msgBox.style.display = 'block';
+            setTimeout(() => { msgBox.style.display = 'none'; }, 3000);
+        }
+        
+        async function saveProfile() {
+            if (!currentUser || !currentUser.id) {
+                showMessage('? User not logged in properly. Please logout and login again.', 'error');
+                return;
+            }
+            
+            const updatedData = {
+                user_id: currentUser.id,
+                full_name: document.getElementById('editFullName').value,
+                email: document.getElementById('editEmail').value,
+                index_number: document.getElementById('editIndexNumber').value,
+                department: document.getElementById('editDepartment').value,
+                level: document.getElementById('editLevel').value
+            };
+            
+            console.log('Saving profile with user_id:', currentUser.id);
+            console.log('Update data:', updatedData);
+            
+            try {
+                const response = await fetch(`${API_URL}/api/profile`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updatedData)
+                });
+                
+                console.log('Response status:', response.status);
+                const result = await response.json();
+                console.log('Response data:', result);
+                
+                if (result.success) {
+                    const updatedUser = { ...currentUser, ...result.user };
+                    localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+                    currentUser = updatedUser;
+                    showMessage('? Profile updated successfully!', 'success');
+                    cancelEdit();
+                    loadUserData();
+                } else {
+                    showMessage('? ' + (result.error || 'Failed to update profile'), 'error');
+                }
+            } catch (error) {
+                console.error('Save error:', error);
+                showMessage('? Network error: ' + error.message, 'error');
+            }
+        }
+        
+        loadUserData();
+    </script>
+</body>
+</html>
