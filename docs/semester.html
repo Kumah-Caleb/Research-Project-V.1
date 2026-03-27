@@ -301,9 +301,11 @@
             }
         }
         
-        async function logout() {
-            localStorage.removeItem('currentUser');
-            localStorage.removeItem('selectedStudent');
+                async function logout() {
+            try {
+                await fetch(`${API_URL}/api/logout`, { method: 'POST' });
+            } catch(e) {}
+            localStorage.clear();
             window.location.href = 'login.html';
         }
         
@@ -311,3 +313,4 @@
     </script>
 </body>
 </html>
+

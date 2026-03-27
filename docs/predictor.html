@@ -146,8 +146,13 @@
             return JSON.parse(userStr);
         }
         
-        async function logout() {
-            localStorage.removeItem('currentUser');
+                async function logout() {
+            try {
+                await fetch(`${API_URL}/api/logout`, { method: 'POST' });
+            } catch(e) {
+                console.log('Logout error:', e);
+            }
+            localStorage.clear();
             window.location.href = 'login.html';
         }
         
@@ -155,3 +160,4 @@
     </script>
 </body>
 </html>
+

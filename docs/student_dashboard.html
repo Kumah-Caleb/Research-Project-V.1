@@ -213,9 +213,18 @@
         }
         
         // ✅ WORKING LOGOUT FUNCTION
+                // WORKING LOGOUT FUNCTION - Clears all data
         async function logout() {
             try {
                 await fetch(`${API_URL}/api/logout`, { method: 'POST' });
+            } catch(e) {
+                console.log('Logout error:', e);
+            }
+            // Clear ALL localStorage data
+            localStorage.clear();
+            // Redirect to login
+            window.location.href = 'login.html';
+        }/api/logout`, { method: 'POST' });
             } catch(e) {
                 console.log('Logout error:', e);
             }
@@ -230,3 +239,4 @@
     </script>
 </body>
 </html>
+
