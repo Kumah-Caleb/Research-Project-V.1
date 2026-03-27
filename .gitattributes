@@ -1,0 +1,49 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Source code files
+*.html text diff=html
+*.css text diff=css
+*.js text diff=javascript
+*.py text diff=python
+*.json text
+*.md text
+
+# Explicitly declare text files we want to always be normalized and converted
+# to native line endings on checkout
+*.html text eol=lf
+*.css text eol=lf
+*.js text eol=lf
+*.py text eol=lf
+*.json text eol=lf
+
+# Binary files (should not be modified)
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ico binary
+*.gif binary
+*.pkl binary
+*.db binary
+*.sqlite binary
+*.pyc binary
+*.pdf binary
+
+# Ensure UTF-8 for text files
+*.html working-tree-encoding=UTF-8
+*.css working-tree-encoding=UTF-8
+*.js working-tree-encoding=UTF-8
+*.py working-tree-encoding=UTF-8
+*.json working-tree-encoding=UTF-8
+*.md working-tree-encoding=UTF-8
+
+# Set charset for diff
+*.html diff=html
+*.css diff=css
+*.js diff=javascript
+*.py diff=python
+
+# Special handling for specific files
+README.md text diff=markdown
+package.json text eol=lf
+requirements.txt text eol=lf
