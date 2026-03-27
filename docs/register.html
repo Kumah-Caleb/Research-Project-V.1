@@ -1,8 +1,4 @@
-﻿cd "C:\Users\AKMC\Desktop\Research Project V.1"
-
-# Fix register.html - correct the API URL syntax
-@'
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -26,6 +22,8 @@
             width: 100%;
             max-width: 550px;
             overflow: hidden;
+            max-height: 90vh;
+            overflow-y: auto;
         }
         .header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -102,28 +100,28 @@
             <div id="successMsg" class="success-message"></div>
             <form id="registerForm">
                 <div class="form-group">
-                    <label>Full Name</label>
+                    <label>Full Name *</label>
                     <input type="text" id="fullName" required placeholder="Enter your full name">
                 </div>
                 <div class="form-group">
-                    <label>Username</label>
+                    <label>Username *</label>
                     <input type="text" id="username" required placeholder="Choose a username">
                 </div>
                 <div class="form-group">
-                    <label>Email</label>
+                    <label>Email *</label>
                     <input type="email" id="email" required placeholder="Enter your email">
                 </div>
                 <div class="form-group">
                     <label>Index Number / Staff ID</label>
-                    <input type="text" id="indexNumber" placeholder="e.g., 2024/IT/001">
+                    <input type="text" id="indexNumber" placeholder="e.g., 2024/IT/001 or STAFF001">
                 </div>
                 <div class="form-group">
-                    <label>Password</label>
+                    <label>Password *</label>
                     <input type="password" id="password" required placeholder="Min 6 characters">
                 </div>
                 <div class="form-group">
-                    <label>Confirm Password</label>
-                    <input type="password" id="confirmPassword" required placeholder="Confirm password">
+                    <label>Confirm Password *</label>
+                    <input type="password" id="confirmPassword" required placeholder="Confirm your password">
                 </div>
                 <div class="form-group">
                     <label>Program Type</label>
@@ -169,19 +167,36 @@
     </div>
 
     <script>
+        // ✅ CORRECT API URL
         const API_URL = 'https://student-performance-predictor7.onrender.com';
         
         document.getElementById('registerForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
+            const fullName = document.getElementById('fullName').value.trim();
+            const username = document.getElementById('username').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const indexNumber = document.getElementById('indexNumber').value.trim();
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
+            const programType = document.querySelector('input[name="programType"]:checked').value;
+            const department = document.getElementById('department').value;
+            const level = document.getElementById('level').value;
+            const role = document.querySelector('input[name="role"]:checked').value;
+            
             const errorDiv = document.getElementById('errorMsg');
             const successDiv = document.getElementById('successMsg');
             const btn = document.getElementById('registerBtn');
             
             errorDiv.style.display = 'none';
             successDiv.style.display = 'none';
+            
+            // Validation
+            if (!fullName || !username || !email || !password) {
+                errorDiv.textContent = 'Please fill in all required fields (*)';
+                errorDiv.style.display = 'block';
+                return;
+            }
             
             if (password !== confirmPassword) {
                 errorDiv.textContent = 'Passwords do not match';
@@ -199,19 +214,21 @@
             btn.innerHTML = '<span class="loading"></span> Creating account...';
             
             const data = {
-                full_name: document.getElementById('fullName').value,
-                username: document.getElementById('username').value,
-                email: document.getElementById('email').value,
-                index_number: document.getElementById('indexNumber').value || '',
+                full_name: fullName,
+                username: username,
+                email: email,
+                index_number: indexNumber || '',
                 password: password,
-                program_type: document.querySelector('input[name="programType"]:checked').value,
-                department: document.getElementById('department').value,
-                level: document.getElementById('level').value,
-                role: document.querySelector('input[name="role"]:checked').value
+                program_type: programType,
+                department: department,
+                level: level,
+                role: role
             };
             
+            console.log('Sending registration data:', data);
+            
             try {
-                // ✅ FIXED: Correct template literal syntax
+                // ✅ CORRECT: using template literal correctly
                 const response = await fetch(`${API_URL}/api/register`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -219,9 +236,10 @@
                 });
                 
                 const result = await response.json();
+                console.log('Registration response:', result);
                 
                 if (result.success) {
-                    // Save user to localStorage for session
+                    // Save user to localStorage
                     localStorage.setItem('currentUser', JSON.stringify(result.user));
                     
                     successDiv.textContent = '✅ Account created successfully! Redirecting to login...';
@@ -239,7 +257,7 @@
                 }
             } catch (error) {
                 console.error('Registration error:', error);
-                errorDiv.textContent = 'Network error. Please try again.';
+                errorDiv.textContent = 'Network error: ' + error.message;
                 errorDiv.style.display = 'block';
                 btn.disabled = false;
                 btn.innerHTML = 'Create Account';
