@@ -1,6 +1,5 @@
 ﻿const express = require('express');
 const { Pool } = require('pg');
-const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
 require('dotenv').config();
@@ -11,60 +10,42 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Log environment variables
-console.log('DATABASE_URL exists:', !!process.env.DATABASE_URL);
-console.log('DB_HOST:', process.env.DB_HOST);
-console.log('DB_NAME:', process.env.DB_NAME);
-
-// PostgreSQL connection
+// Database connection
 let pool;
 try {
-    if (process.env.DATABASE_URL) {
-        pool = new Pool({
-            connectionString: process.env.DATABASE_URL,
-            ssl: { rejectUnauthorized: false }
-        });
-        console.log('Using DATABASE_URL for connection');
-    } else {
-        pool = new Pool({
-            host: process.env.DB_HOST || 'dpg-d726egvdiees739hojv0-a.oregon-postgres.render.com',
-            port: process.env.DB_PORT || 5432,
-            database: process.env.DB_NAME || 'student_performance_db_1f4u',
-            user: process.env.DB_USER || 'student_performance_db_1f4u_user',
-            password: process.env.DB_PASSWORD,
-            ssl: { rejectUnauthorized: false }
-        });
-        console.log('Using individual DB parameters');
-    }
+    const connectionString = process.env.DATABASE_URL || 'postgresql://student_performance_db_1f4u_user:DvLfjBlmxuwdQlyLPd7ZAfnBquaHgriJ@dpg-d726egvdiees739hojv0-a.oregon-postgres.render.com/student_performance_db_1f4u';
+    pool = new Pool({
+        connectionString: connectionString,
+        ssl: { rejectUnauthorized: false }
+    });
+    console.log('Database configured');
     
     pool.connect((err, client, release) => {
         if (err) {
-            console.error('Database connection error:', err.message);
+            console.log('Database connection error:', err.message);
         } else {
-            console.log('Connected to PostgreSQL database!');
+            console.log('Connected to PostgreSQL');
             release();
         }
     });
-} catch (error) {
-    console.error('Failed to create database pool:', error.message);
+} catch (err) {
+    console.log('Pool creation error:', err.message);
 }
 
+// Root endpoint
 app.get('/', (req, res) => {
     res.json({ 
-        status: 'ok', 
+        status: 'ok',
         message: 'AAMUSTED Performance Predictor API',
-        endpoints: {
-            login: 'POST /api/login',
-            profile: 'GET /api/profile',
-            courses: 'GET /api/student/:studentId/courses',
-            predict: 'POST /api/predict'
-        }
+        endpoints: ['/api/login', '/api/profile', '/api/student/:id/courses', '/api/predict']
     });
 });
 
+// Login endpoint
 app.post('/api/login', async (req, res) => {
     try {
         const { username, password } = req.body;
+        console.log('Login attempt for:', username);
         
         if (!pool) {
             return res.status(500).json({ success: false, error: 'Database not connected' });
@@ -90,7 +71,7 @@ app.post('/api/login', async (req, res) => {
         
         res.json({
             success: true,
-            token,
+            token: token,
             user: {
                 id: user.id,
                 full_name: user.full_name,
@@ -100,16 +81,19 @@ app.post('/api/login', async (req, res) => {
                 department: user.department
             }
         });
-    } catch (error) {
-        console.error('Login error:', error);
-        res.status(500).json({ success: false, error: error.message });
+    } catch (err) {
+        console.error('Login error:', err);
+        res.status(500).json({ success: false, error: err.message });
     }
 });
 
+// Profile endpoint
 app.get('/api/profile', async (req, res) => {
-    const token = req.headers.authorization?.split(' ')[1];
+    const authHeader = req.headers.authorization;
+    const token = authHeader && authHeader.split(' ')[1];
+    
     if (!token) {
-        return res.status(401).json({ success: false, error: 'No token' });
+        return res.status(401).json({ success: false, error: 'No token provided' });
     }
     
     try {
@@ -132,27 +116,30 @@ app.get('/api/profile', async (req, res) => {
                 department: user.department
             }
         });
-    } catch (error) {
+    } catch (err) {
+        console.error('Profile error:', err);
         res.status(401).json({ success: false, error: 'Invalid token' });
     }
 });
 
+// Get student courses
 app.get('/api/student/:studentId/courses', async (req, res) => {
     try {
         if (!pool) {
             return res.status(500).json({ success: false, error: 'Database not connected' });
         }
         
-        const query = 'SELECT c.*, sc.enrolled_date FROM courses c JOIN student_courses sc ON c.id = sc.course_id JOIN students s ON sc.student_id = s.id WHERE s.user_id = ';
-        const result = await pool.query(query, [req.params.studentId]);
+        const sql = 'SELECT c.*, sc.enrolled_date FROM courses c JOIN student_courses sc ON c.id = sc.course_id JOIN students s ON sc.student_id = s.id WHERE s.user_id = ';
+        const result = await pool.query(sql, [req.params.studentId]);
         
         res.json({ success: true, courses: result.rows, count: result.rows.length });
-    } catch (error) {
-        console.error('Courses error:', error);
-        res.status(500).json({ success: false, error: error.message });
+    } catch (err) {
+        console.error('Courses error:', err);
+        res.status(500).json({ success: false, error: err.message });
     }
 });
 
+// Make prediction
 app.post('/api/predict', async (req, res) => {
     try {
         const { student_id, course_code, course_name, credits } = req.body;
@@ -161,34 +148,35 @@ app.post('/api/predict', async (req, res) => {
             return res.status(500).json({ success: false, error: 'Database not connected' });
         }
         
-        const predictedScore = Math.floor(Math.random() * (85 - 55 + 1) + 55);
+        const score = Math.floor(Math.random() * (85 - 55 + 1) + 55);
         let grade = 'C';
-        if (predictedScore >= 80) grade = 'A';
-        else if (predictedScore >= 70) grade = 'B';
-        else if (predictedScore >= 60) grade = 'C';
-        else if (predictedScore >= 50) grade = 'D';
+        if (score >= 80) grade = 'A';
+        else if (score >= 70) grade = 'B';
+        else if (score >= 60) grade = 'C';
+        else if (score >= 50) grade = 'D';
         else grade = 'F';
         
-        const insertQuery = 'INSERT INTO predictions (student_id, course_code, course_name, credits, predicted_score, predicted_grade) VALUES (, , , , , ) RETURNING id';
-        const result = await pool.query(insertQuery, [student_id, course_code, course_name, credits, predictedScore, grade]);
+        const sql = 'INSERT INTO predictions (student_id, course_code, course_name, credits, predicted_score, predicted_grade) VALUES (, , , , , ) RETURNING id';
+        const result = await pool.query(sql, [student_id, course_code, course_name, credits, score, grade]);
         
         res.json({
             success: true,
             prediction: {
                 id: result.rows[0].id,
-                score: predictedScore,
+                score: score,
                 grade: grade,
-                description: 'Prediction generated successfully',
-                recommendation: 'Keep studying!'
+                description: 'Prediction generated',
+                recommendation: 'Keep studying'
             }
         });
-    } catch (error) {
-        console.error('Prediction error:', error);
-        res.status(500).json({ success: false, error: error.message });
+    } catch (err) {
+        console.error('Prediction error:', err);
+        res.status(500).json({ success: false, error: err.message });
     }
 });
 
+// Start server
 app.listen(PORT, () => {
-    console.log(Server running on port );
-    console.log(API URL: http://localhost:);
+    console.log('Server running on port ' + PORT);
+    console.log('API URL: http://localhost:' + PORT);
 });
