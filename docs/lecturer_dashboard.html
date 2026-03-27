@@ -5,9 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lecturer Dashboard - AAMUSTED Performance Predictor</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fb; }
-        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fb;
+            min-height: 100vh;
+        }
+
         .navbar {
             background: linear-gradient(135deg, #1a2a3a 0%, #0f1a24 100%);
             color: white;
@@ -18,14 +27,59 @@
             flex-wrap: wrap;
             gap: 1rem;
         }
-        .logo { font-size: 1.5rem; font-weight: bold; }
-        .logo span { color: #ffd700; }
-        .nav-links { display: flex; gap: 1.5rem; align-items: center; flex-wrap: wrap; }
-        .nav-links a { color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 8px; }
-        .nav-links a:hover, .nav-links a.active { background: rgba(255,255,255,0.2); }
-        .logout-btn { background: rgba(255,80,60,0.3); border: 1px solid rgba(255,80,60,0.5); padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; }
-        
-        .container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .logo span {
+            color: #ffd700;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: background 0.3s;
+        }
+
+        .nav-links a:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .nav-links a.active {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .logout-btn {
+            background: rgba(255,80,60,0.3);
+            border: 1px solid rgba(255,80,60,0.5);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            color: white;
+            font-size: 1rem;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,80,60,0.5);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
         .welcome-card {
             background: linear-gradient(135deg, #2c3e50 0%, #1a2a3a 100%);
             color: white;
@@ -33,19 +87,33 @@
             border-radius: 20px;
             margin-bottom: 2rem;
         }
+
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 1.5rem;
             margin-bottom: 2rem;
         }
+
         .stat-card {
             background: white;
             padding: 1.5rem;
             border-radius: 15px;
             text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
-        .stat-number { font-size: 2.5rem; font-weight: bold; color: #2c3e50; }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .stat-label {
+            color: #666;
+            margin-top: 0.5rem;
+        }
+
         .section-title {
             font-size: 1.5rem;
             margin-bottom: 1rem;
@@ -54,57 +122,125 @@
             align-items: center;
             gap: 0.5rem;
         }
+
         .action-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 1.5rem;
             margin-bottom: 2rem;
         }
+
         .action-card {
             background: white;
             border-radius: 15px;
             padding: 1.5rem;
             text-align: center;
             cursor: pointer;
+            transition: transform 0.3s;
             text-decoration: none;
             display: block;
             color: inherit;
-            transition: transform 0.3s;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
-        .action-card:hover { transform: translateY(-5px); }
-        .action-icon { font-size: 2.5rem; margin-bottom: 1rem; }
+
+        .action-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .action-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .action-card h3 {
+            margin-bottom: 0.5rem;
+            color: #2c3e50;
+        }
+
+        .action-card p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
         .management-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 1.5rem;
             margin-bottom: 2rem;
         }
+
         .management-card {
             background: white;
             border-radius: 15px;
             padding: 1.5rem;
             text-align: center;
             cursor: pointer;
+            transition: transform 0.3s;
             text-decoration: none;
             display: block;
             color: inherit;
-            transition: transform 0.3s;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
-        .management-card:hover { transform: translateY(-5px); }
-        .management-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+
+        .management-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .management-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .management-card h4 {
+            margin-bottom: 0.5rem;
+            color: #2c3e50;
+        }
+
+        .management-card p {
+            color: #666;
+            font-size: 0.85rem;
+        }
+
         .students-table {
             background: white;
             border-radius: 15px;
             overflow-x: auto;
             padding: 1rem;
             margin-top: 1rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 1rem; text-align: left; border-bottom: 1px solid #eee; }
-        th { background: #f8f9fa; font-weight: 600; }
-        .risk-high { color: #dc3545; font-weight: bold; }
-        .risk-moderate { color: #fd7e14; }
-        .risk-low { color: #28a745; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+        }
+
+        .risk-high {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .risk-moderate {
+            color: #fd7e14;
+        }
+
+        .risk-low {
+            color: #28a745;
+        }
+
         .view-btn {
             background: #667eea;
             color: white;
@@ -113,9 +249,26 @@
             border-radius: 5px;
             cursor: pointer;
         }
-        .empty-message { text-align: center; padding: 2rem; color: #999; }
+
+        .empty-message {
+            text-align: center;
+            padding: 2rem;
+            color: #999;
+        }
+
         @media (max-width: 768px) {
-            .navbar { flex-direction: column; text-align: center; }
+            .navbar {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .nav-links {
+                justify-content: center;
+            }
+
+            .container {
+                padding: 1rem;
+            }
         }
     </style>
 </head>
@@ -127,7 +280,7 @@
             <a href="courses.html">My Courses</a>
             <a href="students.html">My Students</a>
             <a href="profile.html">Profile</a>
-            <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+            <button class="logout-btn" id="logoutBtn">🚪 Logout</button>
         </div>
     </nav>
 
@@ -138,20 +291,52 @@
         </div>
 
         <div class="stats-grid">
-            <div class="stat-card"><div class="stat-number" id="totalStudents">0</div><div class="stat-label">My Students</div></div>
-            <div class="stat-card"><div class="stat-number" id="totalCourses">0</div><div class="stat-label">My Courses</div></div>
-            <div class="stat-card"><div class="stat-number" id="atRiskCount">0</div><div class="stat-label">At-Risk Students</div></div>
-            <div class="stat-card"><div class="stat-number" id="avgPerformance">--</div><div class="stat-label">Avg Performance</div></div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalStudents">0</div>
+                <div class="stat-label">My Students</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalCourses">0</div>
+                <div class="stat-label">My Courses</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="atRiskCount">0</div>
+                <div class="stat-label">At-Risk Students</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="avgPerformance">--</div>
+                <div class="stat-label">Avg Performance</div>
+            </div>
         </div>
 
-        <div class="section-title"><span>⚡</span><span>Quick Actions</span></div>
+        <div class="section-title">
+            <span>⚡</span>
+            <span>Quick Actions</span>
+        </div>
         <div class="action-grid">
-            <a href="courses.html" class="action-card"><div class="action-icon">📚</div><h3>Create Course</h3><p>Add new courses and manage existing ones</p></a>
-            <a href="students.html" class="action-card"><div class="action-icon">👥</div><h3>View All Students</h3><p>Monitor student performance and predictions</p></a>
-            <a href="predictor.html" class="action-card"><div class="action-icon">🔮</div><h3>Predict Performance</h3><p>Get AI-powered predictions for your students</p></a>
+            <a href="courses.html" class="action-card">
+                <div class="action-icon">📚</div>
+                <h3>Create Course</h3>
+                <p>Add new courses and manage existing ones</p>
+            </a>
+
+            <a href="students.html" class="action-card">
+                <div class="action-icon">👥</div>
+                <h3>View All Students</h3>
+                <p>Monitor student performance and predictions</p>
+            </a>
+
+            <a href="predictor.html" class="action-card">
+                <div class="action-icon">🔮</div>
+                <h3>Predict Performance</h3>
+                <p>Get AI-powered predictions for your students</p>
+            </a>
         </div>
 
-        <div class="section-title"><span>📋</span><span>My Students</span></div>
+        <div class="section-title">
+            <span>📋</span>
+            <span>My Students</span>
+        </div>
         <div class="students-table">
             <div id="studentsList">
                 <div class="empty-message">Loading your students...</div>
@@ -162,6 +347,22 @@
     <script>
         const API_URL = 'https://student-performance-predictor7.onrender.com';
         let currentUser = null;
+        
+        // SIMPLE WORKING LOGOUT FUNCTION
+        function logout() {
+            // Clear all localStorage data
+            localStorage.clear();
+            // Redirect to login page
+            window.location.href = 'login.html';
+        }
+        
+        // Attach logout event listener when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.onclick = logout;
+            }
+        });
         
         async function loadUser() {
             const userStr = localStorage.getItem('currentUser');
@@ -204,12 +405,18 @@
                 container.innerHTML = `
                     <table>
                         <thead>
-                            <tr><th>Student Name</th><th>Index Number</th><th>Program</th><th>Enrolled Courses</th><th>Action</th></tr>
+                            <tr>
+                                <th>Student Name</th>
+                                <th>Index Number</th>
+                                <th>Program</th>
+                                <th>Enrolled Courses</th>
+                                <th>Action</th>
+                            </tr>
                         </thead>
                         <tbody>
                             ${students.map(s => {
                                 // For demo, we'll show placeholder scores - in real app, fetch from predictions
-                                const score = 70; // placeholder
+                                const score = 70;
                                 totalScore += score;
                                 scoreCount++;
                                 if (score < 60) atRisk++;
@@ -254,24 +461,6 @@
             });
         }
         
-                        // SIMPLE WORKING LOGOUT
-        function logout() {
-            localStorage.clear();
-            window.location.href = 'login.html';
-        }/api/logout`, { method: 'POST' });
-            } catch(e) {
-                console.log('Logout error:', e);
-            }
-            // Clear ALL localStorage data
-            localStorage.clear();
-            // Redirect to login
-            window.location.href = 'login.html';
-        }/api/logout`, { method: 'POST' });
-            } catch(e) {}
-            localStorage.removeItem('currentUser');
-            window.location.href = 'login.html';
-        }
-        
         async function init() {
             await loadUser();
             if (currentUser && currentUser.role === 'lecturer') {
@@ -285,5 +474,3 @@
     </script>
 </body>
 </html>
-
-
