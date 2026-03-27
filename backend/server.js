@@ -11,16 +11,14 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Log environment variables (don't log password in production)
+// Log environment variables
 console.log('DATABASE_URL exists:', !!process.env.DATABASE_URL);
 console.log('DB_HOST:', process.env.DB_HOST);
 console.log('DB_NAME:', process.env.DB_NAME);
-console.log('DB_USER:', process.env.DB_USER);
 
 // PostgreSQL connection
 let pool;
 try {
-    // Use DATABASE_URL if available
     if (process.env.DATABASE_URL) {
         pool = new Pool({
             connectionString: process.env.DATABASE_URL,
@@ -28,7 +26,6 @@ try {
         });
         console.log('Using DATABASE_URL for connection');
     } else {
-        // Use individual parameters
         pool = new Pool({
             host: process.env.DB_HOST || 'dpg-d726egvdiees739hojv0-a.oregon-postgres.render.com',
             port: process.env.DB_PORT || 5432,
@@ -40,18 +37,16 @@ try {
         console.log('Using individual DB parameters');
     }
     
-    // Test connection
     pool.connect((err, client, release) => {
         if (err) {
-            console.error('❌ Database connection error:', err.message);
-            console.error('Error details:', err);
+            console.error('Database connection error:', err.message);
         } else {
-            console.log('✅ Connected to PostgreSQL database!');
+            console.log('Connected to PostgreSQL database!');
             release();
         }
     });
 } catch (error) {
-    console.error('❌ Failed to create database pool:', error.message);
+    console.error('Failed to create database pool:', error.message);
 }
 
 app.get('/', (req, res) => {
@@ -75,10 +70,7 @@ app.post('/api/login', async (req, res) => {
             return res.status(500).json({ success: false, error: 'Database not connected' });
         }
         
-        const result = await pool.query(
-            'SELECT * FROM users WHERE username = ',
-            [username]
-        );
+        const result = await pool.query('SELECT * FROM users WHERE username = ', [username]);
         
         if (result.rows.length === 0) {
             return res.status(401).json({ success: false, error: 'Invalid credentials' });
@@ -114,19 +106,45 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
+app.get('/api/profile', async (req, res) => {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) {
+        return res.status(401).json({ success: false, error: 'No token' });
+    }
+    
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
+        const result = await pool.query('SELECT * FROM users WHERE id = ', [decoded.id]);
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+        
+        const user = result.rows[0];
+        res.json({
+            success: true,
+            user: {
+                id: user.id,
+                full_name: user.full_name,
+                username: user.username,
+                email: user.email,
+                role: user.role,
+                department: user.department
+            }
+        });
+    } catch (error) {
+        res.status(401).json({ success: false, error: 'Invalid token' });
+    }
+});
+
 app.get('/api/student/:studentId/courses', async (req, res) => {
     try {
         if (!pool) {
             return res.status(500).json({ success: false, error: 'Database not connected' });
         }
         
-        const result = await pool.query(
-            SELECT c.*, sc.enrolled_date 
-            FROM courses c
-            JOIN student_courses sc ON c.id = sc.course_id
-            JOIN students s ON sc.student_id = s.id
-            WHERE s.user_id = 
-        , [req.params.studentId]);
+        const query = 'SELECT c.*, sc.enrolled_date FROM courses c JOIN student_courses sc ON c.id = sc.course_id JOIN students s ON sc.student_id = s.id WHERE s.user_id = ';
+        const result = await pool.query(query, [req.params.studentId]);
         
         res.json({ success: true, courses: result.rows, count: result.rows.length });
     } catch (error) {
@@ -151,10 +169,8 @@ app.post('/api/predict', async (req, res) => {
         else if (predictedScore >= 50) grade = 'D';
         else grade = 'F';
         
-        const result = await pool.query(
-            'INSERT INTO predictions (student_id, course_code, course_name, credits, predicted_score, predicted_grade) VALUES (, , , , , ) RETURNING id',
-            [student_id, course_code, course_name, credits, predictedScore, grade]
-        );
+        const insertQuery = 'INSERT INTO predictions (student_id, course_code, course_name, credits, predicted_score, predicted_grade) VALUES (, , , , , ) RETURNING id';
+        const result = await pool.query(insertQuery, [student_id, course_code, course_name, credits, predictedScore, grade]);
         
         res.json({
             success: true,
@@ -173,6 +189,6 @@ app.post('/api/predict', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(🚀 Server running on port );
-    console.log(📍 API URL: http://localhost:);
+    console.log(Server running on port );
+    console.log(API URL: http://localhost:);
 });
