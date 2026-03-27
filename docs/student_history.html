@@ -1,0 +1,123 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>History - Student - AAMUSTED Performance Predictor</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fb; }
+        
+        .navbar {
+            background: linear-gradient(135deg, #1a2a3a 0%, #0f1a24 100%);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .logo { font-size: 1.5rem; font-weight: bold; }
+        .logo span { color: #ffd700; }
+        .nav-links { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: background 0.3s;
+        }
+        .nav-links a:hover { background: rgba(255,255,255,0.2); }
+        .nav-links a.active { background: rgba(255,255,255,0.3); border-bottom: 2px solid #ffd700; }
+        .logout-btn {
+            background: rgba(255,80,60,0.3);
+            border: 1px solid rgba(255,80,60,0.5);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            color: white;
+        }
+        
+        .container { max-width: 1000px; margin: 0 auto; padding: 2rem; }
+        .history-list { background: white; border-radius: 15px; overflow: hidden; }
+        .history-header {
+            display: grid;
+            grid-template-columns: 150px 1fr 100px;
+            background: #f8f9fa;
+            padding: 1rem;
+            font-weight: bold;
+            border-bottom: 2px solid #ddd;
+        }
+        .history-item {
+            display: grid;
+            grid-template-columns: 150px 1fr 100px;
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+            align-items: center;
+        }
+        .grade-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            display: inline-block;
+        }
+        .grade-excellent { background: #d4edda; color: #28a745; }
+        .grade-good { background: #d1ecf1; color: #17a2b8; }
+        .grade-average { background: #fff3cd; color: #ffc107; }
+        .grade-poor { background: #f8d7da; color: #dc3545; }
+        .empty-message { text-align: center; padding: 2rem; color: #999; }
+        .back-link { display: inline-block; margin-bottom: 1rem; color: #667eea; text-decoration: none; }
+        
+        @media (max-width: 768px) {
+            .navbar { flex-direction: column; text-align: center; }
+            .history-header, .history-item { grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">🎓 AAMUSTED <span>Predictor</span></div>
+        <div class="nav-links">
+            <a href="student_dashboard.html">Dashboard</a>
+            <a href="predictor.html">Predictor</a>
+            <a href="student_courses.html">My Courses</a>
+            <a href="student_history.html" class="active">History</a>
+            <a href="student_profile.html">Profile</a>
+            <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <a href="student_dashboard.html" class="back-link">← Back to Dashboard</a>
+        <h2>📊 Prediction History</h2>
+        <div class="history-list">
+            <div class="history-header">
+                <div>Date</div>
+                <div>Prediction</div>
+                <div>Score</div>
+            </div>
+            <div id="historyItems"><div class="empty-message">Loading history...</div></div>
+        </div>
+    </div>
+
+    <script>
+        function loadHistory() {
+            const predictions = JSON.parse(localStorage.getItem('predictions') || '[]');
+            const container = document.getElementById('historyItems');
+            if (!predictions.length) { container.innerHTML = '<div class="empty-message">No predictions yet. Make your first prediction!</div>'; return; }
+            container.innerHTML = predictions.map(p => {
+                let gradeClass = '';
+                const grade = (p.grade || p.prediction || '').toLowerCase();
+                if (grade.includes('excellent')) gradeClass = 'grade-excellent';
+                else if (grade.includes('good')) gradeClass = 'grade-good';
+                else if (grade.includes('average')) gradeClass = 'grade-average';
+                else gradeClass = 'grade-poor';
+                return `<div class="history-item"><div>${new Date(p.date).toLocaleDateString()}</div><div><span class="grade-badge ${gradeClass}">${p.grade || p.prediction}</span></div><div>${(p.score || p.weighted_score || 0).toFixed(1)}%</div></div>`;
+            }).join('');
+        }
+        function logout() { localStorage.clear(); window.location.href = 'login.html'; }
+        loadHistory();
+    </script>
+</body>
+</html>
