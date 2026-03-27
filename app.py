@@ -130,7 +130,10 @@ def home():
             'login': 'POST /api/login',
             'logout': 'POST /api/logout',
             'profile': 'GET /api/profile, PUT /api/profile',
-            'courses': 'GET /api/courses',
+            'courses': 'GET /api/courses, POST /api/courses, DELETE /api/courses',
+            'available_courses': 'GET /api/available_courses',
+            'enroll': 'POST /api/enroll',
+            'my_students': 'GET /api/my_students',
             'students': 'GET /api/students'
         }
     })
@@ -292,9 +295,13 @@ def api_predict_weekly():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
-@app.route('/api/courses', methods=['GET', 'POST'])
+# ============ COURSE AND ENROLLMENT API ENDPOINTS ============
+
+@app.route('/api/courses', methods=['GET', 'POST', 'DELETE'])
 def api_courses():
+    """Get, create, or delete courses"""
     courses = load_data(COURSES_FILE)
+    
     if request.method == 'POST':
         data = request.json
         course_id = str(uuid.uuid4())[:8]
@@ -310,27 +317,123 @@ def api_courses():
         }
         save_data(COURSES_FILE, courses)
         return jsonify({'success': True, 'course': courses[course_id]})
+    
+    elif request.method == 'DELETE':
+        data = request.json
+        course_id = data.get('course_id')
+        if course_id in courses:
+            del courses[course_id]
+            save_data(COURSES_FILE, courses)
+            return jsonify({'success': True})
+        return jsonify({'success': False, 'error': 'Course not found'}), 404
+    
+    # GET request - return courses based on user role
+    user_id = request.args.get('user_id')
+    users = load_data(USERS_FILE)
+    enrollments = load_data(ENROLLMENTS_FILE)
+    
+    if user_id and users.get(user_id, {}).get('role') == 'student':
+        # For students: return courses they are enrolled in
+        enrolled_ids = enrollments.get(user_id, [])
+        enrolled_courses = [c for cid, c in courses.items() if cid in enrolled_ids]
+        return jsonify(enrolled_courses)
+    elif user_id and users.get(user_id, {}).get('role') == 'lecturer':
+        # For lecturers: return courses they created
+        lecturer_courses = [c for c in courses.values() if c.get('lecturer_id') == user_id]
+        return jsonify(lecturer_courses)
+    
     return jsonify(list(courses.values()))
+
+@app.route('/api/available_courses', methods=['GET'])
+def api_available_courses():
+    """Get courses available for a student to enroll"""
+    user_id = request.args.get('user_id')
+    if not user_id:
+        return jsonify([]), 400
+    
+    courses = load_data(COURSES_FILE)
+    enrollments = load_data(ENROLLMENTS_FILE)
+    enrolled_ids = enrollments.get(user_id, [])
+    
+    # Get courses not enrolled in
+    available = [c for cid, c in courses.items() if cid not in enrolled_ids]
+    return jsonify(available)
 
 @app.route('/api/enroll', methods=['POST'])
 def api_enroll():
+    """Enroll student in course"""
     try:
         data = request.json
         student_id = data.get('student_id')
         course_id = data.get('course_id')
+        
         enrollments = load_data(ENROLLMENTS_FILE)
+        
         if student_id not in enrollments:
             enrollments[student_id] = []
+        
         if course_id in enrollments[student_id]:
             return jsonify({'success': False, 'error': 'Already enrolled'}), 400
+        
         enrollments[student_id].append(course_id)
         save_data(ENROLLMENTS_FILE, enrollments)
+        
         return jsonify({'success': True})
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/my_students', methods=['GET'])
+def api_my_students():
+    """Get students enrolled in courses created by lecturer"""
+    try:
+        lecturer_id = request.args.get('lecturer_id')
+        if not lecturer_id:
+            return jsonify([]), 400
+        
+        courses = load_data(COURSES_FILE)
+        enrollments = load_data(ENROLLMENTS_FILE)
+        users = load_data(USERS_FILE)
+        
+        # Get courses created by this lecturer
+        lecturer_courses = [c for c in courses.values() if c.get('lecturer_id') == lecturer_id]
+        lecturer_course_ids = [c['id'] for c in lecturer_courses]
+        
+        # Find students enrolled in these courses
+        students_dict = {}
+        for student_id, enrolled_courses in enrollments.items():
+            # Check if student is enrolled in any of lecturer's courses
+            for course_id in enrolled_courses:
+                if course_id in lecturer_course_ids:
+                    if student_id not in students_dict:
+                        student = users.get(student_id, {})
+                        if student.get('role') == 'student':
+                            students_dict[student_id] = {
+                                'id': student_id,
+                                'full_name': student.get('full_name', 'Unknown'),
+                                'index_number': student.get('index_number', 'N/A'),
+                                'program_type': student.get('program_type', 'regular'),
+                                'email': student.get('email', ''),
+                                'courses': []
+                            }
+                    # Add course info
+                    course = next((c for c in lecturer_courses if c['id'] == course_id), None)
+                    if course:
+                        students_dict[student_id]['courses'].append({
+                            'id': course_id,
+                            'code': course['code'],
+                            'name': course['name']
+                        })
+                    break
+        
+        return jsonify(list(students_dict.values()))
+        
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/students', methods=['GET'])
 def api_students():
+    """Get all students (for lecturer view)"""
     users = load_data(USERS_FILE)
     students = [user for user in users.values() if user.get('role') == 'student']
     return jsonify(students)
@@ -343,17 +446,13 @@ def api_history():
     predictions = load_data(PREDICTIONS_FILE)
     return jsonify(predictions.get(user_id, []))
 
-# ✅ PROFILE ENDPOINT - Single definition
 @app.route('/api/profile', methods=['GET', 'PUT', 'OPTIONS'])
 def api_profile():
-    """Get or update user profile - supports GET and PUT"""
-    
-    # Handle CORS preflight
+    """Get or update user profile"""
     if request.method == 'OPTIONS':
         return jsonify({}), 200
     
     try:
-        # Get user_id from request
         if request.method == 'GET':
             user_id = request.args.get('user_id')
         else:
@@ -370,7 +469,6 @@ def api_profile():
         
         if request.method == 'PUT':
             data = request.json
-            # Update profile fields
             if 'full_name' in data:
                 users[user_id]['full_name'] = data['full_name']
             if 'email' in data:
@@ -391,7 +489,6 @@ def api_profile():
                 'user': users[user_id]
             })
         else:
-            # GET request
             return jsonify({
                 'success': True,
                 'user': users[user_id]
