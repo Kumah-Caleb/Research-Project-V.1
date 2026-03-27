@@ -1,15 +1,21 @@
 ﻿services:
   - type: web
-    name: student-performance-predictor7
-    runtime: python
-    repo: https://github.com/Kumah-Caleb/Research-Project-V.1
-    plan: free
-    region: oregon
-    branch: main
-    buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app:app
+    name: student-performance-predictor-api
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: node server.js
     envVars:
-      - key: PYTHON_VERSION
-        value: 3.11.0
-      - key: FLASK_ENV
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: PORT
+        value: 3000
+      - key: NODE_ENV
         value: production
+      - key: DB_SSL
+        value: true
+      - key: PGSSLMODE
+        value: require
+    plan: free

@@ -5,7 +5,7 @@ const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const DEFAULT_PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
@@ -13,23 +13,29 @@ app.use(express.json());
 // Database connection
 let pool;
 try {
-    const connectionString = process.env.DATABASE_URL || 'postgresql://student_performance_db_1f4u_user:DvLfjBlmxuwdQlyLPd7ZAfnBquaHgriJ@dpg-d726egvdiees739hojv0-a.oregon-postgres.render.com/student_performance_db_1f4u';
+    const connectionString = process.env.DATABASE_URL;
+    if (!connectionString) {
+        console.error('❌ DATABASE_URL not found in environment variables');
+        process.exit(1);
+    }
+    
     pool = new Pool({
         connectionString: connectionString,
         ssl: { rejectUnauthorized: false }
     });
-    console.log('Database configured');
+    console.log('✅ Database configured');
     
     pool.connect((err, client, release) => {
         if (err) {
-            console.log('Database connection error:', err.message);
+            console.error('❌ Database connection error:', err.message);
         } else {
-            console.log('Connected to PostgreSQL');
+            console.log('✅ Connected to PostgreSQL');
             release();
         }
     });
 } catch (err) {
-    console.log('Pool creation error:', err.message);
+    console.error('❌ Pool creation error:', err.message);
+    process.exit(1);
 }
 
 // Root endpoint
@@ -51,7 +57,7 @@ app.post('/api/login', async (req, res) => {
             return res.status(500).json({ success: false, error: 'Database not connected' });
         }
         
-        const result = await pool.query('SELECT * FROM users WHERE username = ', [username]);
+        const result = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
         
         if (result.rows.length === 0) {
             return res.status(401).json({ success: false, error: 'Invalid credentials' });
@@ -98,7 +104,7 @@ app.get('/api/profile', async (req, res) => {
     
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
-        const result = await pool.query('SELECT * FROM users WHERE id = ', [decoded.id]);
+        const result = await pool.query('SELECT * FROM users WHERE id = $1', [decoded.id]);
         
         if (result.rows.length === 0) {
             return res.status(404).json({ success: false, error: 'User not found' });
@@ -129,7 +135,7 @@ app.get('/api/student/:studentId/courses', async (req, res) => {
             return res.status(500).json({ success: false, error: 'Database not connected' });
         }
         
-        const sql = 'SELECT c.*, sc.enrolled_date FROM courses c JOIN student_courses sc ON c.id = sc.course_id JOIN students s ON sc.student_id = s.id WHERE s.user_id = ';
+        const sql = 'SELECT c.*, sc.enrolled_date FROM courses c JOIN student_courses sc ON c.id = sc.course_id JOIN students s ON sc.student_id = s.id WHERE s.user_id = $1';
         const result = await pool.query(sql, [req.params.studentId]);
         
         res.json({ success: true, courses: result.rows, count: result.rows.length });
@@ -156,7 +162,7 @@ app.post('/api/predict', async (req, res) => {
         else if (score >= 50) grade = 'D';
         else grade = 'F';
         
-        const sql = 'INSERT INTO predictions (student_id, course_code, course_name, credits, predicted_score, predicted_grade) VALUES (, , , , , ) RETURNING id';
+        const sql = 'INSERT INTO predictions (student_id, course_code, course_name, credits, predicted_score, predicted_grade) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id';
         const result = await pool.query(sql, [student_id, course_code, course_name, credits, score, grade]);
         
         res.json({
@@ -175,8 +181,37 @@ app.post('/api/predict', async (req, res) => {
     }
 });
 
-// Start server
-app.listen(PORT, () => {
-    console.log('Server running on port ' + PORT);
-    console.log('API URL: http://localhost:' + PORT);
-});
+// Function to find an available port
+function findAvailablePort(startPort) {
+    return new Promise((resolve, reject) => {
+        const server = app.listen(startPort, () => {
+            const { port } = server.address();
+            server.close(() => resolve(port));
+        });
+        
+        server.on('error', (err) => {
+            if (err.code === 'EADDRINUSE') {
+                resolve(findAvailablePort(startPort + 1));
+            } else {
+                reject(err);
+            }
+        });
+    });
+}
+
+// Start server with automatic port selection
+async function startServer() {
+    try {
+        const port = await findAvailablePort(DEFAULT_PORT);
+        app.listen(port, () => {
+            console.log(`✅ Server running on port ${port}`);
+            console.log(`🌐 API URL: http://localhost:${port}`);
+            console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
+        });
+    } catch (err) {
+        console.error('❌ Failed to start server:', err);
+        process.exit(1);
+    }
+}
+
+startServer();
