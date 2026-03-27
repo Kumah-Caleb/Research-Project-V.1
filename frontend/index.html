@@ -1,310 +1,231 @@
-<!DOCTYPE html>
+ï»¿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AAMUSTED Student Performance Predictor</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1a2a3a 0%, #0f1a24 100%);
-            min-height: 100vh;
-            color: #333;
-        }
-
-        .hero {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 80px 20px;
-            text-align: center;
-        }
-
-        .hero h1 {
-            font-size: 48px;
-            margin-bottom: 20px;
-        }
-
-        .hero p {
-            font-size: 20px;
-            opacity: 0.9;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 40px 20px;
-        }
-
-        .features {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-            margin-bottom: 60px;
-        }
-
-        .feature-card {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            transition: transform 0.3s;
-        }
-
-        .feature-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .feature-icon {
-            font-size: 48px;
-            margin-bottom: 20px;
-        }
-
-        .feature-card h3 {
-            margin-bottom: 15px;
-            color: #2c3e50;
-        }
-
-        .feature-card p {
-            color: #666;
-            line-height: 1.6;
-        }
-
-        .program-info {
-            background: #f8f9fa;
-            border-radius: 15px;
-            padding: 40px;
-            margin-bottom: 40px;
-        }
-
-        .program-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 30px;
-            margin-top: 30px;
-        }
-
-        .program-card {
-            background: white;
-            border-radius: 12px;
-            padding: 25px;
-            border-left: 4px solid;
-        }
-
-        .program-card.regular {
-            border-left-color: #28a745;
-        }
-
-        .program-card.non-regular {
-            border-left-color: #fd7e14;
-        }
-
-        .program-card h4 {
-            font-size: 20px;
-            margin-bottom: 15px;
-        }
-
-        .program-card ul {
-            list-style: none;
-            padding-left: 0;
-        }
-
-        .program-card li {
-            padding: 8px 0;
-            color: #666;
-        }
-
-        .program-card li:before {
-            content: "?";
-            color: #28a745;
-            margin-right: 10px;
-        }
-
-        .cta-buttons {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            margin-top: 40px;
-        }
-
-        .btn {
-            padding: 15px 40px;
-            border-radius: 50px;
-            font-size: 18px;
-            font-weight: bold;
-            text-decoration: none;
-            transition: all 0.3s;
-            display: inline-block;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-        }
-
-        .btn-outline {
-            border: 2px solid #667eea;
-            color: #667eea;
-            background: white;
-        }
-
-        .btn-outline:hover {
-            background: #667eea;
-            color: white;
-        }
-
-        .welcome-back {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-            color: white;
-            padding: 30px;
-            border-radius: 15px;
-            text-align: center;
-            margin-bottom: 40px;
-            display: none;
-        }
-
-        .welcome-back h2 {
-            margin-bottom: 15px;
-        }
-
-        .dashboard-btn {
-            background: white;
-            color: #28a745;
-            border: none;
-            padding: 12px 30px;
-            border-radius: 50px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 15px;
-            text-decoration: none;
-            display: inline-block;
-        }
-
-        .footer {
-            background: #1a2a3a;
-            color: white;
-            text-align: center;
-            padding: 40px;
-            margin-top: 60px;
-        }
-
-        @media (max-width: 768px) {
-            .hero h1 { font-size: 32px; }
-            .hero p { font-size: 16px; }
-            .cta-buttons { flex-direction: column; align-items: center; }
-            .btn { width: 200px; text-align: center; }
-        }
-    </style>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-    <div class="hero">
-        <h1>?? AAMUSTED Student Performance Predictor</h1>
-        <p>AI-Powered Academic Performance Prediction for Regular & Non-Regular Programs</p>
-    </div>
-
     <div class="container">
-        <!-- Welcome Back Banner for Returning Users -->
-        <div id="welcomeBackBanner" class="welcome-back">
-            <h2>?? Welcome Back!</h2>
-            <p id="userNameDisplay">We missed you!</p>
-            <a href="#" id="goToDashboardBtn" class="dashboard-btn">Go to Dashboard ?</a>
-        </div>
+        <!-- Navigation -->
+        <nav class="navbar">
+            <div class="nav-brand">
+                <i class="fas fa-chart-line"></i>
+                <span>AAMUSTED Performance Predictor</span>
+            </div>
+            <div class="nav-links" id="navLinks">
+                <a href="#" onclick="showPage('dashboard')">Dashboard</a>
+                <a href="#" onclick="showPage('courses')">My Courses</a>
+                <a href="#" onclick="showPage('predictions')">Predictions</a>
+                <a href="#" onclick="showPage('profile')">Profile</a>
+                <a href="#" onclick="logout()">Logout</a>
+            </div>
+            <div class="nav-right">
+                <span id="userName" class="user-name"></span>
+                <button class="mobile-menu" onclick="toggleMobileMenu()">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </nav>
 
-        <div class="features">
-            <div class="feature-card">
-                <div class="feature-icon">??</div>
-                <h3>Semester Prediction</h3>
-                <p>Predict your end-of-semester performance based on attendance, assignments, engagement, and study habits</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">??</div>
-                <h3>Weekly Tracking</h3>
-                <p>Track your weekly progress and get real-time feedback on your performance</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">??</div>
-                <h3>Custom Format</h3>
-                <p>Create your own prediction formula with customizable weights for each factor</p>
-            </div>
-        </div>
-
-        <div class="program-info">
-            <h2 style="text-align: center; margin-bottom: 20px;">?? Programs Supported</h2>
-            <div class="program-grid">
-                <div class="program-card regular">
-                    <h4>?? Regular Program</h4>
-                    <ul>
-                        <li>5 days/week (Monday - Friday)</li>
-                        <li>15 weeks per semester</li>
-                        <li>75 lecture days × 3 hours = 225 total hours</li>
-                        <li>Full-time student schedule</li>
-                    </ul>
+        <!-- Login Page -->
+        <div id="loginPage" class="page active">
+            <div class="login-container">
+                <div class="login-card">
+                    <div class="login-header">
+                        <i class="fas fa-graduation-cap"></i>
+                        <h2>Student Performance Predictor</h2>
+                        <p>Welcome to AAMUSTED Performance Prediction System</p>
+                    </div>
+                    <form id="loginForm" onsubmit="handleLogin(event)">
+                        <div class="form-group">
+                            <label for="username">Username or Email</label>
+                            <input type="text" id="username" required placeholder="Enter your username or email">
+                            <i class="fas fa-user input-icon"></i>
+                        </div>
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <input type="password" id="password" required placeholder="Enter your password">
+                            <i class="fas fa-lock input-icon"></i>
+                        </div>
+                        <button type="submit" class="btn-login">
+                            <i class="fas fa-sign-in-alt"></i> Login
+                        </button>
+                    </form>
+                    <div class="login-footer">
+                        <p>Don't have an account? <a href="#" onclick="showRegister()">Register here</a></p>
+                    </div>
                 </div>
-                <div class="program-card non-regular">
-                    <h4>?? Non-Regular Program</h4>
-                    <ul>
-                        <li>Weekend/Evening classes</li>
-                        <li>2 days/week (Saturday + Sunday/Evening)</li>
-                        <li>30 lecture days × 3 hours = 90 total hours</li>
-                        <li>Working professionals & part-time students</li>
-                    </ul>
+            </div>
+        </div>
+
+        <!-- Register Page -->
+        <div id="registerPage" class="page">
+            <div class="register-container">
+                <div class="register-card">
+                    <div class="register-header">
+                        <i class="fas fa-user-plus"></i>
+                        <h2>Create Account</h2>
+                        <p>Join the AAMUSTED Performance Prediction System</p>
+                    </div>
+                    <form id="registerForm" onsubmit="handleRegister(event)">
+                        <div class="form-group">
+                            <label for="regFullName">Full Name</label>
+                            <input type="text" id="regFullName" required placeholder="Enter your full name">
+                        </div>
+                        <div class="form-group">
+                            <label for="regUsername">Username</label>
+                            <input type="text" id="regUsername" required placeholder="Choose a username">
+                        </div>
+                        <div class="form-group">
+                            <label for="regEmail">Email</label>
+                            <input type="email" id="regEmail" required placeholder="Enter your email">
+                        </div>
+                        <div class="form-group">
+                            <label for="regPassword">Password</label>
+                            <input type="password" id="regPassword" required placeholder="Create a password (min 6 characters)">
+                        </div>
+                        <div class="form-group">
+                            <label for="regDepartment">Department</label>
+                            <select id="regDepartment" required>
+                                <option value="">Select Department</option>
+                                <option value="Computer Science">Computer Science</option>
+                                <option value="Information Technology">Information Technology</option>
+                                <option value="Mathematics">Mathematics</option>
+                                <option value="Statistics">Statistics</option>
+                                <option value="Engineering">Engineering</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn-register">
+                            <i class="fas fa-user-plus"></i> Register
+                        </button>
+                    </form>
+                    <div class="register-footer">
+                        <p>Already have an account? <a href="#" onclick="showLogin()">Login here</a></p>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="cta-buttons" id="ctaButtons">
-            <a href="login.html" class="btn btn-primary">?? Login</a>
-            <a href="register.html" class="btn btn-outline">?? Register</a>
+        <!-- Dashboard Page -->
+        <div id="dashboardPage" class="page">
+            <div class="dashboard-container">
+                <h1><i class="fas fa-tachometer-alt"></i> Dashboard</h1>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <i class="fas fa-book"></i>
+                        <h3 id="totalCourses">0</h3>
+                        <p>Total Courses</p>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-chart-line"></i>
+                        <h3 id="avgScore">0%</h3>
+                        <p>Average Score</p>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-trophy"></i>
+                        <h3 id="highPerformance">0</h3>
+                        <p>High Performance</p>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h3 id="atRisk">0</h3>
+                        <p>At Risk Courses</p>
+                    </div>
+                </div>
+                <div class="recent-predictions">
+                    <h2>Recent Predictions</h2>
+                    <div id="recentPredictions" class="predictions-list"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Courses Page -->
+        <div id="coursesPage" class="page">
+            <div class="courses-container">
+                <h1><i class="fas fa-graduation-cap"></i> My Courses</h1>
+                <div class="course-filters">
+                    <input type="text" id="courseSearch" placeholder="Search courses..." onkeyup="filterCourses()">
+                    <select id="semesterFilter" onchange="filterCourses()">
+                        <option value="">All Semesters</option>
+                        <option value="1">Semester 1</option>
+                        <option value="2">Semester 2</option>
+                    </select>
+                </div>
+                <div id="coursesList" class="courses-grid"></div>
+            </div>
+        </div>
+
+        <!-- Predictions Page -->
+        <div id="predictionsPage" class="page">
+            <div class="predictions-container">
+                <h1><i class="fas fa-chart-line"></i> Make a Prediction</h1>
+                <div class="prediction-form">
+                    <form id="predictionForm" onsubmit="makePrediction(event)">
+                        <div class="form-group">
+                            <label for="courseCode">Course Code</label>
+                            <input type="text" id="courseCode" required placeholder="e.g., CSC 101">
+                        </div>
+                        <div class="form-group">
+                            <label for="courseName">Course Name</label>
+                            <input type="text" id="courseName" required placeholder="e.g., Introduction to Programming">
+                        </div>
+                        <div class="form-group">
+                            <label for="credits">Credits</label>
+                            <input type="number" id="credits" required placeholder="3" min="1" max="6">
+                        </div>
+                        <div class="form-group">
+                            <label for="semester">Semester</label>
+                            <select id="semester" required>
+                                <option value="1">Semester 1</option>
+                                <option value="2">Semester 2</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn-predict">
+                            <i class="fas fa-magic"></i> Predict Performance
+                        </button>
+                    </form>
+                </div>
+                <div id="predictionResult" class="prediction-result"></div>
+                <h2>Prediction History</h2>
+                <div id="predictionHistory" class="prediction-history"></div>
+            </div>
+        </div>
+
+        <!-- Profile Page -->
+        <div id="profilePage" class="page">
+            <div class="profile-container">
+                <h1><i class="fas fa-user-circle"></i> My Profile</h1>
+                <div class="profile-card">
+                    <div class="profile-info">
+                        <div class="info-group">
+                            <label>Full Name:</label>
+                            <p id="profileFullName"></p>
+                        </div>
+                        <div class="info-group">
+                            <label>Username:</label>
+                            <p id="profileUsername"></p>
+                        </div>
+                        <div class="info-group">
+                            <label>Email:</label>
+                            <p id="profileEmail"></p>
+                        </div>
+                        <div class="info-group">
+                            <label>Department:</label>
+                            <p id="profileDepartment"></p>
+                        </div>
+                        <div class="info-group">
+                            <label>Member Since:</label>
+                            <p id="profileJoined"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div class="footer">
-        <p>© 2024 AAMUSTED Student Performance Predictor | Department of Information Technology Education</p>
-        <p style="margin-top: 10px; font-size: 12px;">Powered by AI & Machine Learning | Accurate predictions based on academic data</p>
-    </div>
-
-    <script>
-        // Check if user is already logged in
-        function checkLoggedInUser() {
-            const savedUser = localStorage.getItem('currentUser');
-            const welcomeBanner = document.getElementById('welcomeBackBanner');
-            const ctaButtons = document.getElementById('ctaButtons');
-            
-            if (savedUser) {
-                const user = JSON.parse(savedUser);
-                
-                // Show welcome back banner
-                welcomeBanner.style.display = 'block';
-                document.getElementById('userNameDisplay').innerHTML = `Welcome back, ${user.full_name || user.username}!`;
-                
-                // Hide login/register buttons
-                ctaButtons.style.display = 'none';
-                
-                // Set dashboard link based on role
-                const dashboardLink = document.getElementById('goToDashboardBtn');
-                if (user.role === 'lecturer') {
-                    dashboardLink.href = 'lecturer_dashboard.html';
-                } else {
-                    dashboardLink.href = 'student_dashboard.html';
-                }
-            }
-        }
-        
-        // Run on page load
-        checkLoggedInUser();
-    </script>
+    <script src="js/app.js"></script>
 </body>
 </html>
