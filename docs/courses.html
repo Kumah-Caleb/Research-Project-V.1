@@ -116,20 +116,20 @@
 </head>
 <body>
     <nav class="navbar">
-        <div class="logo">ðŸŽ“ AAMUSTED <span>Predictor</span></div>
+        <div class="logo">🎓 AAMUSTED <span>Predictor</span></div>
         <div class="nav-links">
             <a href="student_dashboard.html">Dashboard</a>
-            <a href="/predictor">Predictor</a>
-            <a href="/courses" class="active">Courses</a>
+            <a href="predictor.html">Predictor</a>
+            <a href="courses.html" class="active">My Courses</a>
             <a href="history.html">History</a>
             <a href="profile.html">Profile</a>
-            <button class="logout-btn" onclick="logout()">ðŸšª Logout</button>
+            <button class="logout-btn" onclick="logout()">🚪 Logout</button>
         </div>
     </nav>
 
     <div class="container">
         <div id="lecturerSection" style="display: none;">
-            <button class="create-course-btn" onclick="toggleAddCourse()">âž• Create New Course</button>
+            <button class="create-course-btn" onclick="toggleAddCourse()">➕ Create New Course</button>
             
             <div id="addCourseCard" class="add-course-card">
                 <h3 style="margin-bottom: 1rem;">Create New Course</h3>
@@ -156,203 +156,146 @@
             </div>
         </div>
         
-        <h2 style="margin-bottom: 1rem;">ðŸ“š My Courses</h2>
-        <div class="courses-grid" id="myCourses"></div>
+        <h2 style="margin-bottom: 1rem;">📚 My Courses</h2>
+        <div class="courses-grid" id="myCourses">
+            <div class="empty-message">Loading your courses...</div>
+        </div>
         
         <div id="studentSection" style="display: none;">
             <div class="available-courses">
-                <h3 style="margin-bottom: 1rem;">ðŸ“– Available Courses to Enroll</h3>
-                <div id="availableCourses"></div>
+                <h3 style="margin-bottom: 1rem;">📖 Available Courses to Enroll</h3>
+                <div id="availableCourses">
+                    <div class="empty-message">Loading available courses...</div>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
+        const API_URL = 'https://student-performance-predictor7.onrender.com';
         let currentUser = null;
-        let allCourses = [];
-        let enrolledCourses = [];
         
-        // Load user from localStorage
-        function loadUser() {
+        async function loadUser() {
             const userStr = localStorage.getItem('currentUser');
-            if (userStr) {
-                currentUser = JSON.parse(userStr);
+            if (!userStr) {
+                window.location.href = 'login.html';
+                return null;
+            }
+            currentUser = JSON.parse(userStr);
+            
+            if (currentUser.role === 'lecturer') {
+                document.getElementById('lecturerSection').style.display = 'block';
+                document.getElementById('studentSection').style.display = 'none';
+                await loadLecturerCourses();
+            } else {
+                document.getElementById('lecturerSection').style.display = 'none';
+                document.getElementById('studentSection').style.display = 'block';
+                await loadStudentCourses();
+                await loadAvailableCourses();
+            }
+            return currentUser;
+        }
+        
+        async function loadLecturerCourses() {
+            try {
+                const response = await fetch(`${API_URL}/api/courses?user_id=${currentUser.id}`);
+                const courses = await response.json();
                 
-                if (currentUser.role === 'lecturer') {
-                    document.getElementById('lecturerSection').style.display = 'block';
-                    document.getElementById('studentSection').style.display = 'none';
-                } else {
-                    document.getElementById('lecturerSection').style.display = 'none';
-                    document.getElementById('studentSection').style.display = 'block';
+                const container = document.getElementById('myCourses');
+                if (!courses || courses.length === 0) {
+                    container.innerHTML = '<div class="empty-message">No courses created yet. Click "Create New Course" to get started!</div>';
+                    return;
                 }
-            } else {
-                // Redirect to login if no user
-                window.location.href = '/login';
+                
+                container.innerHTML = courses.map(course => `
+                    <div class="course-card">
+                        <div class="course-code">${escapeHtml(course.code)}</div>
+                        <div class="course-name">${escapeHtml(course.name)}</div>
+                        <div class="course-info">Credit Hours: ${course.credit_hours}</div>
+                        <div class="lecturer">Created by: You</div>
+                        <button class="delete-btn" onclick="deleteCourse('${course.id}')">Delete Course</button>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading courses:', error);
+                document.getElementById('myCourses').innerHTML = '<div class="empty-message">Error loading courses. Please try again.</div>';
             }
         }
         
-        // Load courses from localStorage
-        function loadCoursesFromStorage() {
-            const coursesStr = localStorage.getItem('courses');
-            if (coursesStr) {
-                allCourses = JSON.parse(coursesStr);
-            } else {
-                // Initialize with some demo courses
-                allCourses = [
-                    {
-                        id: 'course_1',
-                        code: 'ITE 301',
-                        name: 'Web Development',
-                        credit_hours: 3,
-                        program_type: 'regular',
-                        lecturer_id: 'lecturer_1',
-                        lecturer_name: 'Dr. Jane Smith',
-                        created_at: new Date().toISOString()
-                    },
-                    {
-                        id: 'course_2',
-                        code: 'ITE 302',
-                        name: 'Database Management',
-                        credit_hours: 3,
-                        program_type: 'regular',
-                        lecturer_id: 'lecturer_1',
-                        lecturer_name: 'Dr. Jane Smith',
-                        created_at: new Date().toISOString()
-                    },
-                    {
-                        id: 'course_3',
-                        code: 'ITE 303',
-                        name: 'Network Security',
-                        credit_hours: 3,
-                        program_type: 'regular',
-                        lecturer_id: 'lecturer_2',
-                        lecturer_name: 'Prof. John Mensah',
-                        created_at: new Date().toISOString()
-                    }
-                ];
-                saveCoursesToStorage();
+        async function loadStudentCourses() {
+            try {
+                const response = await fetch(`${API_URL}/api/courses?user_id=${currentUser.id}`);
+                const courses = await response.json();
+                
+                const container = document.getElementById('myCourses');
+                if (!courses || courses.length === 0) {
+                    container.innerHTML = '<div class="empty-message">You are not enrolled in any courses. Browse available courses below!</div>';
+                    return;
+                }
+                
+                container.innerHTML = courses.map(course => `
+                    <div class="course-card">
+                        <div class="course-code">${escapeHtml(course.code)}</div>
+                        <div class="course-name">${escapeHtml(course.name)}</div>
+                        <div class="course-info">Credit Hours: ${course.credit_hours}</div>
+                        <div class="lecturer">Lecturer: ${escapeHtml(course.lecturer_name || 'Staff')}</div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading courses:', error);
+                document.getElementById('myCourses').innerHTML = '<div class="empty-message">Error loading your courses.</div>';
             }
         }
         
-        function saveCoursesToStorage() {
-            localStorage.setItem('courses', JSON.stringify(allCourses));
-        }
-        
-        // Load enrolled courses from localStorage
-        function loadEnrollments() {
-            const enrollmentsStr = localStorage.getItem('enrollments');
-            if (enrollmentsStr) {
-                const enrollments = JSON.parse(enrollmentsStr);
-                enrolledCourses = enrollments[currentUser?.id] || [];
-            } else {
-                enrolledCourses = [];
+        async function loadAvailableCourses() {
+            try {
+                const response = await fetch(`${API_URL}/api/available_courses?user_id=${currentUser.id}`);
+                const courses = await response.json();
+                
+                const container = document.getElementById('availableCourses');
+                if (!courses || courses.length === 0) {
+                    container.innerHTML = '<div class="empty-message">No courses available to enroll at the moment.</div>';
+                    return;
+                }
+                
+                container.innerHTML = `
+                    <div class="courses-grid">
+                        ${courses.map(course => `
+                            <div class="course-card">
+                                <div class="course-code">${escapeHtml(course.code)}</div>
+                                <div class="course-name">${escapeHtml(course.name)}</div>
+                                <div class="course-info">Credit Hours: ${course.credit_hours}</div>
+                                <div class="lecturer">Lecturer: ${escapeHtml(course.lecturer_name)}</div>
+                                <button class="enroll-btn" onclick="enrollCourse('${course.id}')">Enroll</button>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error loading available courses:', error);
+                document.getElementById('availableCourses').innerHTML = '<div class="empty-message">Error loading available courses.</div>';
             }
         }
         
-        function saveEnrollments() {
-            let enrollments = localStorage.getItem('enrollments');
-            if (!enrollments) {
-                enrollments = {};
-            } else {
-                enrollments = JSON.parse(enrollments);
-            }
-            enrollments[currentUser.id] = enrolledCourses;
-            localStorage.setItem('enrollments', JSON.stringify(enrollments));
-        }
-        
-        // Display enrolled courses
-        function displayMyCourses() {
-            const container = document.getElementById('myCourses');
-            const myCoursesList = allCourses.filter(course => enrolledCourses.includes(course.id));
-            
-            if (myCoursesList.length === 0) {
-                container.innerHTML = '<div class="empty-message">No courses yet. ' + 
-                    (currentUser.role === 'lecturer' ? 'Create your first course above!' : 'Check available courses below to enroll.') + 
-                    '</div>';
-                return;
-            }
-            
-            container.innerHTML = myCoursesList.map(course => `
-                <div class="course-card">
-                    <div class="course-code">${escapeHtml(course.code)}</div>
-                    <div class="course-name">${escapeHtml(course.name)}</div>
-                    <div class="course-info">Credit Hours: ${course.credit_hours}</div>
-                    <div class="lecturer">Lecturer: ${escapeHtml(course.lecturer_name || 'You')}</div>
-                    ${currentUser.role === 'lecturer' && course.lecturer_id === currentUser.id ? 
-                        `<button class="delete-btn" onclick="deleteCourse('${course.id}')">Delete Course</button>` : 
-                        currentUser.role === 'student' ?
-                        `<button class="enroll-btn" onclick="unenrollCourse('${course.id}')">Drop Course</button>` : ''
-                    }
-                </div>
-            `).join('');
-        }
-        
-        // Display available courses for students
-        function displayAvailableCourses() {
-            if (currentUser.role !== 'student') return;
-            
-            const container = document.getElementById('availableCourses');
-            const available = allCourses.filter(course => !enrolledCourses.includes(course.id));
-            
-            if (available.length === 0) {
-                container.innerHTML = '<div class="empty-message">No courses available to enroll at the moment.</div>';
-                return;
-            }
-            
-            container.innerHTML = `
-                <div class="courses-grid">
-                    ${available.map(course => `
-                        <div class="course-card">
-                            <div class="course-code">${escapeHtml(course.code)}</div>
-                            <div class="course-name">${escapeHtml(course.name)}</div>
-                            <div class="course-info">Credit Hours: ${course.credit_hours}</div>
-                            <div class="lecturer">Lecturer: ${escapeHtml(course.lecturer_name)}</div>
-                            <button class="enroll-btn" onclick="enrollCourse('${course.id}')">Enroll</button>
-                        </div>
-                    `).join('')}
-                </div>
-            `;
-        }
-        
-        function escapeHtml(str) {
-            if (!str) return '';
-            return str.replace(/[&<>]/g, function(m) {
-                if (m === '&') return '&amp;';
-                if (m === '<') return '&lt;';
-                if (m === '>') return '&gt;';
-                return m;
-            });
-        }
-        
-        // Student functions
         async function enrollCourse(courseId) {
-            const course = allCourses.find(c => c.id === courseId);
-            if (course && !enrolledCourses.includes(courseId)) {
-                enrolledCourses.push(courseId);
-                saveEnrollments();
-                displayMyCourses();
-                displayAvailableCourses();
-                alert(`Successfully enrolled in ${course.code} - ${course.name}!`);
-            }
-        }
-        
-        async function unenrollCourse(courseId) {
-            if (confirm('Are you sure you want to drop this course?')) {
-                const index = enrolledCourses.indexOf(courseId);
-                if (index > -1) {
-                    enrolledCourses.splice(index, 1);
-                    saveEnrollments();
-                    displayMyCourses();
-                    displayAvailableCourses();
-                    alert('Course dropped successfully.');
+            try {
+                const response = await fetch(`${API_URL}/api/enroll`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ student_id: currentUser.id, course_id: courseId })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    alert('Successfully enrolled!');
+                    await loadStudentCourses();
+                    await loadAvailableCourses();
+                } else {
+                    alert(result.error || 'Enrollment failed');
                 }
+            } catch (error) {
+                console.error('Enrollment error:', error);
+                alert('Network error. Please try again.');
             }
-        }
-        
-        // Lecturer functions
-        function toggleAddCourse() {
-            const card = document.getElementById('addCourseCard');
-            card.classList.toggle('show');
         }
         
         async function createCourse() {
@@ -366,70 +309,81 @@
                 return;
             }
             
-            const newCourse = {
-                id: 'course_' + Date.now(),
-                code: code,
-                name: name,
-                credit_hours: creditHours,
-                program_type: programType,
-                lecturer_id: currentUser.id,
-                lecturer_name: currentUser.full_name,
-                created_at: new Date().toISOString()
-            };
-            
-            allCourses.push(newCourse);
-            saveCoursesToStorage();
-            
-            alert('Course created successfully!');
-            document.getElementById('courseCode').value = '';
-            document.getElementById('courseName').value = '';
-            document.getElementById('addCourseCard').classList.remove('show');
-            displayMyCourses();
-            if (currentUser.role === 'student') {
-                displayAvailableCourses();
+            try {
+                const response = await fetch(`${API_URL}/api/courses`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        code: code,
+                        name: name,
+                        credit_hours: creditHours,
+                        program_type: programType,
+                        lecturer_id: currentUser.id,
+                        lecturer_name: currentUser.full_name
+                    })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    alert('Course created successfully!');
+                    document.getElementById('courseCode').value = '';
+                    document.getElementById('courseName').value = '';
+                    document.getElementById('addCourseCard').classList.remove('show');
+                    await loadLecturerCourses();
+                } else {
+                    alert(result.error || 'Failed to create course');
+                }
+            } catch (error) {
+                console.error('Create course error:', error);
+                alert('Network error. Please try again.');
             }
         }
         
         async function deleteCourse(courseId) {
             if (confirm('Are you sure you want to delete this course? This will remove it for all students.')) {
-                const index = allCourses.findIndex(c => c.id === courseId);
-                if (index > -1) {
-                    allCourses.splice(index, 1);
-                    saveCoursesToStorage();
-                    
-                    // Also remove from all student enrollments
-                    const enrollmentsStr = localStorage.getItem('enrollments');
-                    if (enrollmentsStr) {
-                        let enrollments = JSON.parse(enrollmentsStr);
-                        for (let studentId in enrollments) {
-                            enrollments[studentId] = enrollments[studentId].filter(id => id !== courseId);
-                        }
-                        localStorage.setItem('enrollments', JSON.stringify(enrollments));
+                try {
+                    const response = await fetch(`${API_URL}/api/courses`, {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ course_id: courseId })
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        alert('Course deleted successfully.');
+                        await loadLecturerCourses();
+                    } else {
+                        alert(result.error || 'Failed to delete course');
                     }
-                    
-                    displayMyCourses();
-                    alert('Course deleted successfully.');
+                } catch (error) {
+                    console.error('Delete error:', error);
+                    alert('Network error. Please try again.');
                 }
             }
         }
         
+        function toggleAddCourse() {
+            const card = document.getElementById('addCourseCard');
+            card.classList.toggle('show');
+        }
+        
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+        
         async function logout() {
+            try {
+                await fetch(`${API_URL}/api/logout`, { method: 'POST' });
+            } catch(e) {}
             localStorage.removeItem('currentUser');
-            window.location.href = '/';
+            window.location.href = 'login.html';
         }
         
-        // Load all data on page load
-        function init() {
-            loadUser();
-            loadCoursesFromStorage();
-            loadEnrollments();
-            displayMyCourses();
-            if (currentUser && currentUser.role === 'student') {
-                displayAvailableCourses();
-            }
-        }
-        
-        init();
+        loadUser();
     </script>
 </body>
 </html>
