@@ -50,47 +50,29 @@
             cursor: pointer;
             margin-bottom: 1rem;
             width: 100%;
-            font-size: 1rem;
-            font-weight: bold;
         }
-        .create-course-btn:hover { background: #218838; }
-        
         .courses-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
             gap: 1.5rem;
-            margin-bottom: 2rem;
         }
-        
         .course-card {
             background: white;
             border-radius: 15px;
             padding: 1.5rem;
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            transition: transform 0.3s;
         }
-        .course-card:hover { transform: translateY(-5px); }
-        
-        .course-code {
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: #667eea;
-            margin-bottom: 0.5rem;
-        }
-        .course-name { font-size: 1.1rem; margin-bottom: 0.5rem; }
-        .course-info { color: #666; font-size: 0.9rem; margin-bottom: 0.5rem; }
-        
+        .course-code { font-size: 1.2rem; font-weight: bold; color: #667eea; }
         .delete-btn {
             background: #dc3545;
             color: white;
             border: none;
-            padding: 0.5rem 1rem;
+            padding: 0.5rem;
             border-radius: 8px;
             cursor: pointer;
             width: 100%;
+            margin-top: 1rem;
         }
-        .delete-btn:hover { background: #c82333; }
-        
         .add-course-card {
             background: white;
             border-radius: 20px;
@@ -99,29 +81,14 @@
             display: none;
         }
         .add-course-card.show { display: block; }
-        
         .form-group { margin-bottom: 1rem; }
-        label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: #333; }
-        input, select {
-            width: 100%;
-            padding: 0.8rem;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-        }
-        
+        input, select { width: 100%; padding: 0.8rem; border: 2px solid #ddd; border-radius: 8px; }
         .empty-message { text-align: center; padding: 2rem; color: #999; }
-        .back-link {
-            display: inline-block;
-            margin-bottom: 1rem;
-            color: #667eea;
-            text-decoration: none;
-        }
-        .back-link:hover { text-decoration: underline; }
+        .back-link { display: inline-block; margin-bottom: 1rem; color: #667eea; text-decoration: none; }
         
         @media (max-width: 768px) {
             .navbar { flex-direction: column; text-align: center; }
             .nav-links { justify-content: center; }
-            .container { padding: 1rem; }
         }
     </style>
 </head>
@@ -132,7 +99,7 @@
             <a href="lecturer_dashboard.html">Dashboard</a>
             <a href="lecturer_courses.html" class="active">My Courses</a>
             <a href="lecturer_students.html">My Students</a>
-            <a href="profile.html">Profile</a>
+            <a href="lecturer_profile.html">Profile</a>
             <button class="logout-btn" onclick="logout()">🚪 Logout</button>
         </div>
     </nav>
@@ -143,7 +110,7 @@
         <button class="create-course-btn" onclick="toggleAddCourse()">➕ Create New Course</button>
         
         <div id="addCourseCard" class="add-course-card">
-            <h3 style="margin-bottom: 1rem;">Create New Course</h3>
+            <h3>Create New Course</h3>
             <div class="form-group">
                 <label>Course Code</label>
                 <input type="text" id="courseCode" placeholder="e.g., ITE 301">
@@ -154,159 +121,63 @@
             </div>
             <div class="form-group">
                 <label>Credit Hours</label>
-                <input type="number" id="creditHours" value="3" step="1">
+                <input type="number" id="creditHours" value="3">
             </div>
-            <div class="form-group">
-                <label>Program Type</label>
-                <select id="courseProgramType">
-                    <option value="regular">Regular (5 days/week)</option>
-                    <option value="non-regular">Non-Regular (Weekend/Evening)</option>
-                </select>
-            </div>
-            <button class="enroll-btn" onclick="createCourse()" style="background:#28a745;">Create Course</button>
+            <button onclick="createCourse()" style="background:#28a745; color:white; padding:0.5rem; border:none; border-radius:8px; width:100%;">Create</button>
         </div>
         
-        <h2 style="margin-bottom: 1rem;">📚 My Courses</h2>
-        <div class="courses-grid" id="myCourses">
-            <div class="empty-message">Loading your courses...</div>
-        </div>
+        <h2>📚 My Courses</h2>
+        <div class="courses-grid" id="myCourses"><div class="empty-message">Loading...</div></div>
     </div>
 
     <script>
         const API_URL = 'https://student-performance-predictor7.onrender.com';
         let currentUser = null;
         
-        function logout() {
-            localStorage.clear();
-            window.location.href = 'login.html';
-        }
+        function logout() { localStorage.clear(); window.location.href = 'login.html'; }
         
         async function loadUser() {
             const userStr = localStorage.getItem('currentUser');
-            if (!userStr) {
-                window.location.href = 'login.html';
-                return null;
-            }
+            if (!userStr) { window.location.href = 'login.html'; return; }
             currentUser = JSON.parse(userStr);
-            if (currentUser.role !== 'lecturer') {
-                window.location.href = 'student_dashboard.html';
-                return null;
-            }
-            return currentUser;
+            if (currentUser.role !== 'lecturer') window.location.href = 'student_dashboard.html';
         }
         
-        async function loadLecturerCourses() {
-            try {
-                const response = await fetch(`${API_URL}/api/courses?user_id=${currentUser.id}`);
-                const courses = await response.json();
-                const container = document.getElementById('myCourses');
-                
-                if (!courses || courses.length === 0) {
-                    container.innerHTML = '<div class="empty-message">No courses created yet. Click "Create New Course" to get started!</div>';
-                    return;
-                }
-                
-                container.innerHTML = courses.map(course => `
-                    <div class="course-card">
-                        <div class="course-code">${escapeHtml(course.code)}</div>
-                        <div class="course-name">${escapeHtml(course.name)}</div>
-                        <div class="course-info">Credit Hours: ${course.credit_hours}</div>
-                        <div class="lecturer" style="color:#999;">Created by: You</div>
-                        <button class="delete-btn" onclick="deleteCourse('${course.id}')">Delete Course</button>
-                    </div>
-                `).join('');
-            } catch (error) {
-                console.error('Error loading courses:', error);
-                document.getElementById('myCourses').innerHTML = '<div class="empty-message">Error loading courses. Please try again.</div>';
-            }
+        async function loadCourses() {
+            const response = await fetch(`${API_URL}/api/courses?user_id=${currentUser.id}`);
+            const courses = await response.json();
+            const container = document.getElementById('myCourses');
+            if (!courses.length) { container.innerHTML = '<div class="empty-message">No courses yet. Click "Create New Course" to get started!</div>'; return; }
+            container.innerHTML = courses.map(c => `
+                <div class="course-card">
+                    <div class="course-code">${c.code}</div>
+                    <div class="course-name">${c.name}</div>
+                    <div>Credit Hours: ${c.credit_hours}</div>
+                    <button class="delete-btn" onclick="deleteCourse('${c.id}')">Delete Course</button>
+                </div>
+            `).join('');
         }
         
         async function createCourse() {
-            const code = document.getElementById('courseCode').value.trim();
-            const name = document.getElementById('courseName').value.trim();
-            const creditHours = parseInt(document.getElementById('creditHours').value);
-            const programType = document.getElementById('courseProgramType').value;
-            
-            if (!code || !name) {
-                alert('Please fill all fields');
-                return;
-            }
-            
-            try {
-                const response = await fetch(`${API_URL}/api/courses`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        code: code,
-                        name: name,
-                        credit_hours: creditHours,
-                        program_type: programType,
-                        lecturer_id: currentUser.id,
-                        lecturer_name: currentUser.full_name
-                    })
-                });
-                const result = await response.json();
-                if (result.success) {
-                    alert('Course created successfully!');
-                    document.getElementById('courseCode').value = '';
-                    document.getElementById('courseName').value = '';
-                    document.getElementById('addCourseCard').classList.remove('show');
-                    await loadLecturerCourses();
-                } else {
-                    alert(result.error || 'Failed to create course');
-                }
-            } catch (error) {
-                console.error('Create course error:', error);
-                alert('Network error. Please try again.');
-            }
+            const data = { code: document.getElementById('courseCode').value, name: document.getElementById('courseName').value, credit_hours: parseInt(document.getElementById('creditHours').value), program_type: 'regular', lecturer_id: currentUser.id, lecturer_name: currentUser.full_name };
+            if (!data.code || !data.name) { alert('Please fill all fields'); return; }
+            const response = await fetch(`${API_URL}/api/courses`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+            const result = await response.json();
+            if (result.success) { alert('Course created!'); document.getElementById('addCourseCard').classList.remove('show'); loadCourses(); }
+            else alert(result.error);
         }
         
         async function deleteCourse(courseId) {
-            if (confirm('Are you sure you want to delete this course? This will remove it for all students.')) {
-                try {
-                    const response = await fetch(`${API_URL}/api/courses`, {
-                        method: 'DELETE',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ course_id: courseId })
-                    });
-                    const result = await response.json();
-                    if (result.success) {
-                        alert('Course deleted successfully.');
-                        await loadLecturerCourses();
-                    } else {
-                        alert(result.error || 'Failed to delete course');
-                    }
-                } catch (error) {
-                    console.error('Delete error:', error);
-                    alert('Network error. Please try again.');
-                }
-            }
+            if (!confirm('Delete this course?')) return;
+            const response = await fetch(`${API_URL}/api/courses`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ course_id: courseId }) });
+            const result = await response.json();
+            if (result.success) loadCourses();
+            else alert(result.error);
         }
         
-        function toggleAddCourse() {
-            const card = document.getElementById('addCourseCard');
-            card.classList.toggle('show');
-        }
+        function toggleAddCourse() { document.getElementById('addCourseCard').classList.toggle('show'); }
         
-        function escapeHtml(str) {
-            if (!str) return '';
-            return str.replace(/[&<>]/g, function(m) {
-                if (m === '&') return '&amp;';
-                if (m === '<') return '&lt;';
-                if (m === '>') return '&gt;';
-                return m;
-            });
-        }
-        
-        async function init() {
-            await loadUser();
-            if (currentUser && currentUser.role === 'lecturer') {
-                await loadLecturerCourses();
-            }
-        }
-        
-        init();
+        loadUser().then(loadCourses);
     </script>
 </body>
 </html>
-
