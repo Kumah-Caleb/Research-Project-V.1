@@ -136,7 +136,7 @@
                     // Save user to localStorage
                     localStorage.setItem('currentUser', JSON.stringify(result.user));
                     
-                    // Redirect based on role
+                    // Redirect to dashboard based on role
                     if (result.user.role === 'lecturer') {
                         window.location.href = 'lecturer_dashboard.html';
                     } else {
@@ -156,17 +156,6 @@
                 btn.innerHTML = 'Login';
             }
         });
-        
-        // Check if already logged in
-        const savedUser = localStorage.getItem('currentUser');
-        if (savedUser) {
-            const user = JSON.parse(savedUser);
-            if (user.role === 'lecturer') {
-                window.location.href = 'lecturer_dashboard.html';
-            } else {
-                window.location.href = 'student_dashboard.html';
-            }
-        }
     </script>
 </body>
 </html>
