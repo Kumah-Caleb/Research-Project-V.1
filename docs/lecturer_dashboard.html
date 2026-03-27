@@ -38,6 +38,7 @@
             cursor: pointer;
             color: white;
         }
+        .logout-btn:hover { background: rgba(255,80,60,0.5); }
         
         .container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
         
@@ -103,14 +104,15 @@
         table { width: 100%; border-collapse: collapse; }
         th, td { padding: 1rem; text-align: left; border-bottom: 1px solid #eee; }
         th { background: #f8f9fa; font-weight: 600; }
-        .view-btn {
-            background: #667eea;
+        .predict-btn {
+            background: #28a745;
             color: white;
             border: none;
             padding: 0.5rem 1rem;
             border-radius: 5px;
             cursor: pointer;
         }
+        .predict-btn:hover { background: #218838; }
         .empty-message { text-align: center; padding: 2rem; color: #999; }
         
         @media (max-width: 768px) {
@@ -135,7 +137,7 @@
     <div class="container">
         <div class="welcome-card">
             <h1 id="welcomeMessage">Welcome, Lecturer! 👋</h1>
-            <p>Monitor student performance, create courses, and provide academic guidance</p>
+            <p>Monitor student performance, create courses, and predict academic outcomes</p>
         </div>
 
         <div class="stats-grid">
@@ -157,14 +159,14 @@
                 <h3>View All Students</h3>
                 <p>Monitor student performance and predictions</p>
             </a>
-            <a href="predictor.html" class="action-card">
+            <div class="action-card" onclick="openPredictor()">
                 <div class="action-icon">🔮</div>
                 <h3>Predict Performance</h3>
                 <p>Get AI-powered predictions for your students</p>
-            </a>
+            </div>
         </div>
 
-        <div class="section-title"><span>📋</span><span>My Students</span></div>
+        <div class="section-title"><span>📊</span><span>Recent Student Activity</span></div>
         <div class="students-table">
             <div id="studentsList"><div class="empty-message">Loading your students...</div></div>
         </div>
@@ -179,6 +181,19 @@
             window.location.href = 'login.html';
         }
         
+        function openPredictor() {
+            window.location.href = 'predictor.html';
+        }
+        
+        // Function to predict for a student with all details
+        function predictForStudent(studentId, studentName, studentIndex, studentProgram) {
+            localStorage.setItem('selectedStudent', studentId);
+            localStorage.setItem('selectedStudentName', studentName);
+            localStorage.setItem('selectedStudentIndex', studentIndex || 'N/A');
+            localStorage.setItem('selectedStudentProgram', studentProgram || 'Regular');
+            window.location.href = 'predictor.html';
+        }
+        
         async function loadUser() {
             const userStr = localStorage.getItem('currentUser');
             if (!userStr) {
@@ -187,7 +202,6 @@
             }
             currentUser = JSON.parse(userStr);
             
-            // Verify user is lecturer - if not, redirect to student dashboard
             if (currentUser.role !== 'lecturer') {
                 window.location.href = 'student_dashboard.html';
                 return null;
@@ -195,12 +209,6 @@
             
             document.getElementById('welcomeMessage').innerHTML = `Welcome, ${currentUser.full_name || currentUser.username}! 👋`;
             return currentUser;
-        }
-        
-        function predictForStudent(studentId, studentName) {
-            localStorage.setItem('selectedStudent', studentId);
-            localStorage.setItem('selectedStudentName', studentName);
-            window.location.href = 'predictor.html';
         }
         
         async function loadMyStudents() {
@@ -231,7 +239,13 @@
                 container.innerHTML = `
                     <table>
                         <thead>
-                            <tr><th>Student Name</th><th>Index Number</th><th>Program</th><th>Enrolled Courses</th><th>Action</th></tr>
+                            <tr>
+                                <th>Student Name</th>
+                                <th>Index Number</th>
+                                <th>Program</th>
+                                <th>Enrolled Courses</th>
+                                <th>Action</th>
+                            </tr>
                         </thead>
                         <tbody>
                             ${students.map(s => {
@@ -246,12 +260,16 @@
                                         <td>${escapeHtml(s.index_number)}</td>
                                         <td>${s.program_type === 'regular' ? 'Regular' : 'Non-Regular'}</td>
                                         <td>${coursesList || 'None'}</td>
-                                        <td><button class="view-btn" onclick="predictForStudent('${s.id}', '${escapeHtml(s.full_name)}')">🔮 Predict</button></td>
+                                        <td>
+                                            <button class="predict-btn" onclick="predictForStudent('${s.id}', '${escapeHtml(s.full_name)}', '${escapeHtml(s.index_number)}', '${s.program_type}')">
+                                                🔮 Predict
+                                            </button>
+                                        </td>
                                     </tr>
                                 `;
                             }).join('')}
                         </tbody>
-                     </table>
+                    </table>
                 `;
                 
                 atRiskCount.textContent = atRisk;
@@ -285,8 +303,3 @@
     </script>
 </body>
 </html>
-
-
-
-
-
