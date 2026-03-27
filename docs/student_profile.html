@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Profile - Student - AAMUSTED Performance Predictor</title>
+    <title>My Profile - AAMUSTED Performance Predictor</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fb; }
@@ -20,29 +20,11 @@
         }
         .logo { font-size: 1.5rem; font-weight: bold; }
         .logo span { color: #ffd700; }
-        .nav-links { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
-        .nav-links a {
-            color: white;
-            text-decoration: none;
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            transition: background 0.3s;
-        }
-        .nav-links a:hover { background: rgba(255,255,255,0.2); }
-        .nav-links a.active { background: rgba(255,255,255,0.3); border-bottom: 2px solid #ffd700; }
-        .logout-btn {
-            background: rgba(255,80,60,0.3);
-            border: 1px solid rgba(255,80,60,0.5);
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            cursor: pointer;
-            color: white;
-            transition: all 0.3s;
-        }
-        .logout-btn:hover {
-            background: rgba(255,80,60,0.5);
-            transform: translateY(-2px);
-        }
+        .nav-links { display: flex; gap: 1.5rem; align-items: center; flex-wrap: wrap; }
+        .nav-links a { color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 8px; }
+        .nav-links a:hover, .nav-links a.active { background: rgba(255,255,255,0.2); }
+        .logout-btn { background: rgba(255,80,60,0.3); border: 1px solid rgba(255,80,60,0.5); padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; transition: all 0.3s; }
+        .logout-btn:hover { background: rgba(255,80,60,0.5); }
         
         .container { max-width: 800px; margin: 0 auto; padding: 2rem; }
         
@@ -51,12 +33,6 @@
             border-radius: 20px;
             overflow: hidden;
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            animation: fadeIn 0.5s ease;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
         }
         
         .profile-header {
@@ -67,13 +43,6 @@
         }
         .avatar { font-size: 4rem; margin-bottom: 1rem; }
         .profile-name { font-size: 1.5rem; margin-bottom: 0.5rem; }
-        .profile-role { 
-            display: inline-block;
-            background: rgba(255,255,255,0.2);
-            padding: 0.3rem 1rem;
-            border-radius: 20px;
-            font-size: 0.9rem;
-        }
         
         .profile-info, .edit-form {
             padding: 2rem;
@@ -83,29 +52,15 @@
             display: flex;
             padding: 1rem 0;
             border-bottom: 1px solid #eee;
-            transition: background 0.3s;
-        }
-        .info-group:hover {
-            background: #f8f9fa;
         }
         .info-label { width: 150px; font-weight: bold; color: #666; }
         .info-value { flex: 1; color: #333; }
         
         .edit-form { display: none; }
-        .edit-form.show { display: block; animation: slideIn 0.3s ease; }
+        .edit-form.show { display: block; }
         
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateX(20px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-        
-        .form-group { margin-bottom: 1.5rem; }
-        label { 
-            display: block; 
-            margin-bottom: 0.5rem; 
-            font-weight: 600; 
-            color: #333;
-        }
+        .form-group { margin-bottom: 1rem; }
+        label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: #333; }
         input, select {
             width: 100%;
             padding: 0.8rem;
@@ -114,11 +69,7 @@
             font-size: 1rem;
             transition: all 0.3s;
         }
-        input:focus, select:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
-        }
+        input:focus, select:focus { outline: none; border-color: #667eea; }
         
         .edit-btn, .save-btn, .cancel-btn {
             padding: 0.8rem 1.5rem;
@@ -136,31 +87,11 @@
             color: white;
             width: 100%;
         }
-        .edit-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102,126,234,0.4);
-        }
-        .save-btn { 
-            background: #28a745; 
-            color: white;
-        }
-        .save-btn:hover {
-            background: #218838;
-            transform: translateY(-2px);
-        }
-        .save-btn:disabled {
-            background: #6c757d;
-            cursor: not-allowed;
-            transform: none;
-        }
-        .cancel-btn { 
-            background: #6c757d; 
-            color: white;
-        }
-        .cancel-btn:hover {
-            background: #5a6268;
-            transform: translateY(-2px);
-        }
+        .edit-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(102,126,234,0.4); }
+        .save-btn { background: #28a745; color: white; }
+        .save-btn:hover { background: #218838; }
+        .cancel-btn { background: #6c757d; color: white; }
+        .cancel-btn:hover { background: #5a6268; }
         
         .message {
             padding: 1rem;
@@ -184,25 +115,7 @@
             text-decoration: none;
             transition: all 0.3s;
         }
-        .back-link:hover {
-            text-decoration: underline;
-            transform: translateX(-5px);
-        }
-        
-        .loading-spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255,255,255,0.3);
-            border-radius: 50%;
-            border-top-color: white;
-            animation: spin 0.8s linear infinite;
-            margin-right: 8px;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
+        .back-link:hover { text-decoration: underline; }
         
         @media (max-width: 768px) {
             .navbar { flex-direction: column; text-align: center; }
@@ -218,9 +131,9 @@
         <div class="nav-links">
             <a href="student_dashboard.html">Dashboard</a>
             <a href="predictor.html">Predictor</a>
-            <a href="student_courses.html">My Courses</a>
-            <a href="student_history.html">History</a>
-            <a href="student_profile.html" class="active">Profile</a>
+            <a href="courses.html">My Courses</a>
+            <a href="history.html">History</a>
+            <a href="profile.html" class="active">Profile</a>
             <button class="logout-btn" onclick="logout()">🚪 Logout</button>
         </div>
     </nav>
@@ -232,7 +145,7 @@
             <div class="profile-header">
                 <div class="avatar">👤</div>
                 <div class="profile-name" id="profileName">Loading...</div>
-                <div class="profile-role" id="profileRole">Student</div>
+                <div id="profileRole"></div>
             </div>
             
             <div id="messageBox" class="message"></div>
@@ -251,7 +164,7 @@
                     <div class="info-value" id="viewEmail">-</div>
                 </div>
                 <div class="info-group">
-                    <div class="info-label">Index Number</div>
+                    <div class="info-label">Index Number / Staff ID</div>
                     <div class="info-value" id="viewIndex">-</div>
                 </div>
                 <div class="info-group">
@@ -276,11 +189,11 @@
                 </div>
                 <div class="form-group">
                     <label>Email</label>
-                    <input type="email" id="editEmail" placeholder="Enter your email address">
+                    <input type="email" id="editEmail" placeholder="Enter your email">
                 </div>
                 <div class="form-group">
-                    <label>Index Number</label>
-                    <input type="text" id="editIndexNumber" placeholder="Enter your index number">
+                    <label>Index Number / Staff ID</label>
+                    <input type="text" id="editIndexNumber" placeholder="Enter index number or staff ID">
                 </div>
                 <div class="form-group">
                     <label>Department</label>
@@ -313,47 +226,61 @@
         const API_URL = 'https://student-performance-predictor7.onrender.com';
         let currentUser = null;
         
-        // Improved logout function
-        function logout() { 
-            // Clear all localStorage data
-            localStorage.clear();
-            // Redirect to login page
-            window.location.href = 'login.html'; 
-        }
-        
-        // Load user data from localStorage
+        // FIXED: Load user data without auto-redirect
         function loadUserData() {
             const userStr = localStorage.getItem('currentUser');
             const token = localStorage.getItem('token');
             
-            // Check if user is logged in
-            if (!userStr || !token) { 
-                showMessage('Please login to continue', 'info');
-                setTimeout(() => {
-                    logout();
-                }, 2000);
-                return; 
+            console.log('Loading profile - Checking auth:', {
+                hasUser: !!userStr,
+                hasToken: !!token,
+                currentPage: window.location.pathname
+            });
+            
+            // If no user data, show error but don't auto-redirect immediately
+            if (!userStr || !token) {
+                console.warn('No user data found in localStorage');
+                document.getElementById('profileName').textContent = 'Not Logged In';
+                document.getElementById('profileRole').innerHTML = '⚠️ Please login';
+                
+                // Show message instead of auto-redirect
+                showMessage('Please login to view your profile', 'info');
+                
+                // Add a login button
+                const viewProfileDiv = document.getElementById('viewProfile');
+                const editBtn = document.querySelector('.edit-btn');
+                if (editBtn) editBtn.style.display = 'none';
+                
+                // Add login button
+                const loginBtn = document.createElement('button');
+                loginBtn.className = 'edit-btn';
+                loginBtn.innerHTML = '🔐 Go to Login';
+                loginBtn.onclick = () => {
+                    window.location.href = 'login.html';
+                };
+                viewProfileDiv.appendChild(loginBtn);
+                return;
             }
             
             try {
                 currentUser = JSON.parse(userStr);
                 
-                // Update profile display
+                // Display profile info
                 document.getElementById('profileName').textContent = currentUser.full_name || currentUser.username;
-                document.getElementById('profileRole').textContent = currentUser.role === 'lecturer' ? '👩‍🏫 Lecturer' : '👨‍🎓 Student';
+                document.getElementById('profileRole').innerHTML = currentUser.role === 'lecturer' ? '👩‍🏫 Lecturer' : '👨‍🎓 Student';
                 
                 document.getElementById('viewUsername').textContent = currentUser.username || '-';
                 document.getElementById('viewFullName').textContent = currentUser.full_name || 'Not set';
                 document.getElementById('viewEmail').textContent = currentUser.email || 'Not set';
-                document.getElementById('viewIndex').textContent = currentUser.index_number || 'Not set';
-                document.getElementById('viewProgram').textContent = currentUser.program_type === 'regular' ? '🎓 Regular Program (5 days/week)' : '🌙 Non-Regular Program (Weekend/Evening)';
+                document.getElementById('viewIndex').textContent = currentUser.index_number || currentUser.staff_id || 'Not set';
+                document.getElementById('viewProgram').innerHTML = currentUser.program_type === 'regular' ? '🎓 Regular Program (5 days/week)' : '🌙 Non-Regular Program (Weekend/Evening)';
                 document.getElementById('viewDepartment').textContent = currentUser.department || 'Not set';
                 document.getElementById('viewLevel').textContent = currentUser.level || 'Not set';
                 
-                // Populate edit form fields
+                // Populate edit form
                 document.getElementById('editFullName').value = currentUser.full_name || '';
                 document.getElementById('editEmail').value = currentUser.email || '';
-                document.getElementById('editIndexNumber').value = currentUser.index_number || '';
+                document.getElementById('editIndexNumber').value = currentUser.index_number || currentUser.staff_id || '';
                 document.getElementById('editDepartment').value = currentUser.department || '';
                 document.getElementById('editLevel').value = currentUser.level || '100';
                 document.getElementById('editProgramType').value = currentUser.program_type || 'regular';
@@ -363,69 +290,64 @@
             }
         }
         
-        // Show edit form
-        function showEditForm() { 
-            document.getElementById('viewProfile').style.display = 'none'; 
-            document.getElementById('editProfile').classList.add('show'); 
-            document.getElementById('messageBox').style.display = 'none'; 
+        function showEditForm() {
+            document.getElementById('viewProfile').style.display = 'none';
+            document.getElementById('editProfile').classList.add('show');
+            document.getElementById('messageBox').style.display = 'none';
         }
         
-        // Cancel editing
-        function cancelEdit() { 
-            document.getElementById('viewProfile').style.display = 'block'; 
-            document.getElementById('editProfile').classList.remove('show'); 
-            document.getElementById('messageBox').style.display = 'none'; 
+        function cancelEdit() {
+            document.getElementById('viewProfile').style.display = 'block';
+            document.getElementById('editProfile').classList.remove('show');
+            document.getElementById('messageBox').style.display = 'none';
         }
         
-        // Show message to user
         function showMessage(text, type) {
             const msgBox = document.getElementById('messageBox');
             msgBox.textContent = text;
             msgBox.className = `message ${type}`;
             msgBox.style.display = 'block';
             
-            // Scroll to message
-            msgBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            
-            // Auto-hide after 3 seconds
-            setTimeout(() => { 
+            setTimeout(() => {
                 if (msgBox.style.display === 'block') {
-                    msgBox.style.display = 'none'; 
+                    msgBox.style.display = 'none';
                 }
             }, 3000);
+            
+            msgBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
         
-        // Validate email format
-        function validateEmail(email) {
+        function isValidEmail(email) {
             const emailRegex = /^[^\s@]+@([^\s@]+\.)+[^\s@]+$/;
             return emailRegex.test(email);
         }
         
-        // Save profile changes
         async function saveProfile() {
-            const token = localStorage.getItem('token');
+            // Check if user is logged in
+            if (!currentUser) {
+                showMessage('Please login to update profile', 'error');
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 2000);
+                return;
+            }
             
-            // Check authentication
+            const token = localStorage.getItem('token');
             if (!token) {
                 showMessage('Session expired. Please login again.', 'error');
-                setTimeout(() => logout(), 2000);
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 2000);
                 return;
             }
             
-            // Validate email
+            // Validate inputs
             const email = document.getElementById('editEmail').value;
-            if (email && !validateEmail(email)) {
-                showMessage('Please enter a valid email address (e.g., name@domain.com)', 'error');
+            if (email && !isValidEmail(email)) {
+                showMessage('Please enter a valid email address', 'error');
                 return;
             }
             
-            // Get save button and show loading state
-            const saveBtn = document.querySelector('.save-btn');
-            const originalText = saveBtn.textContent;
-            saveBtn.innerHTML = '<span class="loading-spinner"></span> Saving...';
-            saveBtn.disabled = true;
-            
-            // Prepare updated data
             const updatedData = {
                 user_id: currentUser.id,
                 full_name: document.getElementById('editFullName').value.trim(),
@@ -436,8 +358,13 @@
                 program_type: document.getElementById('editProgramType').value
             };
             
+            // Show loading state
+            const saveBtn = document.querySelector('.save-btn');
+            const originalText = saveBtn.textContent;
+            saveBtn.textContent = '⏳ Saving...';
+            saveBtn.disabled = true;
+            
             try {
-                // Make API request
                 const response = await fetch(`${API_URL}/api/profile`, {
                     method: 'PUT',
                     headers: { 
@@ -447,26 +374,23 @@
                     body: JSON.stringify(updatedData)
                 });
                 
-                // Handle unauthorized response
+                // Handle unauthorized
                 if (response.status === 401) {
                     showMessage('Session expired. Please login again.', 'error');
-                    setTimeout(() => logout(), 2000);
+                    setTimeout(() => {
+                        localStorage.clear();
+                        window.location.href = 'login.html';
+                    }, 2000);
                     return;
-                }
-                
-                // Handle other error statuses
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
                 
                 const result = await response.json();
                 
                 if (result.success) {
-                    // Update user data in localStorage
+                    // Update localStorage
                     const updatedUser = { ...currentUser, ...result.user, ...updatedData };
                     localStorage.setItem('currentUser', JSON.stringify(updatedUser));
                     
-                    // Update token if a new one is returned
                     if (result.token) {
                         localStorage.setItem('token', result.token);
                     }
@@ -483,42 +407,36 @@
                 }
             } catch (error) {
                 console.error('Save error:', error);
-                
-                // Provide user-friendly error message
-                let errorMessage = 'Network error. Please check your connection.';
-                if (error.message.includes('Failed to fetch')) {
-                    errorMessage = 'Cannot connect to server. Please check your internet connection.';
-                } else if (error.message.includes('HTTP')) {
-                    errorMessage = 'Server error. Please try again later.';
-                }
-                
-                showMessage('❌ ' + errorMessage, 'error');
+                showMessage('❌ Network error. Please check your connection.', 'error');
             } finally {
-                // Reset button state
-                saveBtn.innerHTML = originalText;
+                saveBtn.textContent = originalText;
                 saveBtn.disabled = false;
             }
         }
         
-        // Check if user is logged in on page load
-        function checkAuth() {
-            const token = localStorage.getItem('token');
-            const user = localStorage.getItem('currentUser');
-            
-            if (!token || !user) {
-                showMessage('Please login to access your profile', 'info');
-                setTimeout(() => {
-                    window.location.href = 'login.html';
-                }, 2000);
-                return false;
+        async function logout() {
+            try {
+                const token = localStorage.getItem('token');
+                if (token) {
+                    await fetch(`${API_URL}/api/logout`, { 
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                }
+            } catch (error) {
+                console.log('Logout notice:', error.message);
+            } finally {
+                localStorage.clear();
+                window.location.href = 'login.html';
             }
-            return true;
         }
         
-        // Initialize page
-        if (checkAuth()) {
+        // FIXED: Don't auto-redirect, just load the page
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Profile page loaded');
             loadUserData();
-        }
+        });
     </script>
 </body>
 </html>
