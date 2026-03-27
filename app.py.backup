@@ -1,570 +1,507 @@
-# app.py - Complete Flask Application with All Features
-from flask import Flask, render_template, request, jsonify, redirect, url_for, send_file
+﻿from flask import Flask, request, jsonify
 from flask_cors import CORS
-from flask_login import LoginManager, login_user, logout_user, login_required, current_user
-from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime
-import joblib
-import pandas as pd
-import numpy as np
 import os
 import json
-from io import BytesIO
-from reportlab.lib import colors
-from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
-from reportlab.lib.styles import getSampleStyleSheet
-
-from models import db, User, Prediction, Course, UserCourse
+import hashlib
+import secrets
+import uuid
+from datetime import datetime
+from functools import wraps
 
 app = Flask(__name__)
-
-# Configuration
-app.config['SECRET_KEY'] = 'aamusted-secret-key-2024'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///aamusted.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-# Initialize extensions
-db.init_app(app)
+app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(32))
 CORS(app)
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = 'login_page'
 
-# ML Model variables
-model = None
-scaler = None
-label_encoder = None
-feature_columns = None
+# Data file paths
+DATA_DIR = 'data'
+USERS_FILE = os.path.join(DATA_DIR, 'users.json')
+PREDICTIONS_FILE = os.path.join(DATA_DIR, 'predictions.json')
+COURSES_FILE = os.path.join(DATA_DIR, 'courses.json')
+ENROLLMENTS_FILE = os.path.join(DATA_DIR, 'enrollments.json')
 
-def load_ml_model():
-    global model, scaler, label_encoder, feature_columns
+# Ensure data directory exists
+os.makedirs(DATA_DIR, exist_ok=True)
+
+def init_data_files():
+    if not os.path.exists(USERS_FILE):
+        with open(USERS_FILE, 'w') as f:
+            json.dump({}, f)
+    if not os.path.exists(PREDICTIONS_FILE):
+        with open(PREDICTIONS_FILE, 'w') as f:
+            json.dump({}, f)
+    if not os.path.exists(COURSES_FILE):
+        with open(COURSES_FILE, 'w') as f:
+            json.dump({}, f)
+    if not os.path.exists(ENROLLMENTS_FILE):
+        with open(ENROLLMENTS_FILE, 'w') as f:
+            json.dump({}, f)
+
+def hash_password(password):
+    return hashlib.sha256(password.encode()).hexdigest()
+
+def load_data(filepath):
     try:
-        model = joblib.load('model.pkl')
-        scaler = joblib.load('scaler.pkl')
-        label_encoder = joblib.load('label_encoder.pkl')
-        feature_columns = joblib.load('feature_columns.pkl')
-        print("✅ ML Model loaded successfully")
-        return True
-    except Exception as e:
-        print(f"❌ Error loading model: {e}")
-        return False
+        with open(filepath, 'r') as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
 
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))
+def save_data(filepath, data):
+    with open(filepath, 'w') as f:
+        json.dump(data, f, indent=2)
 
-def predict_performance(attendance, assignments, engagement, study_hours, previous_grade, extra_curricular, parent_education):
-    try:
-        input_dict = {
-            'attendance': attendance,
-            'assignments': assignments,
-            'engagement': engagement,
-            'study_hours': study_hours,
-            'previous_grade': previous_grade,
-            'extra_curricular': extra_curricular,
-            'parent_education': parent_education
-        }
-        
-        input_data = pd.DataFrame([[input_dict[col] for col in feature_columns]], columns=feature_columns)
-        input_scaled = scaler.transform(input_data)
-        prediction_encoded = model.predict(input_scaled)[0]
-        prediction_class = label_encoder.inverse_transform([prediction_encoded])[0]
-        probabilities = model.predict_proba(input_scaled)[0]
-        confidence = float(np.max(probabilities) * 100)
-        
-        study_hours_percent = (study_hours / 20) * 100
-        extra_curricular_percent = (extra_curricular / 5) * 100
-        parent_education_percent = (parent_education / 4) * 100
-        
-        weighted_score = (
-            attendance * 0.20 +
-            assignments * 0.20 +
-            engagement * 0.15 +
-            study_hours_percent * 0.15 +
-            previous_grade * 0.15 +
-            extra_curricular_percent * 0.10 +
-            parent_education_percent * 0.05
-        )
-        
-        return prediction_class, confidence, weighted_score
-    except Exception as e:
-        print(f"Prediction error: {e}")
-        return "Error", 0, 0
+init_data_files()
 
-# ============ PAGE ROUTES ============
+def get_current_week():
+    today = datetime.now()
+    semester_start = datetime(today.year, 8, 26)
+    diff_days = (today - semester_start).days
+    week = (diff_days // 7) + 1
+    if week < 1:
+        week = 1
+    if week > 15:
+        week = 15
+    return week
+
+def calculate_performance_score(data):
+    attendance = float(data.get('attendance', 0))
+    assignments = float(data.get('assignments', 0))
+    engagement = float(data.get('engagement', 0))
+    study_hours = float(data.get('study_hours', 0))
+    previous_grade = float(data.get('previous_grade', 0))
+    extra_curricular = float(data.get('extra_curricular', 0))
+    parent_education = float(data.get('parent_education', 2))
+    
+    weighted_score = (
+        attendance * 0.25 + assignments * 0.25 + engagement * 0.15 +
+        (study_hours / 20 * 100) * 0.15 + previous_grade * 0.10 +
+        (extra_curricular / 5 * 100) * 0.05 + (parent_education / 4 * 100) * 0.05
+    )
+    return min(100, max(0, weighted_score))
+
+def get_grade(score):
+    if score >= 85: return "A - Excellent"
+    elif score >= 80: return "B+ - Very Good"
+    elif score >= 75: return "B - Good"
+    elif score >= 70: return "C+ - Above Average"
+    elif score >= 65: return "C - Average"
+    elif score >= 60: return "D+ - Below Average"
+    elif score >= 55: return "D - Pass"
+    else: return "F - Fail"
+
+def generate_recommendations(data, score):
+    recommendations = []
+    attendance = data.get('attendance', 0)
+    assignments = data.get('assignments', 0)
+    engagement = data.get('engagement', 0)
+    study_hours = data.get('study_hours', 0)
+    
+    if attendance < 70:
+        recommendations.append(f"📅 Improve attendance: Currently {attendance}%. Aim for 85%+")
+    if assignments < 70:
+        recommendations.append(f"📝 Assignment quality: {assignments}%. Review feedback and improve")
+    if engagement < 60:
+        recommendations.append(f"💬 Class engagement: {engagement}%. Participate more")
+    if study_hours < 10:
+        recommendations.append(f"⏰ Study hours: {study_hours}/week. Aim for 10-15 hours")
+    
+    if score >= 85:
+        recommendations.append("🌟 Excellent! Keep up the great work!")
+    elif score >= 70:
+        recommendations.append("👍 Good progress! Focus on weaker areas")
+    elif score >= 55:
+        recommendations.append("⚠️ At risk. Seek academic support")
+    else:
+        recommendations.append("🆘 Critical: Contact academic advisor")
+    return recommendations
+
+# ============ API ENDPOINTS ============
 
 @app.route('/')
-def index():
-    return render_template('index.html')
+def home():
+    return jsonify({
+        'name': 'AAMUSTED Student Performance Predictor API',
+        'status': 'running',
+        'version': '2.0',
+        'endpoints': {
+            'health': 'GET /health',
+            'predict': 'POST /predict',
+            'register': 'POST /api/register',
+            'login': 'POST /api/login',
+            'logout': 'POST /api/logout',
+            'profile': 'GET /api/profile, PUT /api/profile',
+            'courses': 'GET /api/courses, POST /api/courses, DELETE /api/courses',
+            'available_courses': 'GET /api/available_courses',
+            'enroll': 'POST /api/enroll',
+            'my_students': 'GET /api/my_students',
+            'students': 'GET /api/students'
+        }
+    })
 
-@app.route('/login')
-def login_page():
-    return render_template('login.html')
-
-@app.route('/register')
-def register_page():
-    return render_template('register.html')
-
-@app.route('/student_dashboard')
-@login_required
-def student_dashboard():
-    if current_user.role != 'student':
-        return redirect(url_for('lecturer_dashboard'))
-    return render_template('student_dashboard.html', user=current_user)
-
-@app.route('/lecturer_dashboard')
-@login_required
-def lecturer_dashboard():
-    if current_user.role != 'lecturer':
-        return redirect(url_for('student_dashboard'))
-    return render_template('lecturer_dashboard.html', user=current_user)
-
-@app.route('/history')
-@login_required
-def history():
-    return render_template('history.html', user=current_user)
-
-# ============ AUTH API ============
-
-@app.route('/api/login', methods=['POST'])
-def api_login():
-    data = request.json
-    user = User.query.filter_by(username=data['username']).first()
-    
-    if user and check_password_hash(user.password_hash, data['password']):
-        login_user(user)
-        return jsonify({'success': True, 'role': user.role, 'redirect': f'/{user.role}_dashboard'})
-    return jsonify({'success': False, 'error': 'Invalid credentials'})
+@app.route('/health', methods=['GET'])
+def health():
+    return jsonify({
+        'status': 'ok',
+        'timestamp': datetime.now().isoformat(),
+        'current_week': get_current_week()
+    })
 
 @app.route('/api/register', methods=['POST'])
 def api_register():
-    data = request.json
-    
-    if User.query.filter_by(username=data['username']).first():
-        return jsonify({'success': False, 'error': 'Username already exists'})
-    if User.query.filter_by(email=data['email']).first():
-        return jsonify({'success': False, 'error': 'Email already registered'})
-    
-    user = User(
-        username=data['username'],
-        email=data['email'],
-        password_hash=generate_password_hash(data['password']),
-        role=data.get('role', 'student'),
-        full_name=data['full_name'],
-        index_number=data.get('index_number')
-    )
-    db.session.add(user)
-    db.session.commit()
-    
-    login_user(user)
-    return jsonify({'success': True, 'role': user.role})
+    try:
+        data = request.json
+        users = load_data(USERS_FILE)
+        
+        for user_id, user in users.items():
+            if user.get('username') == data['username']:
+                return jsonify({'success': False, 'error': 'Username exists'}), 400
+            if user.get('email') == data['email']:
+                return jsonify({'success': False, 'error': 'Email registered'}), 400
+        
+        user_id = str(uuid.uuid4())[:8]
+        users[user_id] = {
+            'id': user_id,
+            'username': data['username'],
+            'email': data['email'],
+            'password': hash_password(data['password']),
+            'role': data.get('role', 'student'),
+            'full_name': data['full_name'],
+            'index_number': data.get('index_number', ''),
+            'program_type': data.get('program_type', 'regular'),
+            'department': data.get('department', ''),
+            'level': data.get('level', '100'),
+            'created_at': datetime.now().isoformat()
+        }
+        save_data(USERS_FILE, users)
+        
+        return jsonify({
+            'success': True,
+            'user': {
+                'id': user_id,
+                'username': data['username'],
+                'full_name': data['full_name'],
+                'role': data.get('role', 'student'),
+                'program_type': data.get('program_type', 'regular')
+            }
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
-@app.route('/logout')
-@login_required
-def logout():
-    logout_user()
-    return redirect(url_for('index'))
+@app.route('/api/login', methods=['POST'])
+def api_login():
+    try:
+        data = request.json
+        users = load_data(USERS_FILE)
+        
+        for user_id, user in users.items():
+            if user['username'] == data['username'] and user['password'] == hash_password(data['password']):
+                return jsonify({
+                    'success': True,
+                    'user': {
+                        'id': user_id,
+                        'username': user['username'],
+                        'full_name': user['full_name'],
+                        'role': user['role'],
+                        'program_type': user.get('program_type', 'regular'),
+                        'index_number': user.get('index_number', ''),
+                        'email': user.get('email', ''),
+                        'department': user.get('department', ''),
+                        'level': user.get('level', '')
+                    }
+                })
+        return jsonify({'success': False, 'error': 'Invalid credentials'}), 401
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
-# ============ COURSE MANAGEMENT API ============
+@app.route('/api/logout', methods=['POST'])
+def api_logout():
+    return jsonify({'success': True})
 
-@app.route('/api/my_courses', methods=['GET'])
-@login_required
-def my_courses():
-    """Get courses for current user"""
-    if current_user.role == 'lecturer':
-        courses = Course.query.filter_by(lecturer_id=current_user.id).all()
-        return jsonify([{
-            'id': c.id,
-            'name': c.name,
-            'code': c.code,
-            'credit_hours': c.credit_hours,
-            'student_count': UserCourse.query.filter_by(course_id=c.id).count()
-        } for c in courses])
-    else:
-        # Student
-        user_courses = UserCourse.query.filter_by(user_id=current_user.id).all()
-        courses_data = []
-        for uc in user_courses:
-            c = uc.course
-            courses_data.append({
-                'id': c.id,
-                'name': c.name,
-                'code': c.code,
-                'credit_hours': c.credit_hours,
-                'attendance': uc.attendance,
-                'assignments': uc.assignments,
-                'engagement': uc.engagement,
-                'study_hours': uc.study_hours,
-                'previous_grade': uc.previous_grade,
-                'predicted_grade': uc.predicted_grade,
-                'weighted_score': uc.weighted_score
+@app.route('/api/predict', methods=['POST'])
+def api_predict():
+    try:
+        data = request.json
+        weighted_score = calculate_performance_score(data)
+        grade = get_grade(weighted_score)
+        confidence = min(95, max(60, weighted_score))
+        
+        user_id = data.get('user_id')
+        if user_id:
+            predictions = load_data(PREDICTIONS_FILE)
+            if user_id not in predictions:
+                predictions[user_id] = []
+            predictions[user_id].insert(0, {
+                'date': datetime.now().isoformat(),
+                'grade': grade,
+                'score': weighted_score,
+                'confidence': confidence,
+                'inputs': data
             })
-        return jsonify(courses_data)
+            predictions[user_id] = predictions[user_id][:20]
+            save_data(PREDICTIONS_FILE, predictions)
+        
+        recommendations = generate_recommendations(data, weighted_score)
+        
+        return jsonify({
+            'success': True,
+            'prediction': grade.split(' - ')[0],
+            'grade': grade,
+            'score': weighted_score,
+            'weighted_score': weighted_score,
+            'confidence': confidence,
+            'recommendations': recommendations
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
-@app.route('/api/my_courses', methods=['POST', 'DELETE'])
-@login_required
-def manage_courses():
+@app.route('/api/predict/weekly', methods=['POST'])
+def api_predict_weekly():
+    try:
+        data = request.json
+        weekly_attendance = float(data.get('weekly_attendance', 0))
+        weekly_assignments = float(data.get('weekly_assignments', 0))
+        weekly_engagement = float(data.get('weekly_engagement', 0))
+        weekly_study_hours = float(data.get('weekly_study_hours', 0))
+        midterm_grade = float(data.get('midterm_grade', 0))
+        weeks_completed = float(data.get('weeks_completed', 1))
+        
+        weekly_score = (
+            weekly_attendance * 0.25 + weekly_assignments * 0.25 +
+            weekly_engagement * 0.20 + (weekly_study_hours / 20 * 100) * 0.20 +
+            midterm_grade * 0.10
+        )
+        
+        weeks_remaining = 15 - weeks_completed
+        projected_score = (weekly_score * weeks_completed + 70 * weeks_remaining) / 15
+        grade = get_grade(projected_score)
+        
+        recommendations = []
+        if weekly_attendance < 70:
+            recommendations.append(f"📅 Attendance: {weekly_attendance}%. Aim for 85%+")
+        if weekly_assignments < 70:
+            recommendations.append(f"📝 Assignments: {weekly_assignments}%. Improve quality")
+        if weekly_engagement < 60:
+            recommendations.append(f"💬 Engagement: {weekly_engagement}%. Participate more")
+        if weekly_study_hours < 10:
+            recommendations.append(f"⏰ Study hours: {weekly_study_hours}/week. Aim for 10-15 hours")
+        
+        return jsonify({
+            'success': True,
+            'grade': grade,
+            'score': projected_score,
+            'weekly_score': weekly_score,
+            'recommendations': recommendations
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+# ============ COURSE AND ENROLLMENT API ENDPOINTS ============
+
+@app.route('/api/courses', methods=['GET', 'POST', 'DELETE'])
+def api_courses():
+    """Get, create, or delete courses"""
+    courses = load_data(COURSES_FILE)
+    
     if request.method == 'POST':
         data = request.json
-        course = Course(
-            name=data['name'],
-            code=data['code'],
-            credit_hours=data.get('credit_hours', 3),
-            lecturer_id=current_user.id if current_user.role == 'lecturer' else None
-        )
-        db.session.add(course)
-        db.session.commit()
-        
-        if current_user.role == 'student':
-            enrollment = UserCourse(user_id=current_user.id, course_id=course.id)
-            db.session.add(enrollment)
-            db.session.commit()
-        
-        return jsonify({'success': True, 'course_id': course.id})
+        course_id = str(uuid.uuid4())[:8]
+        courses[course_id] = {
+            'id': course_id,
+            'code': data['code'],
+            'name': data['name'],
+            'credit_hours': data.get('credit_hours', 3),
+            'program_type': data.get('program_type', 'regular'),
+            'lecturer_id': data.get('lecturer_id'),
+            'lecturer_name': data.get('lecturer_name'),
+            'created_at': datetime.now().isoformat()
+        }
+        save_data(COURSES_FILE, courses)
+        return jsonify({'success': True, 'course': courses[course_id]})
     
     elif request.method == 'DELETE':
         data = request.json
         course_id = data.get('course_id')
-        
-        if current_user.role == 'lecturer':
-            course = Course.query.get_or_404(course_id)
-            if course.lecturer_id != current_user.id:
-                return jsonify({'error': 'Not your course'}), 403
-            UserCourse.query.filter_by(course_id=course_id).delete()
-            db.session.delete(course)
-        else:
-            enrollment = UserCourse.query.filter_by(user_id=current_user.id, course_id=course_id).first()
-            if enrollment:
-                db.session.delete(enrollment)
-        
-        db.session.commit()
-        return jsonify({'success': True})
+        if course_id in courses:
+            del courses[course_id]
+            save_data(COURSES_FILE, courses)
+            return jsonify({'success': True})
+        return jsonify({'success': False, 'error': 'Course not found'}), 404
+    
+    # GET request - return courses based on user role
+    user_id = request.args.get('user_id')
+    users = load_data(USERS_FILE)
+    enrollments = load_data(ENROLLMENTS_FILE)
+    
+    if user_id and users.get(user_id, {}).get('role') == 'student':
+        # For students: return courses they are enrolled in
+        enrolled_ids = enrollments.get(user_id, [])
+        enrolled_courses = [c for cid, c in courses.items() if cid in enrolled_ids]
+        return jsonify(enrolled_courses)
+    elif user_id and users.get(user_id, {}).get('role') == 'lecturer':
+        # For lecturers: return courses they created
+        lecturer_courses = [c for c in courses.values() if c.get('lecturer_id') == user_id]
+        return jsonify(lecturer_courses)
+    
+    return jsonify(list(courses.values()))
 
-@app.route('/api/available_courses')
-@login_required
-def available_courses():
-    """Get all courses that the student is not already enrolled in"""
-    if current_user.role != 'student':
-        return jsonify({'error': 'Unauthorized'}), 403
+@app.route('/api/available_courses', methods=['GET'])
+def api_available_courses():
+    """Get courses available for a student to enroll"""
+    user_id = request.args.get('user_id')
+    if not user_id:
+        return jsonify([]), 400
     
-    # Get courses the student is already enrolled in
-    enrolled_ids = [uc.course_id for uc in current_user.courses]
+    courses = load_data(COURSES_FILE)
+    enrollments = load_data(ENROLLMENTS_FILE)
+    enrolled_ids = enrollments.get(user_id, [])
     
-    # Get all courses created by lecturers (not enrolled by student)
-    if enrolled_ids:
-        available = Course.query.filter(
-            Course.lecturer_id.isnot(None),
-            Course.id.notin_(enrolled_ids)
-        ).all()
-    else:
-        available = Course.query.filter(Course.lecturer_id.isnot(None)).all()
-    
-    courses_list = []
-    for c in available:
-        lecturer_name = c.lecturer.full_name if c.lecturer else 'Unknown'
-        courses_list.append({
-            'id': c.id,
-            'name': c.name,
-            'code': c.code,
-            'credit_hours': c.credit_hours,
-            'lecturer_name': lecturer_name
-        })
-    
-    return jsonify(courses_list)
+    # Get courses not enrolled in
+    available = [c for cid, c in courses.items() if cid not in enrolled_ids]
+    return jsonify(available)
 
 @app.route('/api/enroll', methods=['POST'])
-@login_required
-def enroll_in_course():
-    """Enroll student in a course"""
-    if current_user.role != 'student':
-        return jsonify({'error': 'Unauthorized'}), 403
-    
-    data = request.json
-    course_id = data.get('course_id')
-    
-    # Check if course exists
-    course = Course.query.get(course_id)
-    if not course:
-        return jsonify({'error': 'Course not found'}), 404
-    
-    # Check if already enrolled
-    existing = UserCourse.query.filter_by(
-        user_id=current_user.id, 
-        course_id=course_id
-    ).first()
-    
-    if existing:
-        return jsonify({'error': 'Already enrolled in this course'}), 400
-    
-    # Create enrollment
-    enrollment = UserCourse(
-        user_id=current_user.id, 
-        course_id=course_id,
-        attendance=0,
-        assignments=0,
-        engagement=0,
-        study_hours=10,
-        previous_grade=65
-    )
-    db.session.add(enrollment)
-    db.session.commit()
-    
-    return jsonify({'success': True, 'course_name': course.name})
+def api_enroll():
+    """Enroll student in course"""
+    try:
+        data = request.json
+        student_id = data.get('student_id')
+        course_id = data.get('course_id')
+        
+        enrollments = load_data(ENROLLMENTS_FILE)
+        
+        if student_id not in enrollments:
+            enrollments[student_id] = []
+        
+        if course_id in enrollments[student_id]:
+            return jsonify({'success': False, 'error': 'Already enrolled'}), 400
+        
+        enrollments[student_id].append(course_id)
+        save_data(ENROLLMENTS_FILE, enrollments)
+        
+        return jsonify({'success': True})
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
-@app.route('/api/lecturer/courses/<int:course_id>/students')
-@login_required
-def course_students(course_id):
-    if current_user.role != 'lecturer':
-        return jsonify({'error': 'Unauthorized'}), 403
-    
-    course = Course.query.get_or_404(course_id)
-    if course.lecturer_id != current_user.id:
-        return jsonify({'error': 'Not your course'}), 403
-    
-    enrollments = UserCourse.query.filter_by(course_id=course_id).all()
-    students_data = []
-    for enrollment in enrollments:
-        student = User.query.get(enrollment.user_id)
-        students_data.append({
-            'id': student.id,
-            'name': student.full_name,
-            'index': student.index_number,
-            'predicted_grade': enrollment.predicted_grade,
-            'weighted_score': enrollment.weighted_score,
-            'attendance': enrollment.attendance,
-            'assignments': enrollment.assignments,
-            'engagement': enrollment.engagement
-        })
-    
-    return jsonify({'course': {'id': course.id, 'name': course.name, 'code': course.code}, 'students': students_data})
+@app.route('/api/my_students', methods=['GET'])
+def api_my_students():
+    """Get students enrolled in courses created by lecturer"""
+    try:
+        lecturer_id = request.args.get('lecturer_id')
+        if not lecturer_id:
+            return jsonify([]), 400
+        
+        courses = load_data(COURSES_FILE)
+        enrollments = load_data(ENROLLMENTS_FILE)
+        users = load_data(USERS_FILE)
+        
+        # Get courses created by this lecturer
+        lecturer_courses = [c for c in courses.values() if c.get('lecturer_id') == lecturer_id]
+        lecturer_course_ids = [c['id'] for c in lecturer_courses]
+        
+        # Find students enrolled in these courses
+        students_dict = {}
+        for student_id, enrolled_courses in enrollments.items():
+            # Check if student is enrolled in any of lecturer's courses
+            for course_id in enrolled_courses:
+                if course_id in lecturer_course_ids:
+                    if student_id not in students_dict:
+                        student = users.get(student_id, {})
+                        if student.get('role') == 'student':
+                            students_dict[student_id] = {
+                                'id': student_id,
+                                'full_name': student.get('full_name', 'Unknown'),
+                                'index_number': student.get('index_number', 'N/A'),
+                                'program_type': student.get('program_type', 'regular'),
+                                'email': student.get('email', ''),
+                                'courses': []
+                            }
+                    # Add course info
+                    course = next((c for c in lecturer_courses if c['id'] == course_id), None)
+                    if course:
+                        students_dict[student_id]['courses'].append({
+                            'id': course_id,
+                            'code': course['code'],
+                            'name': course['name']
+                        })
+                    break
+        
+        return jsonify(list(students_dict.values()))
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
-@app.route('/api/student/<int:student_id>')
-@login_required
-def get_student_data(student_id):
-    if current_user.role != 'lecturer' and current_user.id != student_id:
-        return jsonify({'error': 'Unauthorized'}), 403
-    
-    student = User.query.get_or_404(student_id)
-    courses = UserCourse.query.filter_by(user_id=student.id).all()
-    
-    return jsonify({
-        'student': {
-            'name': student.full_name,
-            'index': student.index_number,
-            'email': student.email,
-            'joined': student.created_at.strftime('%Y-%m-%d')
-        },
-        'courses': [{
-            'id': uc.course.id,
-            'name': uc.course.name,
-            'code': uc.course.code,
-            'predicted_grade': uc.predicted_grade,
-            'weighted_score': uc.weighted_score,
-            'attendance': uc.attendance,
-            'assignments': uc.assignments,
-            'engagement': uc.engagement
-        } for uc in courses]
-    })
+@app.route('/api/students', methods=['GET'])
+def api_students():
+    """Get all students (for lecturer view)"""
+    users = load_data(USERS_FILE)
+    students = [user for user in users.values() if user.get('role') == 'student']
+    return jsonify(students)
 
-# ============ PREDICTION API ============
-
-@app.route('/api/predict', methods=['POST'])
-@login_required
-def api_predict():
-    data = request.json
-    course_id = data.get('course_id')
-    student_id = data.get('student_id')
-    
-    attendance = float(data['attendance'])
-    assignments = float(data['assignments'])
-    engagement = float(data['engagement'])
-    study_hours = float(data.get('study_hours', 10))
-    previous_grade = float(data.get('previous_grade', 65))
-    extra_curricular = float(data.get('extra_curricular', 2))
-    parent_education = float(data.get('parent_education', 2))
-    
-    prediction, confidence, weighted_score = predict_performance(
-        attendance, assignments, engagement, study_hours, previous_grade,
-        extra_curricular, parent_education
-    )
-    
-    # Determine which user to save prediction for
-    target_user_id = student_id if student_id else current_user.id
-    
-    # If student is updating their own course data
-    if current_user.role == 'student' and course_id:
-        user_course = UserCourse.query.filter_by(user_id=current_user.id, course_id=course_id).first()
-        if user_course:
-            user_course.attendance = attendance
-            user_course.assignments = assignments
-            user_course.engagement = engagement
-            user_course.study_hours = study_hours
-            user_course.previous_grade = previous_grade
-            user_course.predicted_grade = prediction
-            user_course.weighted_score = weighted_score
-            db.session.commit()
-    
-    # Save prediction to history
-    pred_record = Prediction(
-        user_id=target_user_id,
-        course_id=course_id,
-        attendance=attendance,
-        assignments=assignments,
-        engagement=engagement,
-        study_hours=study_hours,
-        previous_grade=previous_grade,
-        extra_curricular=extra_curricular,
-        parent_education=parent_education,
-        predicted_grade=prediction,
-        weighted_score=weighted_score,
-        confidence=confidence
-    )
-    db.session.add(pred_record)
-    db.session.commit()
-    
-    return jsonify({'success': True, 'prediction': prediction, 'confidence': confidence, 'weighted_score': weighted_score})
-
-@app.route('/api/course/<int:course_id>/strengths')
-@login_required
-def analyze_course_strengths(course_id):
-    if current_user.role != 'student':
-        return jsonify({'error': 'Unauthorized'}), 403
-    
-    user_course = UserCourse.query.filter_by(user_id=current_user.id, course_id=course_id).first()
-    if not user_course:
-        return jsonify({'error': 'Not enrolled'}), 404
-    
-    strengths = []
-    weaknesses = []
-    recommendations = []
-    
-    metrics = [
-        ('attendance', user_course.attendance, 'attendance', '📅'),
-        ('assignments', user_course.assignments, 'assignment completion', '📝'),
-        ('engagement', user_course.engagement, 'class engagement', '💬'),
-        ('study_hours', (user_course.study_hours / 20) * 100, 'study habits', '📚')
-    ]
-    
-    for name, value, display, icon in metrics:
-        if value >= 70:
-            strengths.append(f"{icon} {display.capitalize()}: {value:.0f}% - Excellent!")
-        elif value < 50 and value > 0:
-            weaknesses.append(f"{icon} {display.capitalize()}: {value:.0f}% - Needs improvement")
-            recommendations.append(f"Focus on improving {display}")
-    
-    if user_course.weighted_score:
-        if user_course.weighted_score >= 80:
-            strengths.append(f"🎯 Overall performance: {user_course.weighted_score:.0f}% - Outstanding!")
-        elif user_course.weighted_score < 60:
-            weaknesses.append(f"⚠️ Overall performance: {user_course.weighted_score:.0f}% - At risk")
-            recommendations.append("Seek academic support and review study strategies")
-    
-    return jsonify({'strengths': strengths, 'weaknesses': weaknesses, 'recommendations': recommendations})
-
-@app.route('/api/history')
-@login_required
-def get_history():
-    predictions = Prediction.query.filter_by(user_id=current_user.id).order_by(Prediction.created_at.desc()).limit(50).all()
-    return jsonify([{
-        'id': p.id,
-        'predicted_grade': p.predicted_grade,
-        'weighted_score': p.weighted_score,
-        'confidence': p.confidence,
-        'created_at': p.created_at.strftime('%Y-%m-%d %H:%M'),
-        'course_id': p.course_id
-    } for p in predictions])
-
-@app.route('/api/study_schedule')
-@login_required
-def get_study_schedule():
-    if current_user.role != 'student':
+@app.route('/api/history', methods=['GET'])
+def api_history():
+    user_id = request.args.get('user_id')
+    if not user_id:
         return jsonify([])
+    predictions = load_data(PREDICTIONS_FILE)
+    return jsonify(predictions.get(user_id, []))
+
+@app.route('/api/profile', methods=['GET', 'PUT', 'OPTIONS'])
+def api_profile():
+    """Get or update user profile"""
+    if request.method == 'OPTIONS':
+        return jsonify({}), 200
     
-    user_courses = UserCourse.query.filter_by(user_id=current_user.id).all()
-    schedule = []
-    
-    for uc in user_courses:
-        if uc.weighted_score:
-            if uc.weighted_score < 50:
-                hours = 8
-                tip = "🔴 Critical: Focus on fundamentals. Attend extra classes."
-                priority = "High"
-            elif uc.weighted_score < 70:
-                hours = 5
-                tip = "🟡 Good progress: Practice more. Review weak areas."
-                priority = "Medium"
-            else:
-                hours = 3
-                tip = "🟢 Excellent: Maintain momentum. Help peers to reinforce learning."
-                priority = "Low"
+    try:
+        if request.method == 'GET':
+            user_id = request.args.get('user_id')
+        else:
+            data = request.json
+            user_id = data.get('user_id') if data else None
+        
+        if not user_id:
+            return jsonify({'success': False, 'error': 'User ID required'}), 400
+        
+        users = load_data(USERS_FILE)
+        
+        if user_id not in users:
+            return jsonify({'success': False, 'error': 'User not found'}), 404
+        
+        if request.method == 'PUT':
+            data = request.json
+            if 'full_name' in data:
+                users[user_id]['full_name'] = data['full_name']
+            if 'email' in data:
+                users[user_id]['email'] = data['email']
+            if 'index_number' in data:
+                users[user_id]['index_number'] = data['index_number']
+            if 'department' in data:
+                users[user_id]['department'] = data['department']
+            if 'level' in data:
+                users[user_id]['level'] = data['level']
+            if 'program_type' in data:
+                users[user_id]['program_type'] = data['program_type']
             
-            schedule.append({
-                'course': uc.course.name,
-                'code': uc.course.code,
-                'recommended_hours': hours,
-                'tip': tip,
-                'priority': priority,
-                'current_score': round(uc.weighted_score, 1)
+            save_data(USERS_FILE, users)
+            
+            return jsonify({
+                'success': True,
+                'user': users[user_id]
             })
-    
-    priority_order = {'High': 0, 'Medium': 1, 'Low': 2}
-    schedule.sort(key=lambda x: priority_order[x['priority']])
-    return jsonify(schedule)
-
-@app.route('/api/download_report')
-@login_required
-def download_report():
-    buffer = BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter)
-    styles = getSampleStyleSheet()
-    story = []
-    
-    title = Paragraph(f"Student Performance Report - {current_user.full_name}", styles['Title'])
-    story.append(title)
-    story.append(Spacer(1, 12))
-    
-    info = [
-        ["Name:", current_user.full_name],
-        ["Index Number:", current_user.index_number or "N/A"],
-        ["Email:", current_user.email],
-        ["Report Date:", datetime.now().strftime('%Y-%m-%d %H:%M')]
-    ]
-    info_table = Table(info, colWidths=[100, 300])
-    info_table.setStyle(TableStyle([('GRID', (0,0), (-1,-1), 0.5, colors.grey)]))
-    story.append(info_table)
-    story.append(Spacer(1, 20))
-    
-    if current_user.role == 'student':
-        user_courses = UserCourse.query.filter_by(user_id=current_user.id).all()
-        course_data = [["Course", "Code", "Predicted Grade", "Score"]]
-        for uc in user_courses:
-            course_data.append([uc.course.name, uc.course.code, uc.predicted_grade or "Pending", f"{uc.weighted_score:.1f}%" if uc.weighted_score else "N/A"])
-        course_table = Table(course_data, colWidths=[200, 80, 100, 80])
-        course_table.setStyle(TableStyle([('GRID', (0,0), (-1,-1), 0.5, colors.grey)]))
-        story.append(course_table)
-    
-    doc.build(buffer)
-    buffer.seek(0)
-    return send_file(buffer, download_name=f"{current_user.index_number or current_user.username}_report.pdf", as_attachment=True, mimetype='application/pdf')
-
-@app.route('/api/students')
-@login_required
-def get_students():
-    if current_user.role != 'lecturer':
-        return jsonify({'error': 'Unauthorized'}), 403
-    students = User.query.filter_by(role='student').all()
-    return jsonify([{'id': s.id, 'name': s.full_name, 'index': s.index_number, 'email': s.email} for s in students])
+        else:
+            return jsonify({
+                'success': True,
+                'user': users[user_id]
+            })
+            
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 # ============ RUN APP ============
-
-# At the very bottom of app.py, replace the if __name__ == '__main__' section with:
 if __name__ == '__main__':
-    # This is only for local development
-    port = int(os.environ.get('PORT', 5001))
-    app.run(debug=False, host='0.0.0.0', port=port)
-else:
-    # This is for production (gunicorn)
-    # Make sure the ML model is loaded
-    with app.app_context():
-        load_ml_model()
+    port = int(os.environ.get('PORT', 10000))
+    print("=" * 50)
+    print("AAMUSTED Student Performance Predictor API")
+    print("=" * 50)
+    print(f"🚀 Server starting on port {port}")
+    app.run(host='0.0.0.0', port=port, debug=False)

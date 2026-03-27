@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Predictor - AAMUSTED Performance Predictor</title>
+    <title>Performance Predictor - AAMUSTED</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fb; }
@@ -20,23 +20,45 @@
         }
         .logo { font-size: 1.5rem; font-weight: bold; }
         .logo span { color: #ffd700; }
-        .nav-links { display: flex; gap: 1.5rem; align-items: center; flex-wrap: wrap; }
+        .nav-links { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
         .nav-links a {
             color: white;
             text-decoration: none;
             padding: 0.5rem 1rem;
             border-radius: 8px;
+            transition: background 0.3s;
         }
-        .nav-links a:hover, .nav-links a.active { background: rgba(255,255,255,0.2); }
+        .nav-links a:hover { background: rgba(255,255,255,0.2); }
+        .nav-links a.active { background: rgba(255,255,255,0.3); border-bottom: 2px solid #ffd700; }
         .logout-btn {
             background: rgba(255,80,60,0.3);
             border: 1px solid rgba(255,80,60,0.5);
             padding: 0.5rem 1rem;
             border-radius: 8px;
             cursor: pointer;
+            color: white;
         }
         
-        .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+        .container { max-width: 900px; margin: 0 auto; padding: 2rem; }
+        
+        .student-info-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            display: none;
+        }
+        .student-info-card h3 { margin-bottom: 0.5rem; }
+        .student-details { display: flex; gap: 2rem; margin-top: 0.5rem; flex-wrap: wrap; }
+        .student-details span { font-weight: bold; }
+        
+        .form-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
         
         .format-tabs {
             display: flex;
@@ -59,40 +81,67 @@
             color: white;
         }
         
-        .prediction-card {
-            background: white;
-            border-radius: 15px;
-            padding: 2rem;
-            text-align: center;
-            cursor: pointer;
-            transition: transform 0.3s;
-            text-decoration: none;
-            display: block;
-            color: inherit;
+        .prediction-form {
+            display: none;
         }
-        .prediction-card:hover { transform: translateY(-5px); }
+        .prediction-form.active { display: block; }
         
-        .prediction-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5rem;
-            margin-top: 1rem;
+        .form-group { margin-bottom: 1.5rem; }
+        label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: #333; }
+        input, select {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
         }
+        input:focus, select:focus { outline: none; border-color: #667eea; }
         
-        .prediction-icon { font-size: 3rem; margin-bottom: 1rem; }
-        .card-btn {
-            background: #667eea;
+        .predict-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+        }
+        
+        .result-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            margin-top: 2rem;
+            text-align: center;
+            display: none;
+        }
+        .result-card.show { display: block; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        .grade { font-size: 2.5rem; font-weight: bold; margin: 1rem 0; }
+        .score { font-size: 1.5rem; margin: 1rem 0; }
+        .recommendations { text-align: left; margin-top: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 10px; }
+        .recommendations ul { margin-left: 1.5rem; }
+        
+        .excellent { color: #28a745; }
+        .good { color: #17a2b8; }
+        .average { color: #ffc107; }
+        .poor { color: #dc3545; }
+        
+        .back-link {
             display: inline-block;
+            margin-bottom: 1rem;
+            color: #667eea;
+            text-decoration: none;
         }
         
         @media (max-width: 768px) {
             .navbar { flex-direction: column; text-align: center; }
             .nav-links { justify-content: center; }
+            .container { padding: 1rem; }
+            .student-details { flex-direction: column; gap: 0.5rem; }
         }
     </style>
 </head>
@@ -100,68 +149,479 @@
     <nav class="navbar">
         <div class="logo">🎓 AAMUSTED <span>Predictor</span></div>
         <div class="nav-links">
-            <a href="student_dashboard.html">Dashboard</a>
+            <a href="#" id="dashboardLink">Dashboard</a>
             <a href="predictor.html" class="active">Predictor</a>
-            <a href="courses.html">My Courses</a>
-            <a href="history.html">History</a>
-            <a href="profile.html">Profile</a>
+            <a href="#" id="coursesLink">My Courses</a>
+            <a href="#" id="historyLink">History</a>
+            <a href="#" id="profileLink">Profile</a>
             <button class="logout-btn" onclick="logout()">🚪 Logout</button>
         </div>
     </nav>
 
     <div class="container">
-        <h2 style="margin-bottom: 1rem;">🔮 Choose Your Prediction Method</h2>
+        <div id="studentInfoCard" class="student-info-card">
+            <h3>👨‍🎓 Predicting for Student</h3>
+            <div class="student-details">
+                <div><span>Name:</span> <span id="studentName"></span></div>
+                <div><span>Index Number:</span> <span id="studentIndex"></span></div>
+                <div><span>Program:</span> <span id="studentProgram"></span></div>
+            </div>
+        </div>
         
-        <div class="prediction-grid">
-            <a href="semester.html" class="prediction-card">
-                <div class="prediction-icon">📚</div>
-                <h3>Semester Prediction</h3>
-                <p>Predict your end-of-semester performance based on attendance, assignments, engagement, and study hours</p>
-                <div class="card-btn">Predict Now →</div>
-            </a>
+        <div class="format-tabs">
+            <button class="format-tab active" onclick="switchFormat('semester')">📚 Semester Prediction</button>
+            <button class="format-tab" onclick="switchFormat('weekly')">📅 Weekly Tracking</button>
+            <button class="format-tab" onclick="switchFormat('custom')">⚙️ Custom Format</button>
+        </div>
 
-            <a href="weekly.html" class="prediction-card">
-                <div class="prediction-icon">📅</div>
-                <h3>Weekly Tracking</h3>
-                <p>Track your weekly progress and get real-time feedback on your performance throughout the semester</p>
-                <div class="card-btn">Track Weekly →</div>
-            </a>
+        <!-- Semester Prediction Form -->
+        <div id="semesterForm" class="prediction-form active">
+            <div class="form-card">
+                <h2 style="margin-bottom: 1.5rem;">📚 Semester Performance Prediction</h2>
+                
+                <div class="form-group">
+                    <label>📚 Select Course</label>
+                    <select id="semesterCourse">
+                        <option value="">Loading courses...</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>📅 Lectures Attended (hours)</label>
+                    <input type="number" id="lecturesAttended" placeholder="Total hours attended so far" step="1">
+                    <small style="color: #666;">Total possible: 225 hours (Regular) or 90 hours (Non-Regular)</small>
+                </div>
+                
+                <div class="form-group">
+                    <label>📝 Assignments</label>
+                    <input type="number" id="totalAssignments" placeholder="Total assignments given" step="1">
+                    <input type="number" id="assignmentsCompleted" placeholder="Assignments completed" step="1" style="margin-top: 0.5rem;">
+                    <input type="number" id="assignmentsScore" placeholder="Average assignment score (%)" step="1" style="margin-top: 0.5rem;">
+                </div>
+                
+                <div class="form-group">
+                    <label>💬 Class Engagement</label>
+                    <input type="number" id="totalEngagements" placeholder="Total engagement opportunities" step="1">
+                    <input type="number" id="engagementsParticipated" placeholder="Engagements participated" step="1" style="margin-top: 0.5rem;">
+                </div>
+                
+                <div class="form-group">
+                    <label>⏰ Weekly Study Hours</label>
+                    <input type="number" id="studyHours" placeholder="Average study hours per week" step="1">
+                </div>
+                
+                <div class="form-group">
+                    <label>📊 Previous Grade (%)</label>
+                    <input type="number" id="previousGrade" placeholder="Your grade from previous semester" step="1">
+                </div>
+                
+                <button class="predict-btn" onclick="predictSemester()">🔮 Predict Semester Performance</button>
+            </div>
+        </div>
 
-            <a href="custom.html" class="prediction-card">
-                <div class="prediction-icon">⚙️</div>
-                <h3>Custom Format</h3>
-                <p>Create your own prediction formula with customizable weights for attendance, assignments, and more</p>
-                <div class="card-btn">Customize →</div>
-            </a>
+        <!-- Weekly Tracking Form -->
+        <div id="weeklyForm" class="prediction-form">
+            <div class="form-card">
+                <h2 style="margin-bottom: 1.5rem;">📅 Weekly Performance Tracking</h2>
+                
+                <div class="form-group">
+                    <label>📚 Select Course</label>
+                    <select id="weeklyCourse">
+                        <option value="">Loading courses...</option>
+                    </select>
+                </div>
+                
+                <div class="week-selector" id="weekSelector" style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem;"></div>
+                
+                <div class="form-group">
+                    <label>Weeks Completed</label>
+                    <input type="number" id="weeksCompleted" value="1" min="1" max="15">
+                </div>
+                
+                <div class="form-group">
+                    <label>📅 Weekly Attendance (%)</label>
+                    <input type="number" id="weeklyAttendance" placeholder="Attendance % this week" step="1">
+                </div>
+                
+                <div class="form-group">
+                    <label>📝 Weekly Assignment Score (%)</label>
+                    <input type="number" id="weeklyAssignments" placeholder="Assignment score this week" step="1">
+                </div>
+                
+                <div class="form-group">
+                    <label>💬 Weekly Engagement (%)</label>
+                    <input type="number" id="weeklyEngagement" placeholder="Engagement rate this week" step="1">
+                </div>
+                
+                <div class="form-group">
+                    <label>⏰ Weekly Study Hours</label>
+                    <input type="number" id="weeklyStudyHours" placeholder="Hours studied this week" step="1">
+                </div>
+                
+                <div class="form-group">
+                    <label>📝 Midterm Grade (%)</label>
+                    <input type="number" id="midtermGrade" placeholder="Your midterm exam score" step="1">
+                </div>
+                
+                <button class="predict-btn" onclick="predictWeekly()">🔮 Track This Week</button>
+            </div>
+        </div>
+
+        <!-- Custom Format Form -->
+        <div id="customForm" class="prediction-form">
+            <div class="form-card">
+                <h2 style="margin-bottom: 1.5rem;">⚙️ Custom Performance Formula</h2>
+                
+                <div class="form-group">
+                    <label>📚 Select Course</label>
+                    <select id="customCourse">
+                        <option value="">Loading courses...</option>
+                    </select>
+                </div>
+                
+                <div class="total-weight" id="totalWeight" style="background: #f8f9fa; padding: 1rem; border-radius: 10px; text-align: center; margin-bottom: 1rem;">
+                    Total Weight: <span id="totalValue">100</span>%
+                </div>
+                
+                <div class="form-group">
+                    <label>📅 Attendance Weight (%)</label>
+                    <div class="weight-slider" style="display: flex; align-items: center; gap: 1rem;">
+                        <input type="range" id="weightAttendance" min="0" max="100" value="25" oninput="updateWeight()" style="flex:1">
+                        <span class="weight-value" id="weightAttendanceVal">25</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>📝 Assignments Weight (%)</label>
+                    <div class="weight-slider" style="display: flex; align-items: center; gap: 1rem;">
+                        <input type="range" id="weightAssignments" min="0" max="100" value="25" oninput="updateWeight()" style="flex:1">
+                        <span class="weight-value" id="weightAssignmentsVal">25</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>💬 Engagement Weight (%)</label>
+                    <div class="weight-slider" style="display: flex; align-items: center; gap: 1rem;">
+                        <input type="range" id="weightEngagement" min="0" max="100" value="20" oninput="updateWeight()" style="flex:1">
+                        <span class="weight-value" id="weightEngagementVal">20</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>⏰ Study Hours Weight (%)</label>
+                    <div class="weight-slider" style="display: flex; align-items: center; gap: 1rem;">
+                        <input type="range" id="weightStudyHours" min="0" max="100" value="15" oninput="updateWeight()" style="flex:1">
+                        <span class="weight-value" id="weightStudyHoursVal">15</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>📊 Previous Grade Weight (%)</label>
+                    <div class="weight-slider" style="display: flex; align-items: center; gap: 1rem;">
+                        <input type="range" id="weightPrevious" min="0" max="100" value="15" oninput="updateWeight()" style="flex:1">
+                        <span class="weight-value" id="weightPreviousVal">15</span>
+                    </div>
+                </div>
+                
+                <hr style="margin: 1rem 0;">
+                
+                <div class="form-group">
+                    <label>📅 Attendance (%)</label>
+                    <input type="number" id="customAttendance" placeholder="Your attendance percentage" step="1">
+                </div>
+                <div class="form-group">
+                    <label>📝 Assignments Score (%)</label>
+                    <input type="number" id="customAssignments" placeholder="Average assignment score" step="1">
+                </div>
+                <div class="form-group">
+                    <label>💬 Engagement Rate (%)</label>
+                    <input type="number" id="customEngagement" placeholder="Class engagement rate" step="1">
+                </div>
+                <div class="form-group">
+                    <label>⏰ Study Hours per Week</label>
+                    <input type="number" id="customStudyHours" placeholder="Average study hours" step="1">
+                </div>
+                <div class="form-group">
+                    <label>📊 Previous Grade (%)</label>
+                    <input type="number" id="customPreviousGrade" placeholder="Previous semester grade" step="1">
+                </div>
+                
+                <button class="predict-btn" onclick="predictCustom()">🔮 Predict with Custom Formula</button>
+            </div>
+        </div>
+        
+        <div id="resultCard" class="result-card">
+            <h2>🎯 Prediction Result</h2>
+            <div id="predictionGrade" class="grade"></div>
+            <div id="predictionScore" class="score"></div>
+            <div id="recommendations" class="recommendations"></div>
         </div>
     </div>
 
     <script>
-        function loadUser() {
+        const API_URL = 'https://student-performance-predictor7.onrender.com';
+        let currentUser = null;
+        let selectedStudent = null;
+        let courses = [];
+        
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'login.html';
+        }
+        
+        function switchFormat(format) {
+            document.querySelectorAll('.prediction-form').forEach(form => form.classList.remove('active'));
+            document.querySelectorAll('.format-tab').forEach(tab => tab.classList.remove('active'));
+            document.getElementById(format + 'Form').classList.add('active');
+            event.target.classList.add('active');
+            document.getElementById('resultCard').classList.remove('show');
+        }
+        
+        function updateWeight() {
+            const attendance = parseInt(document.getElementById('weightAttendance').value) || 0;
+            const assignments = parseInt(document.getElementById('weightAssignments').value) || 0;
+            const engagement = parseInt(document.getElementById('weightEngagement').value) || 0;
+            const studyHours = parseInt(document.getElementById('weightStudyHours').value) || 0;
+            const previous = parseInt(document.getElementById('weightPrevious').value) || 0;
+            
+            document.getElementById('weightAttendanceVal').textContent = attendance;
+            document.getElementById('weightAssignmentsVal').textContent = assignments;
+            document.getElementById('weightEngagementVal').textContent = engagement;
+            document.getElementById('weightStudyHoursVal').textContent = studyHours;
+            document.getElementById('weightPreviousVal').textContent = previous;
+            
+            const total = attendance + assignments + engagement + studyHours + previous;
+            document.getElementById('totalValue').textContent = total;
+        }
+        
+        function generateWeekButtons() {
+            const container = document.getElementById('weekSelector');
+            container.innerHTML = '';
+            for (let i = 1; i <= 15; i++) {
+                const btn = document.createElement('button');
+                btn.className = 'week-btn';
+                btn.textContent = `Week ${i}`;
+                btn.style.padding = '0.5rem 1rem';
+                btn.style.background = '#e9ecef';
+                btn.style.border = 'none';
+                btn.style.borderRadius = '8px';
+                btn.style.cursor = 'pointer';
+                btn.onclick = () => {
+                    document.querySelectorAll('.week-btn').forEach(b => b.style.background = '#e9ecef');
+                    btn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                    btn.style.color = 'white';
+                    document.getElementById('weeksCompleted').value = i;
+                };
+                container.appendChild(btn);
+            }
+        }
+        
+        async function loadUserAndStudent() {
             const userStr = localStorage.getItem('currentUser');
             if (!userStr) {
                 window.location.href = 'login.html';
                 return null;
             }
-            return JSON.parse(userStr);
-        }
-        
-                        // SIMPLE WORKING LOGOUT
-        function logout() {
-            localStorage.clear();
-            window.location.href = 'login.html';
-        }/api/logout`, { method: 'POST' });
-            } catch(e) {
-                console.log('Logout error:', e);
+            currentUser = JSON.parse(userStr);
+            
+            // Set navigation links based on role
+            const dashboardLink = document.getElementById('dashboardLink');
+            const coursesLink = document.getElementById('coursesLink');
+            const historyLink = document.getElementById('historyLink');
+            const profileLink = document.getElementById('profileLink');
+            
+            if (currentUser.role === 'lecturer') {
+                dashboardLink.href = 'lecturer_dashboard.html';
+                coursesLink.href = 'lecturer_courses.html';
+                historyLink.href = 'history.html';
+                profileLink.href = 'profile.html';
+            } else {
+                dashboardLink.href = 'student_dashboard.html';
+                coursesLink.href = 'courses.html';
+                historyLink.href = 'history.html';
+                profileLink.href = 'profile.html';
             }
-            localStorage.clear();
-            window.location.href = 'login.html';
+            
+            // Check if lecturer is predicting for a student
+            const selectedStudentId = localStorage.getItem('selectedStudent');
+            const selectedStudentName = localStorage.getItem('selectedStudentName');
+            const selectedStudentIndex = localStorage.getItem('selectedStudentIndex');
+            const selectedStudentProgram = localStorage.getItem('selectedStudentProgram');
+            
+            if (selectedStudentId && selectedStudentName) {
+                selectedStudent = {
+                    id: selectedStudentId,
+                    name: selectedStudentName,
+                    index: selectedStudentIndex,
+                    program: selectedStudentProgram
+                };
+                
+                const studentCard = document.getElementById('studentInfoCard');
+                studentCard.style.display = 'block';
+                document.getElementById('studentName').innerHTML = selectedStudentName;
+                document.getElementById('studentIndex').innerHTML = selectedStudentIndex || 'N/A';
+                document.getElementById('studentProgram').innerHTML = selectedStudentProgram || 'Regular';
+            }
+            
+            return currentUser;
         }
         
-        loadUser();
+        async function loadCourses() {
+            const userId = selectedStudent ? selectedStudent.id : currentUser.id;
+            try {
+                const response = await fetch(`${API_URL}/api/courses?user_id=${userId}`);
+                courses = await response.json();
+                
+                const courseSelects = ['semesterCourse', 'weeklyCourse', 'customCourse'];
+                courseSelects.forEach(selectId => {
+                    const select = document.getElementById(selectId);
+                    if (courses.length === 0) {
+                        select.innerHTML = '<option value="">No courses available</option>';
+                    } else {
+                        select.innerHTML = '<option value="">Select a course</option>' + 
+                            courses.map(c => `<option value="${c.id}">${c.code} - ${c.name}</option>`).join('');
+                    }
+                });
+            } catch (error) {
+                console.error('Error loading courses:', error);
+            }
+        }
+        
+        async function predictSemester() {
+            const courseId = document.getElementById('semesterCourse').value;
+            if (!courseId) {
+                alert('Please select a course');
+                return;
+            }
+            
+            const data = {
+                user_id: selectedStudent ? selectedStudent.id : currentUser.id,
+                course_id: courseId,
+                lectures_attended: parseFloat(document.getElementById('lecturesAttended').value) || 0,
+                total_assignments: parseFloat(document.getElementById('totalAssignments').value) || 0,
+                assignments_completed: parseFloat(document.getElementById('assignmentsCompleted').value) || 0,
+                assignments_score: parseFloat(document.getElementById('assignmentsScore').value) || 0,
+                total_engagements: parseFloat(document.getElementById('totalEngagements').value) || 0,
+                engagements_participated: parseFloat(document.getElementById('engagementsParticipated').value) || 0,
+                study_hours: parseFloat(document.getElementById('studyHours').value) || 0,
+                previous_grade: parseFloat(document.getElementById('previousGrade').value) || 0
+            };
+            
+            const response = await fetch(`${API_URL}/api/predict`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            
+            const result = await response.json();
+            displayResult(result);
+        }
+        
+        async function predictWeekly() {
+            const courseId = document.getElementById('weeklyCourse').value;
+            if (!courseId) {
+                alert('Please select a course');
+                return;
+            }
+            
+            const weeksCompleted = parseFloat(document.getElementById('weeksCompleted').value) || 1;
+            
+            const data = {
+                user_id: selectedStudent ? selectedStudent.id : currentUser.id,
+                course_id: courseId,
+                weeks_completed: weeksCompleted,
+                weekly_attendance: parseFloat(document.getElementById('weeklyAttendance').value) || 0,
+                weekly_assignments: parseFloat(document.getElementById('weeklyAssignments').value) || 0,
+                weekly_engagement: parseFloat(document.getElementById('weeklyEngagement').value) || 0,
+                weekly_study_hours: parseFloat(document.getElementById('weeklyStudyHours').value) || 0,
+                midterm_grade: parseFloat(document.getElementById('midtermGrade').value) || 0
+            };
+            
+            const response = await fetch(`${API_URL}/api/predict/weekly`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            
+            const result = await response.json();
+            displayResult(result);
+        }
+        
+        async function predictCustom() {
+            const courseId = document.getElementById('customCourse').value;
+            if (!courseId) {
+                alert('Please select a course');
+                return;
+            }
+            
+            const attendance = parseInt(document.getElementById('weightAttendance').value) || 0;
+            const assignments = parseInt(document.getElementById('weightAssignments').value) || 0;
+            const engagement = parseInt(document.getElementById('weightEngagement').value) || 0;
+            const studyHours = parseInt(document.getElementById('weightStudyHours').value) || 0;
+            const previous = parseInt(document.getElementById('weightPrevious').value) || 0;
+            
+            const total = attendance + assignments + engagement + studyHours + previous;
+            if (total !== 100) {
+                alert(`Total weight must be 100%. Current total: ${total}%`);
+                return;
+            }
+            
+            const weights = {
+                attendance: attendance / 100,
+                assignments: assignments / 100,
+                engagement: engagement / 100,
+                study_hours: studyHours / 100,
+                previous_grade: previous / 100
+            };
+            
+            const data = {
+                user_id: selectedStudent ? selectedStudent.id : currentUser.id,
+                course_id: courseId,
+                attendance: parseFloat(document.getElementById('customAttendance').value) || 0,
+                assignments: parseFloat(document.getElementById('customAssignments').value) || 0,
+                engagement: parseFloat(document.getElementById('customEngagement').value) || 0,
+                study_hours: parseFloat(document.getElementById('customStudyHours').value) || 0,
+                previous_grade: parseFloat(document.getElementById('customPreviousGrade').value) || 0,
+                weights: weights
+            };
+            
+            const response = await fetch(`${API_URL}/api/predict`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            
+            const result = await response.json();
+            displayResult(result);
+        }
+        
+        function displayResult(result) {
+            if (result.success) {
+                const gradeClass = result.grade?.includes('Excellent') ? 'excellent' : 
+                                  result.grade?.includes('Good') ? 'good' : 
+                                  result.grade?.includes('Average') ? 'average' : 'poor';
+                
+                document.getElementById('predictionGrade').innerHTML = result.grade;
+                document.getElementById('predictionGrade').className = `grade ${gradeClass}`;
+                document.getElementById('predictionScore').innerHTML = `Score: ${result.score?.toFixed(1)}%`;
+                
+                if (result.recommendations && result.recommendations.length > 0) {
+                    document.getElementById('recommendations').innerHTML = `
+                        <strong>💡 Recommendations:</strong>
+                        <ul>
+                            ${result.recommendations.map(r => `<li>${r}</li>`).join('')}
+                        </ul>
+                    `;
+                }
+                
+                document.getElementById('resultCard').classList.add('show');
+            } else {
+                alert('Prediction failed: ' + (result.error || 'Unknown error'));
+            }
+        }
+        
+        // Initialize
+        generateWeekButtons();
+        loadUserAndStudent().then(() => {
+            loadCourses();
+        });
+        updateWeight();
     </script>
 </body>
 </html>
-
-
-
