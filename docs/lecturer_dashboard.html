@@ -38,7 +38,6 @@
             cursor: pointer;
             color: white;
         }
-        .logout-btn:hover { background: rgba(255,80,60,0.5); }
         
         .container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
         
@@ -188,9 +187,8 @@
             }
             currentUser = JSON.parse(userStr);
             
-            // Verify user is lecturer
+            // Verify user is lecturer - if not, redirect to student dashboard
             if (currentUser.role !== 'lecturer') {
-                alert('This page is for lecturers only. Redirecting to student dashboard...');
                 window.location.href = 'student_dashboard.html';
                 return null;
             }
@@ -214,7 +212,6 @@
                 const totalCourses = document.getElementById('totalCourses');
                 const atRiskCount = document.getElementById('atRiskCount');
                 
-                // Load courses count
                 const coursesResponse = await fetch(`${API_URL}/api/courses?user_id=${currentUser.id}`);
                 const courses = await coursesResponse.json();
                 totalCourses.textContent = courses.length;
@@ -234,13 +231,7 @@
                 container.innerHTML = `
                     <table>
                         <thead>
-                            <tr>
-                                <th>Student Name</th>
-                                <th>Index Number</th>
-                                <th>Program</th>
-                                <th>Enrolled Courses</th>
-                                <th>Action</th>
-                            </tr>
+                            <tr><th>Student Name</th><th>Index Number</th><th>Program</th><th>Enrolled Courses</th><th>Action</th></tr>
                         </thead>
                         <tbody>
                             ${students.map(s => {
@@ -260,7 +251,7 @@
                                 `;
                             }).join('')}
                         </tbody>
-                    </table>
+                     </table>
                 `;
                 
                 atRiskCount.textContent = atRisk;
