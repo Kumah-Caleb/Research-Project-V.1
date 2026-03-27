@@ -23,7 +23,8 @@
         .nav-links { display: flex; gap: 1.5rem; align-items: center; flex-wrap: wrap; }
         .nav-links a { color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 8px; }
         .nav-links a:hover, .nav-links a.active { background: rgba(255,255,255,0.2); }
-        .logout-btn { background: rgba(255,80,60,0.3); border: 1px solid rgba(255,80,60,0.5); padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; }
+        .logout-btn { background: rgba(255,80,60,0.3); border: 1px solid rgba(255,80,60,0.5); padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; transition: all 0.3s; }
+        .logout-btn:hover { background: rgba(255,80,60,0.5); }
         
         .container { max-width: 800px; margin: 0 auto; padding: 2rem; }
         
@@ -66,6 +67,7 @@
             border: 2px solid #e0e0e0;
             border-radius: 8px;
             font-size: 1rem;
+            transition: all 0.3s;
         }
         input:focus, select:focus { outline: none; border-color: #667eea; }
         
@@ -78,35 +80,54 @@
             cursor: pointer;
             margin-top: 1rem;
             margin-right: 1rem;
+            transition: all 0.3s;
         }
         .edit-btn {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             width: 100%;
         }
+        .edit-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(102,126,234,0.4); }
         .save-btn { background: #28a745; color: white; }
+        .save-btn:hover { background: #218838; }
         .cancel-btn { background: #6c757d; color: white; }
+        .cancel-btn:hover { background: #5a6268; }
         
         .message {
             padding: 1rem;
             border-radius: 8px;
-            margin-bottom: 1rem;
+            margin: 1rem 2rem;
             display: none;
+            animation: slideDown 0.3s ease;
+        }
+        @keyframes slideDown {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
         .message.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
         .message.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .message.info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
         
         .back-link {
             display: inline-block;
             margin-bottom: 1rem;
             color: #667eea;
             text-decoration: none;
+            transition: all 0.3s;
+        }
+        .back-link:hover { text-decoration: underline; }
+        
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
         }
         
         @media (max-width: 768px) {
             .navbar { flex-direction: column; text-align: center; }
             .info-group { flex-direction: column; gap: 0.5rem; }
             .info-label { width: 100%; }
+            .container { padding: 1rem; }
         }
     </style>
 </head>
@@ -170,19 +191,19 @@
             <div id="editProfile" class="edit-form">
                 <div class="form-group">
                     <label>Full Name</label>
-                    <input type="text" id="editFullName">
+                    <input type="text" id="editFullName" placeholder="Enter your full name">
                 </div>
                 <div class="form-group">
                     <label>Email</label>
-                    <input type="email" id="editEmail">
+                    <input type="email" id="editEmail" placeholder="Enter your email">
                 </div>
                 <div class="form-group">
                     <label>Index Number / Staff ID</label>
-                    <input type="text" id="editIndexNumber">
+                    <input type="text" id="editIndexNumber" placeholder="Enter index number or staff ID">
                 </div>
                 <div class="form-group">
                     <label>Department</label>
-                    <input type="text" id="editDepartment">
+                    <input type="text" id="editDepartment" placeholder="Enter your department">
                 </div>
                 <div class="form-group">
                     <label>Level</label>
@@ -214,35 +235,45 @@
         function loadUserData() {
             const userStr = localStorage.getItem('currentUser');
             if (!userStr) {
-                window.location.href = 'login.html';
+                showMessage('Please login to continue', 'info');
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 2000);
                 return;
             }
-            currentUser = JSON.parse(userStr);
             
-            // Display profile info
-            document.getElementById('profileName').textContent = currentUser.full_name || currentUser.username;
-            document.getElementById('profileRole').innerHTML = currentUser.role === 'lecturer' ? '👩‍🏫 Lecturer' : '👨‍🎓 Student';
-            
-            document.getElementById('viewUsername').textContent = currentUser.username;
-            document.getElementById('viewFullName').textContent = currentUser.full_name || 'Not set';
-            document.getElementById('viewEmail').textContent = currentUser.email || 'Not set';
-            document.getElementById('viewIndex').textContent = currentUser.index_number || 'Not set';
-            document.getElementById('viewProgram').textContent = currentUser.program_type === 'regular' ? '🎓 Regular Program (5 days/week)' : '🌙 Non-Regular Program (Weekend/Evening)';
-            document.getElementById('viewDepartment').textContent = currentUser.department || 'Not set';
-            document.getElementById('viewLevel').textContent = currentUser.level || 'Not set';
-            
-            // Populate edit form
-            document.getElementById('editFullName').value = currentUser.full_name || '';
-            document.getElementById('editEmail').value = currentUser.email || '';
-            document.getElementById('editIndexNumber').value = currentUser.index_number || '';
-            document.getElementById('editDepartment').value = currentUser.department || '';
-            document.getElementById('editLevel').value = currentUser.level || '100';
-            document.getElementById('editProgramType').value = currentUser.program_type || 'regular';
+            try {
+                currentUser = JSON.parse(userStr);
+                
+                // Display profile info
+                document.getElementById('profileName').textContent = currentUser.full_name || currentUser.username;
+                document.getElementById('profileRole').innerHTML = currentUser.role === 'lecturer' ? '👩‍🏫 Lecturer' : '👨‍🎓 Student';
+                
+                document.getElementById('viewUsername').textContent = currentUser.username || '-';
+                document.getElementById('viewFullName').textContent = currentUser.full_name || 'Not set';
+                document.getElementById('viewEmail').textContent = currentUser.email || 'Not set';
+                document.getElementById('viewIndex').textContent = currentUser.index_number || currentUser.staff_id || 'Not set';
+                document.getElementById('viewProgram').innerHTML = currentUser.program_type === 'regular' ? '🎓 Regular Program (5 days/week)' : '🌙 Non-Regular Program (Weekend/Evening)';
+                document.getElementById('viewDepartment').textContent = currentUser.department || 'Not set';
+                document.getElementById('viewLevel').textContent = currentUser.level || 'Not set';
+                
+                // Populate edit form
+                document.getElementById('editFullName').value = currentUser.full_name || '';
+                document.getElementById('editEmail').value = currentUser.email || '';
+                document.getElementById('editIndexNumber').value = currentUser.index_number || currentUser.staff_id || '';
+                document.getElementById('editDepartment').value = currentUser.department || '';
+                document.getElementById('editLevel').value = currentUser.level || '100';
+                document.getElementById('editProgramType').value = currentUser.program_type || 'regular';
+            } catch (error) {
+                console.error('Error loading user data:', error);
+                showMessage('Error loading profile data', 'error');
+            }
         }
         
         function showEditForm() {
             document.getElementById('viewProfile').style.display = 'none';
             document.getElementById('editProfile').classList.add('show');
+            document.getElementById('messageBox').style.display = 'none';
         }
         
         function cancelEdit() {
@@ -256,35 +287,67 @@
             msgBox.textContent = text;
             msgBox.className = `message ${type}`;
             msgBox.style.display = 'block';
+            
+            // Auto-hide after 3 seconds
             setTimeout(() => {
-                msgBox.style.display = 'none';
+                if (msgBox.style.display === 'block') {
+                    msgBox.style.display = 'none';
+                }
             }, 3000);
+            
+            // Scroll to message
+            msgBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
         
         async function saveProfile() {
+            // Validate inputs
+            const email = document.getElementById('editEmail').value;
+            if (email && !isValidEmail(email)) {
+                showMessage('Please enter a valid email address', 'error');
+                return;
+            }
+            
             const updatedData = {
                 user_id: currentUser.id,
-                full_name: document.getElementById('editFullName').value,
-                email: document.getElementById('editEmail').value,
-                index_number: document.getElementById('editIndexNumber').value,
-                department: document.getElementById('editDepartment').value,
+                full_name: document.getElementById('editFullName').value.trim(),
+                email: email.trim(),
+                index_number: document.getElementById('editIndexNumber').value.trim(),
+                department: document.getElementById('editDepartment').value.trim(),
                 level: document.getElementById('editLevel').value,
                 program_type: document.getElementById('editProgramType').value
             };
             
+            // Show loading state
+            const saveBtn = document.querySelector('.save-btn');
+            const originalText = saveBtn.textContent;
+            saveBtn.textContent = '⏳ Saving...';
+            saveBtn.disabled = true;
+            
             try {
                 const response = await fetch(`${API_URL}/api/profile`, {
                     method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        // Add auth token if your API requires it
+                        'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+                    },
                     body: JSON.stringify(updatedData)
                 });
                 
                 const result = await response.json();
                 
                 if (result.success) {
-                    // Update localStorage with new user data
-                    const updatedUser = { ...currentUser, ...result.user };
+                    // Merge updated data with existing user
+                    const updatedUser = { ...currentUser, ...result.user, ...updatedData };
+                    
+                    // Save to localStorage
                     localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+                    
+                    // Also save token if returned
+                    if (result.token) {
+                        localStorage.setItem('token', result.token);
+                    }
+                    
                     currentUser = updatedUser;
                     
                     showMessage('✅ Profile updated successfully!', 'success');
@@ -293,33 +356,47 @@
                     cancelEdit();
                     loadUserData();
                 } else {
-                    showMessage('❌ ' + (result.error || 'Failed to update profile'), 'error');
+                    showMessage('❌ ' + (result.message || result.error || 'Failed to update profile'), 'error');
                 }
             } catch (error) {
                 console.error('Save error:', error);
-                showMessage('❌ Network error. Please try again.', 'error');
+                showMessage('❌ Network error. Please check your connection and try again.', 'error');
+            } finally {
+                // Reset button state
+                saveBtn.textContent = originalText;
+                saveBtn.disabled = false;
             }
         }
         
-                        // SIMPLE WORKING LOGOUT
-        function logout() {
-            localStorage.clear();
-            window.location.href = 'login.html';
-        }/api/logout`, { method: 'POST' });
-            } catch(e) {}
-            localStorage.clear();
-            window.location.href = 'login.html';
-        }/api/logout`, { method: 'POST' });
-            } catch(e) {}
-            localStorage.removeItem('currentUser');
-            window.location.href = 'login.html';
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@([^\s@]+\.)+[^\s@]+$/;
+            return emailRegex.test(email);
         }
         
+        // FIXED LOGOUT FUNCTION - Clean and working
+        async function logout() {
+            try {
+                // Try to notify server about logout (optional)
+                const token = localStorage.getItem('token');
+                if (token) {
+                    await fetch(`${API_URL}/api/logout`, { 
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                }
+            } catch (error) {
+                // Ignore network errors during logout
+                console.log('Logout notice:', error.message);
+            } finally {
+                // Clear all localStorage data
+                localStorage.clear();
+                // Redirect to login page
+                window.location.href = 'login.html';
+            }
+        }
+        
+        // Initialize page
         loadUserData();
     </script>
 </body>
 </html>
-
-
-
-
