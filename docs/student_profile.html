@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Profile - Lecturer - AAMUSTED Performance Predictor</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+     * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fb; }
         
         .navbar {
@@ -39,97 +39,126 @@
             color: white;
         }
         
-        .container { max-width: 800px; margin: 0 auto; padding: 2rem; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
         
-        .profile-card {
-            background: white;
+        .welcome-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
             border-radius: 20px;
-            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .stat-number { font-size: 2.5rem; font-weight: bold; color: #667eea; }
+        .stat-label { color: #666; margin-top: 0.5rem; }
+        
+        .section-title { font-size: 1.5rem; margin-bottom: 1rem; color: #2c3e50; display: flex; align-items: center; gap: 0.5rem; }
+        
+        .prediction-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .prediction-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.3s;
+            text-decoration: none;
+            display: block;
+            color: inherit;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .prediction-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .prediction-icon { font-size: 2.5rem; margin-bottom: 1rem; }
+        .card-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            width: 100%;
+        }
+        
+        .management-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .management-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.3s;
+            text-decoration: none;
+            display: block;
+            color: inherit;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .management-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .management-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+        
+        .activity-section, .calendar-widget {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-top: 1rem;
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
         
-        .profile-header {
-            background: linear-gradient(135deg, #2c3e50 0%, #1a2a3a 100%);
-            color: white;
-            padding: 2rem;
-            text-align: center;
-        }
-        .avatar { font-size: 4rem; margin-bottom: 1rem; }
-        .profile-name { font-size: 1.5rem; margin-bottom: 0.5rem; }
-        
-        .profile-info, .edit-form {
-            padding: 2rem;
-        }
-        
-        .info-group {
-            display: flex;
-            padding: 1rem 0;
-            border-bottom: 1px solid #eee;
-        }
-        .info-label { width: 150px; font-weight: bold; color: #666; }
-        .info-value { flex: 1; color: #333; }
-        
-        .edit-form { display: none; }
-        .edit-form.show { display: block; }
-        
-        .form-group { margin-bottom: 1rem; }
-        label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: #333; }
-        input, select {
-            width: 100%;
-            padding: 0.8rem;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 1rem;
-        }
-        
-        .edit-btn, .save-btn, .cancel-btn {
-            padding: 0.8rem 1.5rem;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: bold;
-            cursor: pointer;
+        .progress-bar {
+            background: #e0e0e0;
+            border-radius: 10px;
+            height: 10px;
             margin-top: 1rem;
-            margin-right: 1rem;
+            overflow: hidden;
         }
-        .edit-btn {
-            background: linear-gradient(135deg, #2c3e50 0%, #1a2a3a 100%);
-            color: white;
-            width: 100%;
+        .progress-fill {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100%;
+            transition: width 0.3s;
         }
-        .save-btn { background: #28a745; color: white; }
-        .cancel-btn { background: #6c757d; color: white; }
         
-        .message {
-            padding: 1rem;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            display: none;
-        }
-        .message.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .message.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        
-        .back-link {
-            display: inline-block;
-            margin-bottom: 1rem;
-            color: #667eea;
-            text-decoration: none;
-        }
+        .empty-message { text-align: center; padding: 2rem; color: #999; }
         
         @media (max-width: 768px) {
             .navbar { flex-direction: column; text-align: center; }
-            .info-group { flex-direction: column; gap: 0.5rem; }
-            .info-label { width: 100%; }
-        }
+            .nav-links { justify-content: center; }
+            .container { padding: 1rem; }
+        }   
     </style>
 </head>
 <body>
     <nav class="navbar">
-        <div class="logo">👩‍🏫AAMUSTED <span>Predictor</span></div>
+        <div class="logo">🎓 AAMUSTED <span>Predictor</span></div>
         <div class="nav-links">
             <a href="student_dashboard.html">Dashboard</a>
+            <a href="predictor.html">Predictor</a>
             <a href="student_courses.html">My Courses</a>
-            <a href="lecturer_students.html">My Students</a>
+            <a href="student_history.html">History</a>
             <a href="student_profile.html" class="active">Profile</a>
             <button class="logout-btn" onclick="logout()">🚪 Logout</button>
         </div>
@@ -140,29 +169,79 @@
         
         <div class="profile-card">
             <div class="profile-header">
-                <div class="avatar">👩‍🏫</div>
+                <div class="avatar">👤</div>
                 <div class="profile-name" id="profileName">Loading...</div>
-                <div id="profileRole">Lecturer</div>
+                <div class="profile-role" id="profileRole">Student</div>
             </div>
             
             <div id="messageBox" class="message"></div>
             
             <div id="viewProfile" class="profile-info">
-                <div class="info-group"><div class="info-label">Username</div><div class="info-value" id="viewUsername">-</div></div>
-                <div class="info-group"><div class="info-label">Full Name</div><div class="info-value" id="viewFullName">-</div></div>
-                <div class="info-group"><div class="info-label">Email</div><div class="info-value" id="viewEmail">-</div></div>
-                <div class="info-group"><div class="info-label">Staff ID</div><div class="info-value" id="viewIndex">-</div></div>
-                <div class="info-group"><div class="info-label">Department</div><div class="info-value" id="viewDepartment">-</div></div>
-                <div class="info-group"><div class="info-label">Title</div><div class="info-value" id="viewLevel">-</div></div>
+                <div class="info-group">
+                    <div class="info-label">Username</div>
+                    <div class="info-value" id="viewUsername">-</div>
+                </div>
+                <div class="info-group">
+                    <div class="info-label">Full Name</div>
+                    <div class="info-value" id="viewFullName">-</div>
+                </div>
+                <div class="info-group">
+                    <div class="info-label">Email</div>
+                    <div class="info-value" id="viewEmail">-</div>
+                </div>
+                <div class="info-group">
+                    <div class="info-label">Index Number</div>
+                    <div class="info-value" id="viewIndex">-</div>
+                </div>
+                <div class="info-group">
+                    <div class="info-label">Program Type</div>
+                    <div class="info-value" id="viewProgram">-</div>
+                </div>
+                <div class="info-group">
+                    <div class="info-label">Department</div>
+                    <div class="info-value" id="viewDepartment">-</div>
+                </div>
+                <div class="info-group">
+                    <div class="info-label">Level</div>
+                    <div class="info-value" id="viewLevel">-</div>
+                </div>
                 <button class="edit-btn" onclick="showEditForm()">✏️ Edit Profile</button>
             </div>
             
             <div id="editProfile" class="edit-form">
-                <div class="form-group"><label>Full Name</label><input type="text" id="editFullName"></div>
-                <div class="form-group"><label>Email</label><input type="email" id="editEmail"></div>
-                <div class="form-group"><label>Staff ID</label><input type="text" id="editIndexNumber"></div>
-                <div class="form-group"><label>Department</label><input type="text" id="editDepartment"></div>
-                <div class="form-group"><label>Title</label><select id="editLevel"><option value="Junior Lecturer">Junior Lecturer</option><option value="Lecturer">Lecturer</option><option value="Senior Lecturer">Senior Lecturer</option><option value="Associate Professor">Associate Professor</option><option value="Professor">Professor</option></select></div>
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="editFullName" placeholder="Enter your full name">
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="editEmail" placeholder="Enter your email address">
+                </div>
+                <div class="form-group">
+                    <label>Index Number</label>
+                    <input type="text" id="editIndexNumber" placeholder="Enter your index number">
+                </div>
+                <div class="form-group">
+                    <label>Department</label>
+                    <input type="text" id="editDepartment" placeholder="Enter your department">
+                </div>
+                <div class="form-group">
+                    <label>Level</label>
+                    <select id="editLevel">
+                        <option value="100">Level 100</option>
+                        <option value="200">Level 200</option>
+                        <option value="300">Level 300</option>
+                        <option value="400">Level 400</option>
+                        <option value="Postgraduate">Postgraduate</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Program Type</label>
+                    <select id="editProgramType">
+                        <option value="regular">Regular (5 days/week)</option>
+                        <option value="non-regular">Non-Regular (Weekend/Evening)</option>
+                    </select>
+                </div>
                 <button class="save-btn" onclick="saveProfile()">💾 Save Changes</button>
                 <button class="cancel-btn" onclick="cancelEdit()">Cancel</button>
             </div>
