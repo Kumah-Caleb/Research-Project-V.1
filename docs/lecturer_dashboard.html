@@ -41,6 +41,7 @@
         .logout-btn:hover { background: rgba(255,80,60,0.5); }
         
         .container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
+        
         .welcome-card {
             background: linear-gradient(135deg, #2c3e50 0%, #1a2a3a 100%);
             color: white;
@@ -48,12 +49,14 @@
             border-radius: 20px;
             margin-bottom: 2rem;
         }
+        
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 1.5rem;
             margin-bottom: 2rem;
         }
+        
         .stat-card {
             background: white;
             padding: 1.5rem;
@@ -61,8 +64,10 @@
             text-align: center;
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
+        
         .stat-number { font-size: 2.5rem; font-weight: bold; color: #2c3e50; }
         .stat-label { color: #666; margin-top: 0.5rem; }
+        
         .section-title { font-size: 1.5rem; margin-bottom: 1rem; color: #2c3e50; display: flex; align-items: center; gap: 0.5rem; }
         
         .action-grid {
@@ -71,6 +76,7 @@
             gap: 1.5rem;
             margin-bottom: 2rem;
         }
+        
         .action-card {
             background: white;
             border-radius: 15px;
@@ -96,12 +102,10 @@
             margin-top: 1rem;
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
+        
         table { width: 100%; border-collapse: collapse; }
         th, td { padding: 1rem; text-align: left; border-bottom: 1px solid #eee; }
         th { background: #f8f9fa; font-weight: 600; }
-        .risk-high { color: #dc3545; font-weight: bold; }
-        .risk-moderate { color: #fd7e14; }
-        .risk-low { color: #28a745; }
         .view-btn {
             background: #667eea;
             color: white;
@@ -173,8 +177,19 @@
         
         async function loadUser() {
             const userStr = localStorage.getItem('currentUser');
-            if (!userStr) { window.location.href = 'login.html'; return null; }
+            if (!userStr) {
+                window.location.href = 'login.html';
+                return null;
+            }
             currentUser = JSON.parse(userStr);
+            
+            // Check if user is actually a lecturer
+            if (currentUser.role !== 'lecturer') {
+                alert('This dashboard is for lecturers only. Redirecting to student dashboard...');
+                window.location.href = 'student_dashboard.html';
+                return null;
+            }
+            
             document.getElementById('welcomeMessage').innerHTML = `Welcome, ${currentUser.full_name || currentUser.username}! 👋`;
             return currentUser;
         }
@@ -194,15 +209,18 @@
                 const totalCourses = document.getElementById('totalCourses');
                 const atRiskCount = document.getElementById('atRiskCount');
                 
+                // Also load courses count
                 const coursesResponse = await fetch(`${API_URL}/api/courses?user_id=${currentUser.id}`);
                 const courses = await coursesResponse.json();
                 totalCourses.textContent = courses.length;
                 totalStudents.textContent = students.length;
                 
-                let atRisk = 0, totalScore = 0, scoreCount = 0;
+                let atRisk = 0;
+                let totalScore = 0;
+                let scoreCount = 0;
                 
                 if (!students || students.length === 0) {
-                    container.innerHTML = '<div class="empty-message">No students have enrolled in your courses yet.</div>';
+                    container.innerHTML = '<div class="empty-message">No students have enrolled in your courses yet. Create courses and students will appear here when they enroll.</div>';
                     atRiskCount.textContent = '0';
                     document.getElementById('avgPerformance').textContent = '--';
                     return;
@@ -210,20 +228,31 @@
                 
                 container.innerHTML = `
                     <table>
-                        <thead><tr><th>Student Name</th><th>Index Number</th><th>Program</th><th>Enrolled Courses</th><th>Action</th></tr></thead>
+                        <thead>
+                            <tr>
+                                <th>Student Name</th>
+                                <th>Index Number</th>
+                                <th>Program</th>
+                                <th>Enrolled Courses</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
                         <tbody>
                             ${students.map(s => {
                                 const score = 70;
-                                totalScore += score; scoreCount++;
+                                totalScore += score;
+                                scoreCount++;
                                 if (score < 60) atRisk++;
                                 const coursesList = s.courses.map(c => c.code).join(', ');
-                                return `<tr>
-                                    <td>${escapeHtml(s.full_name)}</td>
-                                    <td>${escapeHtml(s.index_number)}</td>
-                                    <td>${s.program_type === 'regular' ? 'Regular' : 'Non-Regular'}</td>
-                                    <td>${coursesList || 'None'}</td>
-                                    <td><button class="view-btn" onclick="predictForStudent('${s.id}', '${escapeHtml(s.full_name)}')">🔮 Predict</button></td>
-                                </tr>`;
+                                return `
+                                    <tr>
+                                        <td>${escapeHtml(s.full_name)}</td>
+                                        <td>${escapeHtml(s.index_number)}</td>
+                                        <td>${s.program_type === 'regular' ? 'Regular' : 'Non-Regular'}</td>
+                                        <td>${coursesList || 'None'}</td>
+                                        <td><button class="view-btn" onclick="predictForStudent('${s.id}', '${escapeHtml(s.full_name)}')">🔮 Predict</button></td>
+                                    </tr>
+                                `;
                             }).join('')}
                         </tbody>
                     </table>
@@ -232,15 +261,30 @@
                 atRiskCount.textContent = atRisk;
                 const avgScore = scoreCount > 0 ? (totalScore / scoreCount).toFixed(1) : 0;
                 document.getElementById('avgPerformance').textContent = avgScore + '%';
+                
             } catch (error) {
-                console.error('Error:', error);
-                document.getElementById('studentsList').innerHTML = '<div class="empty-message">Error loading student data.</div>';
+                console.error('Error loading students:', error);
+                document.getElementById('studentsList').innerHTML = '<div class="empty-message">Error loading student data. Please try again.</div>';
             }
         }
         
-        function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, function(m) { if (m === '&') return '&amp;'; if (m === '<') return '&lt;'; if (m === '>') return '&gt;'; return m; }); }
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
         
-        async function init() { await loadUser(); if (currentUser && currentUser.role === 'lecturer') await loadMyStudents(); else window.location.href = 'login.html'; }
+        async function init() {
+            await loadUser();
+            if (currentUser && currentUser.role === 'lecturer') {
+                await loadMyStudents();
+            }
+        }
+        
         init();
     </script>
 </body>
