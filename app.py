@@ -117,6 +117,35 @@ def get_grade(score):
     else:
         return "F - Fail"
 
+def generate_recommendations(data, score):
+    """Generate personalized recommendations"""
+    recommendations = []
+    
+    attendance = data.get('attendance', 0)
+    assignments = data.get('assignments', 0)
+    engagement = data.get('engagement', 0)
+    study_hours = data.get('study_hours', 0)
+    
+    if attendance < 70:
+        recommendations.append(f"📅 Improve attendance: Currently {attendance}%. Aim for 85%+")
+    if assignments < 70:
+        recommendations.append(f"📝 Assignment quality: {assignments}%. Review feedback and improve")
+    if engagement < 60:
+        recommendations.append(f"💬 Class engagement: {engagement}%. Participate more in discussions")
+    if study_hours < 10:
+        recommendations.append(f"⏰ Study hours: {study_hours}/week. Aim for 10-15 hours")
+    
+    if score >= 85:
+        recommendations.append("🌟 Excellent performance! Keep up the great work!")
+    elif score >= 70:
+        recommendations.append("👍 Good progress! Focus on weaker areas to reach excellence")
+    elif score >= 55:
+        recommendations.append("⚠️ You're at risk. Seek academic support immediately")
+    else:
+        recommendations.append("🆘 Critical: Contact academic advisor for intervention")
+    
+    return recommendations
+
 # ============ API ENDPOINTS ============
 
 @app.route('/')
@@ -134,7 +163,8 @@ def home():
             'login': 'POST /api/login',
             'logout': 'POST /api/logout',
             'courses': 'GET /api/courses',
-            'students': 'GET /api/students'
+            'students': 'GET /api/students',
+            'profile': 'GET/PUT /api/profile'
         }
     })
 
@@ -212,7 +242,9 @@ def api_login():
                         'role': user['role'],
                         'program_type': user.get('program_type', 'regular'),
                         'index_number': user.get('index_number', ''),
-                        'email': user.get('email', '')
+                        'email': user.get('email', ''),
+                        'department': user.get('department', ''),
+                        'level': user.get('level', '')
                     }
                 })
         
@@ -386,34 +418,51 @@ def api_history():
     predictions = load_data(PREDICTIONS_FILE)
     return jsonify(predictions.get(user_id, []))
 
-def generate_recommendations(data, score):
-    """Generate personalized recommendations"""
-    recommendations = []
-    
-    attendance = data.get('attendance', 0)
-    assignments = data.get('assignments', 0)
-    engagement = data.get('engagement', 0)
-    study_hours = data.get('study_hours', 0)
-    
-    if attendance < 70:
-        recommendations.append(f"📅 Improve attendance: Currently {attendance}%. Aim for 85%+")
-    if assignments < 70:
-        recommendations.append(f"📝 Assignment quality: {assignments}%. Review feedback and improve")
-    if engagement < 60:
-        recommendations.append(f"💬 Class engagement: {engagement}%. Participate more in discussions")
-    if study_hours < 10:
-        recommendations.append(f"⏰ Study hours: {study_hours}/week. Aim for 10-15 hours")
-    
-    if score >= 85:
-        recommendations.append("🌟 Excellent performance! Keep up the great work!")
-    elif score >= 70:
-        recommendations.append("👍 Good progress! Focus on weaker areas to reach excellence")
-    elif score >= 55:
-        recommendations.append("⚠️ You're at risk. Seek academic support immediately")
-    else:
-        recommendations.append("🆘 Critical: Contact academic advisor for intervention")
-    
-    return recommendations
+@app.route('/api/profile', methods=['GET', 'PUT'])
+def api_profile():
+    """Get or update user profile"""
+    try:
+        data = request.json
+        user_id = data.get('user_id')
+        
+        if not user_id:
+            return jsonify({'success': False, 'error': 'User ID required'}), 400
+        
+        users = load_data(USERS_FILE)
+        
+        if user_id not in users:
+            return jsonify({'success': False, 'error': 'User not found'}), 404
+        
+        if request.method == 'PUT':
+            # Update profile
+            if 'full_name' in data:
+                users[user_id]['full_name'] = data['full_name']
+            if 'email' in data:
+                users[user_id]['email'] = data['email']
+            if 'index_number' in data:
+                users[user_id]['index_number'] = data['index_number']
+            if 'department' in data:
+                users[user_id]['department'] = data['department']
+            if 'level' in data:
+                users[user_id]['level'] = data['level']
+            if 'program_type' in data:
+                users[user_id]['program_type'] = data['program_type']
+            
+            save_data(USERS_FILE, users)
+            
+            return jsonify({
+                'success': True,
+                'user': users[user_id]
+            })
+        else:
+            # GET profile
+            return jsonify({
+                'success': True,
+                'user': users[user_id]
+            })
+            
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 # ============ RUN APP ============
 if __name__ == '__main__':
