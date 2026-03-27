@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -159,19 +159,19 @@
 </head>
 <body>
     <nav class="navbar">
-        <div class="logo">👩‍🏫 AAMUSTED <span>Predictor</span></div>
+        <div class="logo">ðŸ‘©â€ðŸ« AAMUSTED <span>Predictor</span></div>
         <div class="nav-links">
             <a href="/dashboard" class="active">Dashboard</a>
             <a href="/students">My Students</a>
             <a href="/courses">My Courses</a>
             <a href="/profile">Profile</a>
-            <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+            <button class="logout-btn" onclick="logout()">ðŸšª Logout</button>
         </div>
     </nav>
 
     <div class="container">
         <div class="welcome-card">
-            <h1>Welcome, Prof. {{ user.full_name }}! 👋</h1>
+            <h1>Welcome, Prof. {{ user.full_name }}! ðŸ‘‹</h1>
             <p>Monitor student performance and provide academic guidance</p>
         </div>
 
@@ -196,24 +196,24 @@
 
         <div class="action-grid">
             <div class="action-card" onclick="location.href='/courses'">
-                <div class="action-icon">📚</div>
+                <div class="action-icon">ðŸ“š</div>
                 <h3>Create Course</h3>
                 <p>Add new courses and manage existing ones</p>
             </div>
             <div class="action-card" onclick="location.href='/students'">
-                <div class="action-icon">👥</div>
+                <div class="action-icon">ðŸ‘¥</div>
                 <h3>View Students</h3>
                 <p>Monitor student performance and predictions</p>
             </div>
             <div class="action-card" onclick="location.href='/predictor'">
-                <div class="action-icon">🔮</div>
+                <div class="action-icon">ðŸ”®</div>
                 <h3>Predict Student Performance</h3>
                 <p>Get AI-powered predictions for your students</p>
             </div>
         </div>
 
         <div class="students-table">
-            <h3 style="margin-bottom: 1rem;">📊 Recent Student Activity</h3>
+            <h3 style="margin-bottom: 1rem;">ðŸ“Š Recent Student Activity</h3>
             <div id="studentsList">
                 <p style="text-align: center; padding: 2rem;">Loading student data...</p>
             </div>
@@ -276,7 +276,7 @@
             window.location.href = `/students?view=${studentId}`;
         }
         
-        async function logout() {
+        async async function logout() {
             await fetch('/api/logout', { method: 'POST' });
             window.location.href = '/';
         }
