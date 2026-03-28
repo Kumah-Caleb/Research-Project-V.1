@@ -588,3 +588,353 @@ app.get('/api/dashboard/stats', authenticateToken, async (req, res) => {
         res.status(500).json({ success: false, error: err.message });
     }
 });
+
+// ============ LECTURER DASHBOARD ENDPOINTS ============
+
+// Get lecturer dashboard data
+app.get('/api/lecturer/dashboard', authenticateToken, async (req, res) => {
+    try {
+        console.log('Lecturer dashboard request from user:', req.user.id, 'role:', req.user.role);
+        
+        // Check if user is a lecturer
+        if (req.user.role !== 'lecturer') {
+            return res.status(403).json({ success: false, error: 'Access denied. Lecturer only.' });
+        }
+        
+        // Get lecturer's courses with student counts
+        const coursesResult = await pool.query(`
+            SELECT 
+                c.*,
+                COUNT(DISTINCT sc.student_id) as enrolled_students,
+                COALESCE(AVG(p.predicted_score), 0) as avg_performance
+            FROM courses c
+            LEFT JOIN student_courses sc ON c.id = sc.course_id
+            LEFT JOIN predictions p ON p.course_code = c.course_code AND p.student_id = sc.student_id
+            WHERE c.lecturer_id = $1 OR $1 IN (SELECT user_id FROM users WHERE role = 'admin')
+            GROUP BY c.id
+            ORDER BY c.course_code
+        `, [req.user.id]);
+        
+        // Get overall statistics
+        const statsResult = await pool.query(`
+            SELECT 
+                COUNT(DISTINCT c.id) as total_courses,
+                COUNT(DISTINCT sc.student_id) as total_students,
+                COALESCE(AVG(p.predicted_score), 0) as avg_performance,
+                COUNT(DISTINCT CASE WHEN p.predicted_grade IN ('D', 'F') THEN sc.student_id END) as at_risk_students
+            FROM courses c
+            LEFT JOIN student_courses sc ON c.id = sc.course_id
+            LEFT JOIN predictions p ON p.course_code = c.course_code AND p.student_id = sc.student_id
+            WHERE c.lecturer_id = $1 OR $1 IN (SELECT user_id FROM users WHERE role = 'admin')
+        `, [req.user.id]);
+        
+        // Get recent predictions for lecturer's courses
+        const recentResult = await pool.query(`
+            SELECT 
+                p.*,
+                u.full_name as student_name,
+                u.email as student_email,
+                c.course_name,
+                c.course_code
+            FROM predictions p
+            JOIN students s ON p.student_id = s.id
+            JOIN users u ON s.user_id = u.id
+            JOIN courses c ON p.course_code = c.course_code
+            WHERE c.lecturer_id = $1 OR $1 IN (SELECT user_id FROM users WHERE role = 'admin')
+            ORDER BY p.created_at DESC
+            LIMIT 10
+        `, [req.user.id]);
+        
+        res.json({
+            success: true,
+            courses: coursesResult.rows,
+            stats: statsResult.rows[0],
+            recent_predictions: recentResult.rows
+        });
+        
+    } catch (err) {
+        console.error('Lecturer dashboard error:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// Get students for a specific course
+app.get('/api/lecturer/course/:courseId/students', authenticateToken, async (req, res) => {
+    try {
+        if (req.user.role !== 'lecturer') {
+            return res.status(403).json({ success: false, error: 'Access denied. Lecturer only.' });
+        }
+        
+        const { courseId } = req.params;
+        
+        // Verify lecturer owns this course
+        const courseCheck = await pool.query(
+            'SELECT * FROM courses WHERE id = $1 AND (lecturer_id = $2 OR $2 IN (SELECT id FROM users WHERE role = $3))',
+            [courseId, req.user.id, 'admin']
+        );
+        
+        if (courseCheck.rows.length === 0 && req.user.role !== 'admin') {
+            return res.status(403).json({ success: false, error: 'You do not have access to this course' });
+        }
+        
+        // Get all students enrolled in this course with their predictions
+        const students = await pool.query(`
+            SELECT 
+                u.id as user_id,
+                u.full_name,
+                u.email,
+                u.department,
+                s.student_id,
+                sc.enrolled_date,
+                sc.semester,
+                sc.academic_year,
+                p.id as prediction_id,
+                p.predicted_score,
+                p.predicted_grade,
+                p.recommendation,
+                p.created_at as prediction_date
+            FROM students s
+            JOIN users u ON s.user_id = u.id
+            JOIN student_courses sc ON s.id = sc.student_id
+            JOIN courses c ON sc.course_id = c.id
+            LEFT JOIN predictions p ON p.student_id = s.id AND p.course_code = c.course_code
+            WHERE c.id = $1
+            ORDER BY u.full_name
+        `, [courseId]);
+        
+        // Get course details
+        const course = await pool.query(
+            'SELECT * FROM courses WHERE id = $1',
+            [courseId]
+        );
+        
+        res.json({
+            success: true,
+            course: course.rows[0],
+            students: students.rows,
+            count: students.rows.length
+        });
+        
+    } catch (err) {
+        console.error('Course students error:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// Update student prediction (lecturer can add feedback)
+app.put('/api/lecturer/prediction/:predictionId', authenticateToken, async (req, res) => {
+    try {
+        if (req.user.role !== 'lecturer') {
+            return res.status(403).json({ success: false, error: 'Access denied. Lecturer only.' });
+        }
+        
+        const { predictionId } = req.params;
+        const { lecturer_feedback, predicted_score, predicted_grade } = req.body;
+        
+        const result = await pool.query(`
+            UPDATE predictions 
+            SET lecturer_feedback = COALESCE($1, lecturer_feedback),
+                predicted_score = COALESCE($2, predicted_score),
+                predicted_grade = COALESCE($3, predicted_grade),
+                updated_by = $4,
+                updated_at = NOW()
+            WHERE id = $5
+            RETURNING *
+        `, [lecturer_feedback, predicted_score, predicted_grade, req.user.id, predictionId]);
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Prediction not found' });
+        }
+        
+        res.json({
+            success: true,
+            prediction: result.rows[0]
+        });
+        
+    } catch (err) {
+        console.error('Update prediction error:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// Get course analytics
+app.get('/api/lecturer/course/:courseId/analytics', authenticateToken, async (req, res) => {
+    try {
+        if (req.user.role !== 'lecturer') {
+            return res.status(403).json({ success: false, error: 'Access denied. Lecturer only.' });
+        }
+        
+        const { courseId } = req.params;
+        
+        const analytics = await pool.query(`
+            SELECT 
+                c.course_code,
+                c.course_name,
+                COUNT(DISTINCT s.id) as total_students,
+                COUNT(p.id) as predictions_made,
+                AVG(p.predicted_score) as average_score,
+                COUNT(CASE WHEN p.predicted_grade = 'A' THEN 1 END) as grade_a_count,
+                COUNT(CASE WHEN p.predicted_grade = 'B' THEN 1 END) as grade_b_count,
+                COUNT(CASE WHEN p.predicted_grade = 'C' THEN 1 END) as grade_c_count,
+                COUNT(CASE WHEN p.predicted_grade = 'D' THEN 1 END) as grade_d_count,
+                COUNT(CASE WHEN p.predicted_grade = 'F' THEN 1 END) as grade_f_count
+            FROM courses c
+            LEFT JOIN student_courses sc ON c.id = sc.course_id
+            LEFT JOIN students s ON sc.student_id = s.id
+            LEFT JOIN predictions p ON p.student_id = s.id AND p.course_code = c.course_code
+            WHERE c.id = $1
+            GROUP BY c.id
+        `, [courseId]);
+        
+        // Get grade distribution
+        const gradeDistribution = await pool.query(`
+            SELECT 
+                p.predicted_grade,
+                COUNT(*) as count
+            FROM predictions p
+            JOIN courses c ON p.course_code = c.course_code
+            WHERE c.id = $1
+            GROUP BY p.predicted_grade
+            ORDER BY p.predicted_grade
+        `, [courseId]);
+        
+        res.json({
+            success: true,
+            analytics: analytics.rows[0],
+            grade_distribution: gradeDistribution.rows
+        });
+        
+    } catch (err) {
+        console.error('Course analytics error:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// ============ LECTURER DASHBOARD ENDPOINTS ============
+
+// Get lecturer dashboard data
+app.get('/api/lecturer/dashboard', authenticateToken, async (req, res) => {
+    try {
+        console.log('Lecturer dashboard request - User:', req.user.id, 'Role:', req.user.role);
+        
+        // Check if user is a lecturer or admin
+        if (req.user.role !== 'lecturer' && req.user.role !== 'admin') {
+            return res.status(403).json({ 
+                success: false, 
+                error: 'Access denied. Lecturer or Admin only.' 
+            });
+        }
+        
+        // Get lecturer's courses with student counts
+        const coursesResult = await pool.query(`
+            SELECT 
+                c.id,
+                c.course_code,
+                c.course_name,
+                c.credits,
+                COUNT(DISTINCT sc.student_id) as enrolled_students
+            FROM courses c
+            LEFT JOIN student_courses sc ON c.id = sc.course_id
+            WHERE c.lecturer_id = $1
+            GROUP BY c.id
+            ORDER BY c.course_code
+        `, [req.user.id]);
+        
+        // Get overall statistics
+        const statsResult = await pool.query(`
+            SELECT 
+                COUNT(DISTINCT c.id) as total_courses,
+                COUNT(DISTINCT sc.student_id) as total_students
+            FROM courses c
+            LEFT JOIN student_courses sc ON c.id = sc.course_id
+            WHERE c.lecturer_id = $1
+        `, [req.user.id]);
+        
+        res.json({
+            success: true,
+            courses: coursesResult.rows,
+            stats: statsResult.rows[0] || { total_courses: 0, total_students: 0 },
+            recent_predictions: []
+        });
+        
+    } catch (err) {
+        console.error('Lecturer dashboard error:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// Get all students for a lecturer's course
+app.get('/api/lecturer/course/:courseId/students', authenticateToken, async (req, res) => {
+    try {
+        if (req.user.role !== 'lecturer' && req.user.role !== 'admin') {
+            return res.status(403).json({ success: false, error: 'Access denied' });
+        }
+        
+        const { courseId } = req.params;
+        
+        // Get students enrolled in this course
+        const students = await pool.query(`
+            SELECT 
+                u.id as user_id,
+                u.full_name,
+                u.email,
+                u.department,
+                s.student_id,
+                sc.enrolled_date,
+                sc.semester,
+                sc.academic_year
+            FROM students s
+            JOIN users u ON s.user_id = u.id
+            JOIN student_courses sc ON s.id = sc.student_id
+            WHERE sc.course_id = $1
+            ORDER BY u.full_name
+        `, [courseId]);
+        
+        // Get course details
+        const course = await pool.query(
+            'SELECT * FROM courses WHERE id = $1',
+            [courseId]
+        );
+        
+        res.json({
+            success: true,
+            course: course.rows[0],
+            students: students.rows,
+            count: students.rows.length
+        });
+        
+    } catch (err) {
+        console.error('Course students error:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// Get lecturer's courses list
+app.get('/api/lecturer/courses', authenticateToken, async (req, res) => {
+    try {
+        if (req.user.role !== 'lecturer' && req.user.role !== 'admin') {
+            return res.status(403).json({ success: false, error: 'Access denied' });
+        }
+        
+        const courses = await pool.query(`
+            SELECT 
+                c.*,
+                COUNT(DISTINCT sc.student_id) as enrolled_students
+            FROM courses c
+            LEFT JOIN student_courses sc ON c.id = sc.course_id
+            WHERE c.lecturer_id = $1
+            GROUP BY c.id
+            ORDER BY c.course_code
+        `, [req.user.id]);
+        
+        res.json({
+            success: true,
+            courses: courses.rows,
+            count: courses.rows.length
+        });
+        
+    } catch (err) {
+        console.error('Lecturer courses error:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
