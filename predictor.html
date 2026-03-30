@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>USTED | Student Self-Assessment Predictor</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <header class="bg-primary text-white py-3">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0">USTED</h1>
+                    <p class="mb-0 small">Student Self-Assessment Predictor</p>
+                </div>
+                <nav>
+                    <a href="student_dashboard.html" class="text-white me-3">Dashboard</a>
+                    <a href="predictor.html" class="text-white me-3">Predict</a>
+                    <a href="history.html" class="text-white me-3">History</a>
+                    <a href="profile.html" class="text-white me-3">Profile</a>
+                    <a href="#" id="logoutBtn" class="text-white">Logout</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="container my-4">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">Make a Prediction</h4>
+                    </div>
+                    <div class="card-body">
+                        <form id="predictionForm">
+                            <div class="mb-3">
+                                <label for="courseCode" class="form-label">Course Code *</label>
+                                <input type="text" class="form-control" id="courseCode" 
+                                       placeholder="e.g., ITE301" required>
+                                <div id="courseCodeError" class="validation-error text-danger small mt-1"></div>
+                                <small class="text-muted">Format: 2-4 uppercase letters followed by 3-4 digits</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="currentGrade" class="form-label">Current Grade *</label>
+                                <select class="form-select" id="currentGrade" required>
+                                    <option value="">Select grade</option>
+                                    <option value="A">A (Excellent)</option>
+                                    <option value="B+">B+ (Very Good)</option>
+                                    <option value="B">B (Good)</option>
+                                    <option value="C+">C+ (Above Average)</option>
+                                    <option value="C">C (Average)</option>
+                                    <option value="D+">D+ (Below Average)</option>
+                                    <option value="D">D (Poor)</option>
+                                    <option value="F">F (Fail)</option>
+                                </select>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="semester" class="form-label">Semester *</label>
+                                    <select class="form-select" id="semester" required>
+                                        <option value="">Select semester</option>
+                                        <option value="1">1</option>
+                                        <option value="2">2</option>
+                                        <option value="3">3</option>
+                                        <option value="4">4</option>
+                                        <option value="5">5</option>
+                                        <option value="6">6</option>
+                                        <option value="7">7</option>
+                                        <option value="8">8</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="academicYear" class="form-label">Academic Year *</label>
+                                    <input type="text" class="form-control" id="academicYear" 
+                                           placeholder="e.g., 2024" required>
+                                    <div id="yearError" class="validation-error text-danger small mt-1"></div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="studyHours" class="form-label">Hours spent studying per week:</label>
+                                <input type="range" class="form-range" id="studyHours" min="0" max="40" value="10">
+                                <span id="studyHoursValue" class="badge bg-info">10 hours</span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="difficulty" class="form-label">Perceived Difficulty:</label>
+                                <input type="range" class="form-range" id="difficulty" min="1" max="5" value="3">
+                                <span id="difficultyValue" class="badge bg-info">Medium (3/5)</span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="confidence" class="form-label">Confidence in Understanding:</label>
+                                <input type="range" class="form-range" id="confidence" min="1" max="5" value="3">
+                                <span id="confidenceValue" class="badge bg-info">Moderate (3/5)</span>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary w-100">Predict Performance</button>
+                        </form>
+
+                        <div id="predictionResult" class="mt-4" style="display: none;">
+                            <div class="alert alert-success">
+                                <h5>Prediction Result</h5>
+                                <p><strong>Predicted Grade:</strong> <span id="resultGrade"></span></p>
+                                <p><strong>Confidence:</strong> <span id="resultConfidence"></span>%</p>
+                                <div class="progress mb-3">
+                                    <div id="confidenceBar" class="progress-bar bg-success" style="width: 0%"></div>
+                                </div>
+                                <p><strong>Recommendations:</strong></p>
+                                <p id="recommendations"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-light text-center py-3 mt-4">
+        <div class="container">
+            <p class="mb-0">&copy; 2025 USTED. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/validation.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        // Range slider value display
+        document.getElementById('studyHours').addEventListener('input', function() {
+            document.getElementById('studyHoursValue').textContent = this.value + ' hours';
+        });
+        document.getElementById('difficulty').addEventListener('input', function() {
+            let text = ['Easy', 'Easy-Medium', 'Medium', 'Medium-Hard', 'Hard'][this.value-1];
+            document.getElementById('difficultyValue').textContent = text + ' (' + this.value + '/5)';
+        });
+        document.getElementById('confidence').addEventListener('input', function() {
+            let text = ['Very Low', 'Low', 'Moderate', 'High', 'Very High'][this.value-1];
+            document.getElementById('confidenceValue').textContent = text + ' (' + this.value + '/5)';
+        });
+    </script>
+</body>
+</html>
