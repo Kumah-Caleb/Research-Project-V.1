@@ -1,0 +1,13 @@
+﻿{
+  "name": "student-performance-predictor-frontend",
+  "version": "1.0.0",
+  "description": "Frontend for AAMUSTED Student Performance Predictor",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve .",
+    "dev": "npx serve ."
+  },
+  "keywords": ["student", "performance", "predictor", "aamusted"],
+  "author": "AAMUSTED Research Project",
+  "license": "MIT"
+}

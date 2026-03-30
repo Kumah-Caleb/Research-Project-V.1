@@ -1,73 +1,151 @@
+﻿/* styles.css - USTED Student Self-Assessment Predictor */
 
-/* Form Validation Styles */
-input.valid {
-    border-color: #28a745 !important;
-    border-width: 2px !important;
+:root {
+    --primary-color: #003366;
+    --secondary-color: #FFD700;
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+    --info-color: #17a2b8;
 }
 
-input.invalid {
-    border-color: #dc3545 !important;
-    border-width: 2px !important;
-    background-color: #fff8f8 !important;
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+}
+
+/* Header Styles */
+.bg-primary {
+    background-color: var(--primary-color) !important;
+}
+
+/* Card Styles */
+.card {
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+/* Form Validation Styles */
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(0,51,102,0.25);
+}
+
+.form-control.valid {
+    border-color: var(--success-color);
+    border-width: 2px;
+}
+
+.form-control.invalid {
+    border-color: var(--danger-color);
+    border-width: 2px;
+    background-color: #fff8f8;
 }
 
 .validation-error {
-    color: #dc3545;
     font-size: 0.875rem;
     margin-top: 0.25rem;
-    display: none;
 }
 
-.form-group {
-    margin-bottom: 1rem;
+/* Button Styles */
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
 }
 
-.form-group label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
+.btn-primary:hover {
+    background-color: #002244;
+    border-color: #002244;
 }
 
-.form-group input,
-.form-group select,
-.form-group textarea {
+.btn-outline-primary {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+/* Progress Bar */
+.progress-bar {
+    background-color: var(--primary-color);
+}
+
+/* Table Styles */
+.table thead th {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+}
+
+/* Footer */
+footer {
+    background-color: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .display-4 {
+        font-size: 2rem;
+    }
+    
+    header nav a {
+        font-size: 0.875rem;
+    }
+}
+
+/* Toast Notifications */
+.toast-notification {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 9999;
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Loading Spinner */
+.spinner-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
     width: 100%;
-    padding: 0.5rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    transition: all 0.3s ease;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 9998;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
-.form-group input:focus {
-    outline: none;
-    border-color: #007bff;
-    box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.25);
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
 }
 
-.form-group input.valid:focus {
-    border-color: #28a745;
-    box-shadow: 0 0 0 0.2rem rgba(40,167,69,0.25);
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
-
-.form-group input.invalid:focus {
-    border-color: #dc3545;
-    box-shadow: 0 0 0 0.2rem rgba(220,53,69,0.25);
-}
-
-.password-strength {
-    margin-top: 0.25rem;
-    font-size: 0.875rem;
-}
-
-.strength-weak {
-    color: #dc3545;
-}
-
-.strength-medium {
-    color: #ffc107;
-}
-
-.strength-strong {
-    color: #28a745;
-}
-

@@ -1,0 +1,13 @@
+﻿# Prevent package.json from being added back
+package.json
+package-lock.json
+node_modules/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp

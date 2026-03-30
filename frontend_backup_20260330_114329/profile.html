@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - USTED Performance Predictor</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fb; }
+        
+        .navbar {
+            background: linear-gradient(135deg, #1a2a3a 0%, #0f1a24 100%);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .logo { font-size: 1.5rem; font-weight: bold; }
+        .logo span { color: #ffd700; }
+        .nav-links { display: flex; gap: 1.5rem; align-items: center; flex-wrap: wrap; }
+        .nav-links a { color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 8px; }
+        .nav-links a:hover, .nav-links a.active { background: rgba(255,255,255,0.2); }
+        .logout-btn { background: rgba(255,80,60,0.3); border: 1px solid rgba(255,80,60,0.5); padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; transition: all 0.3s; }
+        .logout-btn:hover { background: rgba(255,80,60,0.5); }
+        
+        .container { max-width: 800px; margin: 0 auto; padding: 2rem; }
+        
+        .profile-card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .profile-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+        .avatar { font-size: 4rem; margin-bottom: 1rem; }
+        .profile-name { font-size: 1.5rem; margin-bottom: 0.5rem; }
+        
+        .profile-info, .edit-form {
+            padding: 2rem;
+        }
+        
+        .info-group {
+            display: flex;
+            padding: 1rem 0;
+            border-bottom: 1px solid #eee;
+        }
+        .info-label { width: 150px; font-weight: bold; color: #666; }
+        .info-value { flex: 1; color: #333; }
+        
+        .edit-form { display: none; }
+        .edit-form.show { display: block; }
+        
+        .form-group { margin-bottom: 1rem; }
+        label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: #333; }
+        input, select {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        input:focus, select:focus { outline: none; border-color: #667eea; }
+        
+        .edit-btn, .save-btn, .cancel-btn {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 1rem;
+            margin-right: 1rem;
+            transition: all 0.3s;
+        }
+        .edit-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 100%;
+        }
+        .edit-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(102,126,234,0.4); }
+        .save-btn { background: #28a745; color: white; }
+        .save-btn:hover { background: #218838; }
+        .cancel-btn { background: #6c757d; color: white; }
+        .cancel-btn:hover { background: #5a6268; }
+        
+        .message {
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 2rem;
+            display: none;
+            animation: slideDown 0.3s ease;
+        }
+        @keyframes slideDown {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .message.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .message.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .message.info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        
+        .back-link {
+            display: inline-block;
+            margin-bottom: 1rem;
+            color: #667eea;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        .back-link:hover { text-decoration: underline; }
+        
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+        
+        @media (max-width: 768px) {
+            .navbar { flex-direction: column; text-align: center; }
+            .info-group { flex-direction: column; gap: 0.5rem; }
+            .info-label { width: 100%; }
+            .container { padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">?? USTED <span>Predictor</span></div>
+        <div class="nav-links">
+            <a href="student_dashboard.html">Dashboard</a>
+            <a href="predictor.html">Predictor</a>
+            <a href="courses.html">My Courses</a>
+            <a href="history.html">History</a>
+            <a href="profile.html" class="active">Profile</a>
+            <button class="logout-btn" onclick="logout()">?? Logout</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <a href="student_dashboard.html" class="back-link">? Back to Dashboard</a>
+        
+        <div class="profile-card">
+            <div class="profile-header">
+                <div class="avatar">??</div>
+                <div class="profile-name" id="profileName">Loading...</div>
+                <div id="profileRole"></div>
+            </div>
+            
+            <div id="messageBox" class="message"></div>
+            
+            <div id="viewProfile" class="profile-info">
+                <div class="info-group">
+                    <div class="info-label">Username</div>
+                    <div class="info-value" id="viewUsername">-</div>
+                </div>
+                <div class="info-group">
+                    <div class="info-label">Full Name</div>
+                    <div class="info-value" id="viewFullName">-</div>
+                </div>
+                <div class="info-group">
+                    <div class="info-label">Email</div>
+                    <div class="info-value" id="viewEmail">-</div>
+                </div>
+                <div class="info-group">
+                    <div class="info-label">Index Number / Staff ID</div>
+                    <div class="info-value" id="viewIndex">-</div>
+                </div>
+                <div class="info-group">
+                    <div class="info-label">Program Type</div>
+                    <div class="info-value" id="viewProgram">-</div>
+                </div>
+                <div class="info-group">
+                    <div class="info-label">Department</div>
+                    <div class="info-value" id="viewDepartment">-</div>
+                </div>
+                <div class="info-group">
+                    <div class="info-label">Level</div>
+                    <div class="info-value" id="viewLevel">-</div>
+                </div>
+                <button class="edit-btn" onclick="showEditForm()">?? Edit Profile</button>
+            </div>
+            
+            <div id="editProfile" class="edit-form">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="editFullName" placeholder="Enter your full name">
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="editEmail" placeholder="Enter your email">
+                </div>
+                <div class="form-group">
+                    <label>Index Number / Staff ID</label>
+                    <input type="text" id="editIndexNumber" placeholder="Enter index number or staff ID">
+                </div>
+                <div class="form-group">
+                    <label>Department</label>
+                    <input type="text" id="editDepartment" placeholder="Enter your department">
+                </div>
+                <div class="form-group">
+                    <label>Level</label>
+                    <select id="editLevel">
+                        <option value="100">Level 100</option>
+                        <option value="200">Level 200</option>
+                        <option value="300">Level 300</option>
+                        <option value="400">Level 400</option>
+                        <option value="Postgraduate">Postgraduate</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Program Type</label>
+                    <select id="editProgramType">
+                        <option value="regular">Regular (5 days/week)</option>
+                        <option value="non-regular">Non-Regular (Weekend/Evening)</option>
+                    </select>
+                </div>
+                <button class="save-btn" onclick="saveProfile()">?? Save Changes</button>
+                <button class="cancel-btn" onclick="cancelEdit()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000';
+        let currentUser = null;
+        
+        function loadUserData() {
+            const userStr = localStorage.getItem('currentUser');
+            if (!userStr) {
+                showMessage('Please login to continue', 'info');
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 2000);
+                return;
+            }
+            
+            try {
+                currentUser = JSON.parse(userStr);
+                
+                // Display profile info
+                document.getElementById('profileName').textContent = currentUser.full_name || currentUser.username;
+                document.getElementById('profileRole').innerHTML = currentUser.role === 'lecturer' ? '????? Lecturer' : '????? Student';
+                
+                document.getElementById('viewUsername').textContent = currentUser.username || '-';
+                document.getElementById('viewFullName').textContent = currentUser.full_name || 'Not set';
+                document.getElementById('viewEmail').textContent = currentUser.email || 'Not set';
+                document.getElementById('viewIndex').textContent = currentUser.index_number || currentUser.staff_id || 'Not set';
+                document.getElementById('viewProgram').innerHTML = currentUser.program_type === 'regular' ? '?? Regular Program (5 days/week)' : '?? Non-Regular Program (Weekend/Evening)';
+                document.getElementById('viewDepartment').textContent = currentUser.department || 'Not set';
+                document.getElementById('viewLevel').textContent = currentUser.level || 'Not set';
+                
+                // Populate edit form
+                document.getElementById('editFullName').value = currentUser.full_name || '';
+                document.getElementById('editEmail').value = currentUser.email || '';
+                document.getElementById('editIndexNumber').value = currentUser.index_number || currentUser.staff_id || '';
+                document.getElementById('editDepartment').value = currentUser.department || '';
+                document.getElementById('editLevel').value = currentUser.level || '100';
+                document.getElementById('editProgramType').value = currentUser.program_type || 'regular';
+            } catch (error) {
+                console.error('Error loading user data:', error);
+                showMessage('Error loading profile data', 'error');
+            }
+        }
+        
+        function showEditForm() {
+            document.getElementById('viewProfile').style.display = 'none';
+            document.getElementById('editProfile').classList.add('show');
+            document.getElementById('messageBox').style.display = 'none';
+        }
+        
+        function cancelEdit() {
+            document.getElementById('viewProfile').style.display = 'block';
+            document.getElementById('editProfile').classList.remove('show');
+            document.getElementById('messageBox').style.display = 'none';
+        }
+        
+        function showMessage(text, type) {
+            const msgBox = document.getElementById('messageBox');
+            msgBox.textContent = text;
+            msgBox.className = `message ${type}`;
+            msgBox.style.display = 'block';
+            
+            // Auto-hide after 3 seconds
+            setTimeout(() => {
+                if (msgBox.style.display === 'block') {
+                    msgBox.style.display = 'none';
+                }
+            }, 3000);
+            
+            // Scroll to message
+            msgBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        
+        async function saveProfile() {
+            // Validate inputs
+            const email = document.getElementById('editEmail').value;
+            if (email && !isValidEmail(email)) {
+                showMessage('Please enter a valid email address', 'error');
+                return;
+            }
+            
+            const updatedData = {
+                user_id: currentUser.id,
+                full_name: document.getElementById('editFullName').value.trim(),
+                email: email.trim(),
+                index_number: document.getElementById('editIndexNumber').value.trim(),
+                department: document.getElementById('editDepartment').value.trim(),
+                level: document.getElementById('editLevel').value,
+                program_type: document.getElementById('editProgramType').value
+            };
+            
+            // Show loading state
+            const saveBtn = document.querySelector('.save-btn');
+            const originalText = saveBtn.textContent;
+            saveBtn.textContent = '? Saving...';
+            saveBtn.disabled = true;
+            
+            try {
+                const response = await fetch(`${API_URL}/api/profile`, {
+                    method: 'PUT',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        // Add auth token if your API requires it
+                        'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+                    },
+                    body: JSON.stringify(updatedData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Merge updated data with existing user
+                    const updatedUser = { ...currentUser, ...result.user, ...updatedData };
+                    
+                    // Save to localStorage
+                    localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+                    
+                    // Also save token if returned
+                    if (result.token) {
+                        localStorage.setItem('token', result.token);
+                    }
+                    
+                    currentUser = updatedUser;
+                    
+                    showMessage('? Profile updated successfully!', 'success');
+                    
+                    // Refresh display
+                    cancelEdit();
+                    loadUserData();
+                } else {
+                    showMessage('? ' + (result.message || result.error || 'Failed to update profile'), 'error');
+                }
+            } catch (error) {
+                console.error('Save error:', error);
+                showMessage('? Network error. Please check your connection and try again.', 'error');
+            } finally {
+                // Reset button state
+                saveBtn.textContent = originalText;
+                saveBtn.disabled = false;
+            }
+        }
+        
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@([^\s@]+\.)+[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+        
+        // FIXED LOGOUT FUNCTION - Clean and working
+        async function logout() {
+            try {
+                // Try to notify server about logout (optional)
+                const token = localStorage.getItem('token');
+                if (token) {
+                    await fetch(`${API_URL}/api/logout`, { 
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                }
+            } catch (error) {
+                // Ignore network errors during logout
+                console.log('Logout notice:', error.message);
+            } finally {
+                // Clear all localStorage data
+                localStorage.clear();
+                // Redirect to login page
+                window.location.href = 'login.html';
+            }
+        }
+        
+        // Initialize page
+        loadUserData();
+    </script>
+</body>
+</html>

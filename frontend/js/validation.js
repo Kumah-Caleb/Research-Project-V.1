@@ -1,9 +1,9 @@
-// validation.js - Form validation utilities
+﻿// validation.js - Form validation with regex patterns for USTED
 
-// Regex patterns for validation
+// Validation patterns
 const VALIDATION_PATTERNS = {
-    // Email pattern: standard email format
-    email: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+    // Email pattern: standard email format with USTED domain
+    email: /^[a-zA-Z0-9._%+-]+@(usted\.edu\.gh|[a-z]+\.usted\.edu\.gh)$/,
     
     // Password: at least 8 characters, 1 uppercase, 1 lowercase, 1 number
     password: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$/,
@@ -18,23 +18,23 @@ const VALIDATION_PATTERNS = {
     courseCode: /^[A-Z]{2,4}\d{3,4}$/,
     
     // Grade: A, B+, B, C+, C, D+, D, F only
-    grade: /^[A-D][+]?|F$/,
+    grade: /^(A|B\+|B|C\+|C|D\+|D|F)$/,
     
     // Semester: 1-8 only
     semester: /^[1-8]$/,
     
-    // Academic year: 4 digits
-    academicYear: /^\d{4}$/
+    // Academic year: 4 digits (2000-2030)
+    academicYear: /^(20\d{2})$/
 };
 
 // Validation messages
 const VALIDATION_MESSAGES = {
-    email: 'Please enter a valid email address (e.g., name@domain.com)',
+    email: 'Please enter a valid USTED email address (e.g., student@usted.edu.gh)',
     password: 'Password must be at least 8 characters with 1 uppercase, 1 lowercase, and 1 number',
-    studentId: 'Student ID must be 3 uppercase letters followed by 5-7 digits (e.g., STU12345)',
+    studentId: 'Student ID must be 3 uppercase letters followed by 5-7 digits (e.g., ITE12345)',
     name: 'Name must be 2-50 characters (letters, spaces, hyphens, apostrophes only)',
-    courseCode: 'Course code must be 2-4 uppercase letters followed by 3-4 digits (e.g., CS101)',
-    grade: 'Please enter a valid grade (A, B+, B, C+, C, D+, D, or F)',
+    courseCode: 'Course code must be 2-4 uppercase letters followed by 3-4 digits (e.g., ITE301)',
+    grade: 'Please select a valid grade (A, B+, B, C+, C, D+, D, or F)',
     semester: 'Semester must be between 1 and 8',
     academicYear: 'Please enter a valid 4-digit year (e.g., 2024)',
     required: 'This field is required',
@@ -42,126 +42,100 @@ const VALIDATION_MESSAGES = {
 };
 
 // Validation functions
-const Validator = {
-    // Validate email
-    validateEmail: (email) => {
-        if (!email) return { isValid: false, message: VALIDATION_MESSAGES.required };
-        if (!VALIDATION_PATTERNS.email.test(email)) {
-            return { isValid: false, message: VALIDATION_MESSAGES.email };
-        }
-        return { isValid: true, message: '' };
-    },
-    
-    // Validate password
-    validatePassword: (password) => {
-        if (!password) return { isValid: false, message: VALIDATION_MESSAGES.required };
-        if (!VALIDATION_PATTERNS.password.test(password)) {
-            return { isValid: false, message: VALIDATION_MESSAGES.password };
-        }
-        return { isValid: true, message: '' };
-    },
-    
-    // Validate student ID
-    validateStudentId: (studentId) => {
-        if (!studentId) return { isValid: false, message: VALIDATION_MESSAGES.required };
-        if (!VALIDATION_PATTERNS.studentId.test(studentId)) {
-            return { isValid: false, message: VALIDATION_MESSAGES.studentId };
-        }
-        return { isValid: true, message: '' };
-    },
-    
-    // Validate name
-    validateName: (name) => {
-        if (!name) return { isValid: false, message: VALIDATION_MESSAGES.required };
-        if (!VALIDATION_PATTERNS.name.test(name)) {
-            return { isValid: false, message: VALIDATION_MESSAGES.name };
-        }
-        return { isValid: true, message: '' };
-    },
-    
-    // Validate course code
-    validateCourseCode: (courseCode) => {
-        if (!courseCode) return { isValid: false, message: VALIDATION_MESSAGES.required };
-        if (!VALIDATION_PATTERNS.courseCode.test(courseCode)) {
-            return { isValid: false, message: VALIDATION_MESSAGES.courseCode };
-        }
-        return { isValid: true, message: '' };
-    },
-    
-    // Validate grade
-    validateGrade: (grade) => {
-        if (!grade) return { isValid: false, message: VALIDATION_MESSAGES.required };
-        if (!VALIDATION_PATTERNS.grade.test(grade)) {
-            return { isValid: false, message: VALIDATION_MESSAGES.grade };
-        }
-        return { isValid: true, message: '' };
-    },
-    
-    // Validate semester
-    validateSemester: (semester) => {
-        if (!semester) return { isValid: false, message: VALIDATION_MESSAGES.required };
-        if (!VALIDATION_PATTERNS.semester.test(semester.toString())) {
-            return { isValid: false, message: VALIDATION_MESSAGES.semester };
-        }
-        return { isValid: true, message: '' };
-    },
-    
-    // Validate academic year
-    validateAcademicYear: (year) => {
-        if (!year) return { isValid: false, message: VALIDATION_MESSAGES.required };
-        if (!VALIDATION_PATTERNS.academicYear.test(year.toString())) {
-            return { isValid: false, message: VALIDATION_MESSAGES.academicYear };
-        }
-        const currentYear = new Date().getFullYear();
-        if (year < 2000 || year > currentYear + 5) {
-            return { isValid: false, message: Year must be between 2000 and  };
-        }
-        return { isValid: true, message: '' };
-    },
-    
-    // Validate confirm password
-    validateConfirmPassword: (password, confirmPassword) => {
-        if (!confirmPassword) return { isValid: false, message: VALIDATION_MESSAGES.required };
-        if (password !== confirmPassword) {
-            return { isValid: false, message: VALIDATION_MESSAGES.confirmPassword };
-        }
-        return { isValid: true, message: '' };
-    },
-    
-    // Generic field validation
-    validateRequired: (value, fieldName) => {
-        if (!value || value.trim() === '') {
-            return { isValid: false, message: ${fieldName} is required };
-        }
-        return { isValid: true, message: '' };
+function validateEmail(email) {
+    if (!email) return { isValid: false, message: VALIDATION_MESSAGES.required };
+    if (!VALIDATION_PATTERNS.email.test(email)) {
+        return { isValid: false, message: VALIDATION_MESSAGES.email };
     }
-};
-
-// Real-time validation helper
-function addRealTimeValidation(inputElement, validationFunction, errorElementId) {
-    inputElement.addEventListener('input', function() {
-        const result = validationFunction(this.value);
-        const errorElement = document.getElementById(errorElementId);
-        
-        if (!result.isValid) {
-            this.classList.add('invalid');
-            this.classList.remove('valid');
-            if (errorElement) {
-                errorElement.textContent = result.message;
-                errorElement.style.display = 'block';
-            }
-        } else {
-            this.classList.add('valid');
-            this.classList.remove('invalid');
-            if (errorElement) {
-                errorElement.textContent = '';
-                errorElement.style.display = 'none';
-            }
-        }
-    });
+    return { isValid: true, message: '' };
 }
 
-// Export for use in other files (if using modules)
+function validatePassword(password) {
+    if (!password) return { isValid: false, message: VALIDATION_MESSAGES.required };
+    if (!VALIDATION_PATTERNS.password.test(password)) {
+        return { isValid: false, message: VALIDATION_MESSAGES.password };
+    }
+    return { isValid: true, message: '' };
+}
+
+function validateStudentId(studentId) {
+    if (!studentId) return { isValid: false, message: VALIDATION_MESSAGES.required };
+    if (!VALIDATION_PATTERNS.studentId.test(studentId.toUpperCase())) {
+        return { isValid: false, message: VALIDATION_MESSAGES.studentId };
+    }
+    return { isValid: true, message: '' };
+}
+
+function validateName(name) {
+    if (!name) return { isValid: false, message: VALIDATION_MESSAGES.required };
+    if (!VALIDATION_PATTERNS.name.test(name)) {
+        return { isValid: false, message: VALIDATION_MESSAGES.name };
+    }
+    return { isValid: true, message: '' };
+}
+
+function validateCourseCode(courseCode) {
+    if (!courseCode) return { isValid: false, message: VALIDATION_MESSAGES.required };
+    if (!VALIDATION_PATTERNS.courseCode.test(courseCode.toUpperCase())) {
+        return { isValid: false, message: VALIDATION_MESSAGES.courseCode };
+    }
+    return { isValid: true, message: '' };
+}
+
+function validateSemester(semester) {
+    if (!semester) return { isValid: false, message: VALIDATION_MESSAGES.required };
+    if (!VALIDATION_PATTERNS.semester.test(semester)) {
+        return { isValid: false, message: VALIDATION_MESSAGES.semester };
+    }
+    return { isValid: true, message: '' };
+}
+
+function validateAcademicYear(year) {
+    if (!year) return { isValid: false, message: VALIDATION_MESSAGES.required };
+    const currentYear = new Date().getFullYear();
+    if (!VALIDATION_PATTERNS.academicYear.test(year)) {
+        return { isValid: false, message: VALIDATION_MESSAGES.academicYear };
+    }
+    if (year < 2000 || year > currentYear + 5) {
+        return { isValid: false, message: `Year must be between 2000 and ${currentYear + 5}` };
+    }
+    return { isValid: true, message: '' };
+}
+
+function validateConfirmPassword(password, confirmPassword) {
+    if (!confirmPassword) return { isValid: false, message: VALIDATION_MESSAGES.required };
+    if (password !== confirmPassword) {
+        return { isValid: false, message: VALIDATION_MESSAGES.confirmPassword };
+    }
+    return { isValid: true, message: '' };
+}
+
+// Helper function to show validation feedback
+function showFieldValidation(inputElement, validationResult, errorElementId) {
+    const errorElement = document.getElementById(errorElementId);
+    
+    if (!validationResult.isValid) {
+        inputElement.classList.add('invalid');
+        inputElement.classList.remove('valid');
+        if (errorElement) {
+            errorElement.textContent = validationResult.message;
+            errorElement.style.display = 'block';
+        }
+    } else {
+        inputElement.classList.add('valid');
+        inputElement.classList.remove('invalid');
+        if (errorElement) {
+            errorElement.textContent = '';
+            errorElement.style.display = 'none';
+        }
+    }
+}
+
+// Export for use in other files
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { Validator, VALIDATION_PATTERNS, VALIDATION_MESSAGES, addRealTimeValidation };
+    module.exports = { 
+        validateEmail, validatePassword, validateStudentId, validateName,
+        validateCourseCode, validateSemester, validateAcademicYear, 
+        validateConfirmPassword, showFieldValidation 
+    };
 }

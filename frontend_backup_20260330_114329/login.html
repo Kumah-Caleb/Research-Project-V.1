@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login & Register - USTED Performance Predictor</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+        }
+        .auth-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+        }
+        .tab-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 0.8rem;
+            background: none;
+            border: none;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            color: #666;
+            transition: all 0.3s;
+        }
+        .tab-btn.active {
+            color: #667eea;
+            border-bottom: 2px solid #667eea;
+            margin-bottom: -2px;
+        }
+        .tab-btn:hover {
+            color: #667eea;
+        }
+        .form-panel {
+            display: none;
+        }
+        .form-panel.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #666;
+            font-weight: 600;
+        }
+        label .required {
+            color: #dc3545;
+            margin-left: 3px;
+        }
+        input, select {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+        }
+        .role-selector {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .role-option {
+            flex: 1;
+            padding: 0.8rem;
+            text-align: center;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .role-option.selected {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .role-option:hover {
+            border-color: #667eea;
+        }
+        button {
+            width: 100%;
+            padding: 0.8rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 1rem;
+            transition: all 0.3s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102,126,234,0.4);
+        }
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .message {
+            padding: 0.8rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            display: none;
+            animation: slideDown 0.3s ease;
+        }
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            display: block;
+            border-left: 4px solid #dc3545;
+        }
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            display: block;
+            border-left: 4px solid #28a745;
+        }
+        .message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            display: block;
+            border-left: 4px solid #17a2b8;
+        }
+        .test-accounts {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .test-accounts h4 {
+            margin-bottom: 0.5rem;
+            color: #666;
+        }
+        .test-accounts p {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 0.3rem;
+        }
+        .test-buttons {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        .test-buttons button {
+            width: auto;
+            padding: 0.3rem 0.8rem;
+            font-size: 0.8rem;
+            margin-top: 0;
+        }
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        @media (max-width: 768px) {
+            .auth-container {
+                padding: 1.5rem;
+            }
+            .role-selector {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <h2>?? USTED Predictor</h2>
+        <div class="subtitle">Academic Performance Prediction System</div>
+        
+        <div class="tab-buttons">
+            <button class="tab-btn active" onclick="switchTab('login')">?? Login</button>
+            <button class="tab-btn" onclick="switchTab('register')">?? Register</button>
+        </div>
+        
+        <div id="messageBox" class="message"></div>
+        
+        <!-- Login Form -->
+        <div id="loginPanel" class="form-panel active">
+            <form onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="loginUsername" placeholder="Enter your username" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter your password" required>
+                </div>
+                <button type="submit">?? Login</button>
+            </form>
+        </div>
+        
+        <!-- Registration Form -->
+        <div id="registerPanel" class="form-panel">
+            <form onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label>Role <span class="required">*</span></label>
+                    <div class="role-selector">
+                        <div class="role-option selected" data-role="student" onclick="selectRole('student')">
+                            ????? Student
+                        </div>
+                        <div class="role-option" data-role="lecturer" onclick="selectRole('lecturer')">
+                            ????? Lecturer
+                        </div>
+                    </div>
+                    <input type="hidden" id="registerRole" value="student">
+                </div>
+                
+                <div class="form-group">
+                    <label>Full Name <span class="required">*</span></label>
+                    <input type="text" id="registerFullName" placeholder="Enter your full name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Username <span class="required">*</span></label>
+                    <input type="text" id="registerUsername" placeholder="Choose a username" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Email <span class="required">*</span></label>
+                    <input type="email" id="registerEmail" placeholder="Enter your email" required>
+                </div>
+                
+                <div class="form-group" id="studentIdField">
+                    <label>Index Number <span class="required">*</span></label>
+                    <input type="text" id="registerIndexNumber" placeholder="Enter your index number (e.g., 5230100757)">
+                </div>
+                
+                <div class="form-group" id="lecturerIdField" style="display: none;">
+                    <label>Staff ID <span class="required">*</span></label>
+                    <input type="text" id="registerStaffId" placeholder="Enter your staff ID">
+                </div>
+                
+                <div class="form-group">
+                    <label>Department <span class="required">*</span></label>
+                    <input type="text" id="registerDepartment" placeholder="Enter your department" required>
+                </div>
+                
+                <div class="form-group" id="studentFields">
+                    <label>Level</label>
+                    <select id="registerLevel">
+                        <option value="100">Level 100</option>
+                        <option value="200">Level 200</option>
+                        <option value="300">Level 300</option>
+                        <option value="400">Level 400</option>
+                        <option value="Postgraduate">Postgraduate</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" id="studentProgramField">
+                    <label>Program Type</label>
+                    <select id="registerProgramType">
+                        <option value="regular">Regular (5 days/week)</option>
+                        <option value="non-regular">Non-Regular (Weekend/Evening)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Password <span class="required">*</span></label>
+                    <input type="password" id="registerPassword" placeholder="Choose a password (min. 6 characters)" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Confirm Password <span class="required">*</span></label>
+                    <input type="password" id="registerConfirmPassword" placeholder="Confirm your password" required>
+                </div>
+                
+                <button type="submit">?? Create Account</button>
+            </form>
+        </div>
+        
+        <!-- Test Accounts Section -->
+        <div class="test-accounts">
+            <h4>?? Quick Login (Test Accounts)</h4>
+            <p><strong>Student:</strong> amoateng / student123</p>
+            <p><strong>Lecturer:</strong> prof_asare / lecturer123</p>
+            <div class="test-buttons">
+                <button onclick="fillStudentLogin()">?? Fill Student</button>
+                <button onclick="fillLecturerLogin()">????? Fill Lecturer</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000';
+        
+        function switchTab(tab) {
+            // Update tab buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Update panels
+            if (tab === 'login') {
+                document.getElementById('loginPanel').classList.add('active');
+                document.getElementById('registerPanel').classList.remove('active');
+            } else {
+                document.getElementById('loginPanel').classList.remove('active');
+                document.getElementById('registerPanel').classList.add('active');
+            }
+            
+            // Clear messages
+            document.getElementById('messageBox').style.display = 'none';
+        }
+        
+        function selectRole(role) {
+            document.getElementById('registerRole').value = role;
+            
+            // Update UI for role selection
+            document.querySelectorAll('.role-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            event.target.classList.add('selected');
+            
+            // Show/hide role-specific fields
+            if (role === 'student') {
+                document.getElementById('studentIdField').style.display = 'block';
+                document.getElementById('lecturerIdField').style.display = 'none';
+                document.getElementById('studentFields').style.display = 'block';
+                document.getElementById('studentProgramField').style.display = 'block';
+                
+                // Make student fields required
+                document.getElementById('registerIndexNumber').required = true;
+                document.getElementById('registerStaffId').required = false;
+            } else {
+                document.getElementById('studentIdField').style.display = 'none';
+                document.getElementById('lecturerIdField').style.display = 'block';
+                document.getElementById('studentFields').style.display = 'none';
+                document.getElementById('studentProgramField').style.display = 'none';
+                
+                // Make lecturer fields required
+                document.getElementById('registerIndexNumber').required = false;
+                document.getElementById('registerStaffId').required = true;
+            }
+        }
+        
+        function showMessage(text, type) {
+            const msgBox = document.getElementById('messageBox');
+            msgBox.textContent = text;
+            msgBox.className = `message ${type}`;
+            msgBox.style.display = 'block';
+            
+            setTimeout(() => {
+                msgBox.style.display = 'none';
+            }, 4000);
+            
+            // Scroll to message
+            msgBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        
+        function fillStudentLogin() {
+            document.getElementById('loginUsername').value = 'amoateng';
+            document.getElementById('loginPassword').value = 'student123';
+            showMessage('Student credentials filled! Click Login', 'info');
+        }
+        
+        function fillLecturerLogin() {
+            document.getElementById('loginUsername').value = 'prof_asare';
+            document.getElementById('loginPassword').value = 'lecturer123';
+            showMessage('Lecturer credentials filled! Click Login', 'info');
+        }
+        
+        async function handleLogin(event) {
+            event.preventDefault();
+            
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            if (!username || !password) {
+                showMessage('Please enter username and password', 'error');
+                return;
+            }
+            
+            const loginBtn = event.target.querySelector('button');
+            const originalText = loginBtn.innerHTML;
+            loginBtn.innerHTML = '<span class="loading-spinner"></span> Logging in...';
+            loginBtn.disabled = true;
+            
+            try {
+                const response = await fetch(`${API_URL}/api/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    localStorage.setItem('token', result.token);
+                    localStorage.setItem('currentUser', JSON.stringify(result.user));
+                    
+                    showMessage(`? Welcome ${result.user.full_name || result.user.username}!`, 'success');
+                    
+                    setTimeout(() => {
+                        if (result.user.role === 'lecturer') {
+                            window.location.href = 'lecturer_dashboard.html';
+                        } else {
+                            window.location.href = 'student_dashboard.html';
+                        }
+                    }, 1000);
+                } else {
+                    showMessage('? Login failed: ' + (result.message || 'Invalid credentials'), 'error');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showMessage('? Network error. Please check your connection.', 'error');
+            } finally {
+                loginBtn.innerHTML = originalText;
+                loginBtn.disabled = false;
+            }
+        }
+        
+        async function handleRegister(event) {
+            event.preventDefault();
+            
+            const role = document.getElementById('registerRole').value;
+            const fullName = document.getElementById('registerFullName').value.trim();
+            const username = document.getElementById('registerUsername').value.trim();
+            const email = document.getElementById('registerEmail').value.trim();
+            const department = document.getElementById('registerDepartment').value.trim();
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('registerConfirmPassword').value;
+            
+            // Validation
+            if (!fullName || !username || !email || !department || !password) {
+                showMessage('Please fill in all required fields', 'error');
+                return;
+            }
+            
+            if (password.length < 6) {
+                showMessage('Password must be at least 6 characters', 'error');
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                showMessage('Passwords do not match', 'error');
+                return;
+            }
+            
+            // Prepare registration data
+            let registrationData = {
+                full_name: fullName,
+                username: username,
+                email: email,
+                department: department,
+                password: password,
+                role: role
+            };
+            
+            // Add role-specific fields
+            if (role === 'student') {
+                const indexNumber = document.getElementById('registerIndexNumber').value.trim();
+                const level = document.getElementById('registerLevel').value;
+                const programType = document.getElementById('registerProgramType').value;
+                
+                if (!indexNumber) {
+                    showMessage('Please enter your index number', 'error');
+                    return;
+                }
+                
+                registrationData.index_number = indexNumber;
+                registrationData.level = level;
+                registrationData.program_type = programType;
+            } else {
+                const staffId = document.getElementById('registerStaffId').value.trim();
+                
+                if (!staffId) {
+                    showMessage('Please enter your staff ID', 'error');
+                    return;
+                }
+                
+                registrationData.staff_id = staffId;
+            }
+            
+            const registerBtn = event.target.querySelector('button');
+            const originalText = registerBtn.innerHTML;
+            registerBtn.innerHTML = '<span class="loading-spinner"></span> Creating account...';
+            registerBtn.disabled = true;
+            
+            try {
+                const response = await fetch(`${API_URL}/api/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(registrationData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showMessage(`? Registration successful! Welcome ${fullName}! Please login.`, 'success');
+                    
+                    // Clear form
+                    event.target.reset();
+                    
+                    // Switch to login tab after 2 seconds
+                    setTimeout(() => {
+                        document.querySelector('.tab-btn').click();
+                        // Fill username for convenience
+                        document.getElementById('loginUsername').value = username;
+                    }, 2000);
+                } else {
+                    showMessage('? Registration failed: ' + (result.message || result.error || 'Please try again'), 'error');
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                showMessage('? Network error. Please check your connection.', 'error');
+            } finally {
+                registerBtn.innerHTML = originalText;
+                registerBtn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
