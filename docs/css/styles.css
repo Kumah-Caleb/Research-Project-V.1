@@ -1,0 +1,52 @@
+﻿/* USTED Student Self-Assessment Predictor Styles */
+
+:root {
+    --usted-primary: #003366;
+    --usted-gold: #FFD700;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+}
+
+.bg-primary {
+    background-color: var(--usted-primary) !important;
+}
+
+.btn-primary {
+    background-color: var(--usted-primary);
+    border-color: var(--usted-primary);
+}
+
+.btn-primary:hover {
+    background-color: #002244;
+}
+
+.form-control:focus {
+    border-color: var(--usted-primary);
+    box-shadow: 0 0 0 0.2rem rgba(0,51,102,0.25);
+}
+
+.form-control.valid {
+    border-color: #28a745;
+}
+
+.form-control.invalid {
+    border-color: #dc3545;
+}
+
+.validation-error {
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+.progress-bar {
+    background-color: var(--usted-primary);
+}
+
+footer {
+    background-color: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+}
