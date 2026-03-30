@@ -1,5 +1,5 @@
-﻿// API Configuration
-const API_BASE_URL = 'https://aamusted-predictor-backend2.onrender.com';
+// API Configuration
+const API_BASE_URL = 'https://USTED-predictor-backend2.onrender.com';
 let currentUser = null;
 let authToken = null;
 

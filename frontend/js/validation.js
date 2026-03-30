@@ -1,4 +1,4 @@
-﻿// validation.js - Form validation utilities
+// validation.js - Form validation utilities
 
 // Regex patterns for validation
 const VALIDATION_PATTERNS = {
