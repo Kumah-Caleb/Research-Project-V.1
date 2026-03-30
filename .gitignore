@@ -1,31 +1,13 @@
-﻿# Environment files
-.env
-.env.local
-.env.*.local
-
-# Dependencies
-node_modules/
+﻿# Prevent package.json from being added back
+package.json
 package-lock.json
-
-# Frontend - prevent package.json from being committed
-frontend/package.json
-frontend/package-lock.json
-frontend/node_modules/
-
-# Database
-*.sqlite
-*.db
-data/
-
-# Logs
-logs/
-*.log
+node_modules/
 
 # OS files
 .DS_Store
 Thumbs.db
 
-# IDE
+# Editor files
 .vscode/
 .idea/
 *.swp
