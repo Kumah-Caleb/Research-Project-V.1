@@ -1,0 +1,544 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>USTED | Three-Format Academic Predictor</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+        }
+        .format-card {
+            margin-bottom: 25px;
+            border: none;
+            border-left: 5px solid #003366;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            background: white;
+        }
+        .format-header {
+            background: linear-gradient(135deg, #003366 0%, #0055aa 100%);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 10px 10px 0 0;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        .format-body {
+            padding: 20px;
+        }
+        .section-title {
+            font-weight: bold;
+            color: #003366;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #003366;
+        }
+        .badge-value {
+            background-color: #003366;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-left: 10px;
+        }
+        .form-range {
+            width: 100%;
+        }
+        .form-label {
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+        .value-display {
+            display: inline-block;
+            background-color: #e9ecef;
+            padding: 2px 10px;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            margin-left: 10px;
+        }
+        .bg-primary-custom {
+            background-color: #003366;
+        }
+        .btn-primary-custom {
+            background-color: #003366;
+            border: none;
+            padding: 12px;
+            font-weight: bold;
+        }
+        .btn-primary-custom:hover {
+            background-color: #002244;
+        }
+    </style>
+</head>
+<body>
+    <header style="background-color: #003366; color: white; padding: 15px 0;">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0">USTED</h1>
+                    <p class="mb-0 small">Three-Format Academic Performance Predictor</p>
+                </div>
+                <nav>
+                    <a href="student_dashboard.html" style="color: white; margin-right: 15px; text-decoration: none;">Dashboard</a>
+                    <a href="predictor-three-format.html" style="color: white; margin-right: 15px; text-decoration: none;">Predict</a>
+                    <a href="history.html" style="color: white; margin-right: 15px; text-decoration: none;">History</a>
+                    <a href="profile.html" style="color: white; margin-right: 15px; text-decoration: none;">Profile</a>
+                    <a href="#" id="logoutBtn" style="color: white; text-decoration: none;">Logout</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="container my-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <strong>📊 Three-Format Prediction System</strong><br>
+                    Your grade is predicted based on THREE formats: Semester Format (40%), Weekly Format (30%), and Module Format (30%).
+                    Each format has its own: Assignments, Attendance, Engagement, Parental Level, and Study Hours.
+                </div>
+            </div>
+        </div>
+
+        <form id="predictionForm">
+            <!-- ========================================== -->
+            <!-- FORMAT 1: SEMESTER FORMAT -->
+            <!-- ========================================== -->
+            <div class="format-card">
+                <div class="format-header">
+                    📅 FORMAT 1: SEMESTER FORMAT (40% Weight)
+                </div>
+                <div class="format-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Semester Type</label>
+                            <select class="form-select" id="semesterType">
+                                <option value="regular">Regular Semester</option>
+                                <option value="non-regular">Non-Regular Semester</option>
+                                <option value="modular">Modular Format</option>
+                                <option value="sandwich">Sandwich (Work-Study)</option>
+                                <option value="distance">Distance Learning</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Current Semester</label>
+                            <input type="number" class="form-control" id="currentSemester" value="3" min="1" max="12">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Total Semesters</label>
+                            <input type="number" class="form-control" id="totalSemesters" value="8" min="4" max="12">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Parental Education Level</label>
+                            <select class="form-select" id="semParental">
+                                <option value="none">None</option>
+                                <option value="primary">Primary School</option>
+                                <option value="secondary">Secondary School</option>
+                                <option value="tertiary" selected>Tertiary (University)</option>
+                                <option value="postgraduate">Postgraduate (Master's/PhD)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Assignments Completion (%)</label>
+                            <input type="range" class="form-range" id="semAssignments" min="0" max="100" value="75">
+                            <span id="semAssignmentsVal" class="value-display">75%</span>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Attendance (%)</label>
+                            <input type="range" class="form-range" id="semAttendance" min="0" max="100" value="80">
+                            <span id="semAttendanceVal" class="value-display">80%</span>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Class Engagement (%)</label>
+                            <input type="range" class="form-range" id="semEngagement" min="0" max="100" value="70">
+                            <span id="semEngagementVal" class="value-display">70%</span>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Study Hours/Week</label>
+                            <input type="range" class="form-range" id="semStudyHours" min="0" max="40" value="12">
+                            <span id="semStudyHoursVal" class="value-display">12 hrs</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========================================== -->
+            <!-- FORMAT 2: WEEKLY FORMAT -->
+            <!-- ========================================== -->
+            <div class="format-card">
+                <div class="format-header">
+                    📆 FORMAT 2: WEEKLY FORMAT (30% Weight) - <small>Influenced by Semester Type</small>
+                </div>
+                <div class="format-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Week Number</label>
+                            <input type="number" class="form-control" id="weekNumber" value="8" min="1" max="16">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Total Weeks in Semester</label>
+                            <input type="number" class="form-control" id="totalWeeks" value="16" min="12" max="20">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Consistency Score (%)</label>
+                            <input type="range" class="form-range" id="consistency" min="0" max="100" value="70">
+                            <span id="consistencyVal" class="value-display">70%</span>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Parental Education Level</label>
+                            <select class="form-select" id="weekParental">
+                                <option value="none">None</option>
+                                <option value="primary">Primary School</option>
+                                <option value="secondary" selected>Secondary School</option>
+                                <option value="tertiary">Tertiary (University)</option>
+                                <option value="postgraduate">Postgraduate</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Weekly Assignments (%)</label>
+                            <input type="range" class="form-range" id="weekAssignments" min="0" max="100" value="70">
+                            <span id="weekAssignmentsVal" class="value-display">70%</span>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Weekly Attendance (%)</label>
+                            <input type="range" class="form-range" id="weekAttendance" min="0" max="100" value="75">
+                            <span id="weekAttendanceVal" class="value-display">75%</span>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Weekly Engagement (%)</label>
+                            <input type="range" class="form-range" id="weekEngagement" min="0" max="100" value="65">
+                            <span id="weekEngagementVal" class="value-display">65%</span>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Study Hours (this week)</label>
+                            <input type="range" class="form-range" id="weekStudyHours" min="0" max="40" value="10">
+                            <span id="weekStudyHoursVal" class="value-display">10 hrs</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========================================== -->
+            <!-- FORMAT 3: MODULE FORMAT -->
+            <!-- ========================================== -->
+            <div class="format-card">
+                <div class="format-header">
+                    📘 FORMAT 3: MODULE FORMAT (30% Weight)
+                </div>
+                <div class="format-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Module Code</label>
+                            <input type="text" class="form-control" id="moduleCode" placeholder="ITE301">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Module Type</label>
+                            <select class="form-select" id="moduleType">
+                                <option value="core">Core Course</option>
+                                <option value="elective">Elective</option>
+                                <option value="project">Project/Research</option>
+                                <option value="lab">Laboratory/Practical</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Credit Hours</label>
+                            <input type="number" class="form-control" id="creditHours" value="3" min="1" max="6">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Parental Education Level</label>
+                            <select class="form-select" id="modParental">
+                                <option value="none">None</option>
+                                <option value="primary">Primary School</option>
+                                <option value="secondary">Secondary School</option>
+                                <option value="tertiary" selected>Tertiary (University)</option>
+                                <option value="postgraduate">Postgraduate</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Module Assignments (%)</label>
+                            <input type="range" class="form-range" id="modAssignments" min="0" max="100" value="80">
+                            <span id="modAssignmentsVal" class="value-display">80%</span>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Module Attendance (%)</label>
+                            <input type="range" class="form-range" id="modAttendance" min="0" max="100" value="85">
+                            <span id="modAttendanceVal" class="value-display">85%</span>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Module Engagement (%)</label>
+                            <input type="range" class="form-range" id="modEngagement" min="0" max="100" value="75">
+                            <span id="modEngagementVal" class="value-display">75%</span>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Study Hours (for this module)</label>
+                            <input type="range" class="form-range" id="modStudyHours" min="0" max="40" value="8">
+                            <span id="modStudyHoursVal" class="value-display">8 hrs</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========================================== -->
+            <!-- EXTRACURRICULAR ACTIVITIES -->
+            <!-- ========================================== -->
+            <div class="format-card">
+                <div class="format-header">
+                    🎯 EXTRACURRICULAR ACTIVITIES (Academic Calendar Events)
+                </div>
+                <div class="format-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Number of Events Participated</label>
+                            <input type="range" class="form-range" id="eventsCount" min="0" max="20" value="3">
+                            <span id="eventsCountVal" class="value-display">3 events</span>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Hours per Week on Activities</label>
+                            <input type="range" class="form-range" id="eventHours" min="0" max="30" value="5">
+                            <span id="eventHoursVal" class="value-display">5 hrs/week</span>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Previous GPA</label>
+                            <input type="number" step="0.1" class="form-control" id="previousGpa" value="3.0" min="0" max="4.0">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <label class="form-label">Event Types (select all that apply)</label>
+                            <div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" id="typeSports" value="sports">
+                                    <label class="form-check-label">⚽ Sports</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" id="typeCultural" value="cultural">
+                                    <label class="form-check-label">🎭 Cultural</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" id="typeAcademic" value="academic_clubs" checked>
+                                    <label class="form-check-label">📚 Academic Clubs</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" id="typeVolunteering" value="volunteering">
+                                    <label class="form-check-label">🤝 Volunteering</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" id="typeLeadership" value="leadership">
+                                    <label class="form-check-label">👑 Leadership</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" id="typeWorkshops" value="workshops">
+                                    <label class="form-check-label">💡 Workshops</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" id="typeHackathons" value="hackathons">
+                                    <label class="form-check-label">💻 Hackathons</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" id="typeResearch" value="research">
+                                    <label class="form-check-label">🔬 Research</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary-custom w-100 py-2 mt-3" style="background-color: #003366; color: white; font-weight: bold; border: none; border-radius: 8px;">
+                🔮 PREDICT MY PERFORMANCE (All Three Formats)
+            </button>
+        </form>
+
+        <div id="predictionResult" class="mt-4" style="display: none;">
+            <div class="alert alert-success">
+                <h5>📈 Prediction Results</h5>
+                <hr>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>🎓 Predicted Grade:</strong> <span id="resultGrade" style="font-size: 3rem; font-weight: bold;"></span></p>
+                        <p><strong>📊 Confidence Level:</strong> <span id="resultConfidence"></span>%</p>
+                        <div class="progress mb-3">
+                            <div id="confidenceBar" class="progress-bar bg-success" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6>📊 Format Scores</h6>
+                                <div id="scoresDisplay"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <h6 class="mt-3">💡 Recommendations:</h6>
+                <p id="recommendations"></p>
+            </div>
+        </div>
+    </main>
+
+    <footer style="background-color: #f8f9fa; text-align: center; padding: 20px; margin-top: 40px;">
+        <div class="container">
+            <p class="mb-0">&copy; 2025 USTED. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        const API_BASE_URL = 'https://aamusted-predictor-backend2.onrender.com';
+        
+        // Range slider value displays
+        function setupSliders() {
+            const sliders = [
+                {id: 'semAssignments', display: 'semAssignmentsVal', suffix: '%'},
+                {id: 'semAttendance', display: 'semAttendanceVal', suffix: '%'},
+                {id: 'semEngagement', display: 'semEngagementVal', suffix: '%'},
+                {id: 'semStudyHours', display: 'semStudyHoursVal', suffix: ' hrs'},
+                {id: 'weekAssignments', display: 'weekAssignmentsVal', suffix: '%'},
+                {id: 'weekAttendance', display: 'weekAttendanceVal', suffix: '%'},
+                {id: 'weekEngagement', display: 'weekEngagementVal', suffix: '%'},
+                {id: 'weekStudyHours', display: 'weekStudyHoursVal', suffix: ' hrs'},
+                {id: 'consistency', display: 'consistencyVal', suffix: '%'},
+                {id: 'modAssignments', display: 'modAssignmentsVal', suffix: '%'},
+                {id: 'modAttendance', display: 'modAttendanceVal', suffix: '%'},
+                {id: 'modEngagement', display: 'modEngagementVal', suffix: '%'},
+                {id: 'modStudyHours', display: 'modStudyHoursVal', suffix: ' hrs'},
+                {id: 'eventsCount', display: 'eventsCountVal', suffix: ' events'},
+                {id: 'eventHours', display: 'eventHoursVal', suffix: ' hrs/week'}
+            ];
+            sliders.forEach(s => {
+                const el = document.getElementById(s.id);
+                if (el) {
+                    el.addEventListener('input', function() {
+                        const displayEl = document.getElementById(s.display);
+                        if (displayEl) displayEl.textContent = this.value + s.suffix;
+                    });
+                }
+            });
+        }
+        
+        function getSelectedEventTypes() {
+            const types = [];
+            const checkboxes = ['typeSports', 'typeCultural', 'typeAcademic', 'typeVolunteering', 'typeLeadership', 'typeWorkshops', 'typeHackathons', 'typeResearch'];
+            checkboxes.forEach(id => {
+                const cb = document.getElementById(id);
+                if (cb && cb.checked) types.push(cb.value);
+            });
+            return types;
+        }
+        
+        document.getElementById('predictionForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('Please login first');
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            const predictionData = {
+                semester: {
+                    semester_type: document.getElementById('semesterType').value,
+                    current_semester: parseInt(document.getElementById('currentSemester').value),
+                    total_semesters: parseInt(document.getElementById('totalSemesters').value),
+                    assignments: parseInt(document.getElementById('semAssignments').value),
+                    attendance: parseInt(document.getElementById('semAttendance').value),
+                    engagement: parseInt(document.getElementById('semEngagement').value),
+                    parental_level: document.getElementById('semParental').value,
+                    study_hours: parseInt(document.getElementById('semStudyHours').value)
+                },
+                weekly: {
+                    week_number: parseInt(document.getElementById('weekNumber').value),
+                    total_weeks: parseInt(document.getElementById('totalWeeks').value),
+                    assignments: parseInt(document.getElementById('weekAssignments').value),
+                    attendance: parseInt(document.getElementById('weekAttendance').value),
+                    engagement: parseInt(document.getElementById('weekEngagement').value),
+                    parental_level: document.getElementById('weekParental').value,
+                    study_hours: parseInt(document.getElementById('weekStudyHours').value),
+                    consistency: parseInt(document.getElementById('consistency').value)
+                },
+                module: {
+                    module_code: document.getElementById('moduleCode').value.toUpperCase(),
+                    module_type: document.getElementById('moduleType').value,
+                    credit_hours: parseInt(document.getElementById('creditHours').value),
+                    assignments: parseInt(document.getElementById('modAssignments').value),
+                    attendance: parseInt(document.getElementById('modAttendance').value),
+                    engagement: parseInt(document.getElementById('modEngagement').value),
+                    parental_level: document.getElementById('modParental').value,
+                    study_hours: parseInt(document.getElementById('modStudyHours').value)
+                },
+                extracurricular: {
+                    events_count: parseInt(document.getElementById('eventsCount').value),
+                    event_types: getSelectedEventTypes(),
+                    event_hours_per_week: parseInt(document.getElementById('eventHours').value)
+                },
+                previous_gpa: parseFloat(document.getElementById('previousGpa').value)
+            };
+            
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Analyzing all three formats...';
+            submitBtn.disabled = true;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/predict-three-format?token=${token}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(predictionData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('resultGrade').textContent = data.predicted_grade;
+                    document.getElementById('resultConfidence').textContent = data.confidence;
+                    document.getElementById('confidenceBar').style.width = `${data.confidence}%`;
+                    
+                    const scoresHtml = `
+                        <div><strong>📅 Semester Format:</strong> ${data.scores.semester_format}/4.0</div>
+                        <div><strong>📆 Weekly Format:</strong> ${data.scores.weekly_format}/4.0</div>
+                        <div><strong>📘 Module Format:</strong> ${data.scores.module_format}/4.0</div>
+                        <hr>
+                        <div><strong>🎯 Extracurricular:</strong> Factor ${data.extracurricular.factor}</div>
+                        <div><strong>📊 Events:</strong> ${data.extracurricular.events_count} events</div>
+                        <div><strong>⏰ Hours/Week:</strong> ${data.extracurricular.hours_per_week} hrs</div>
+                    `;
+                    document.getElementById('scoresDisplay').innerHTML = scoresHtml;
+                    document.getElementById('recommendations').textContent = data.recommendations;
+                    document.getElementById('predictionResult').style.display = 'block';
+                    
+                    document.getElementById('predictionResult').scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    alert('Prediction failed: ' + (data.detail || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Prediction error:', error);
+                alert('Network error: ' + error.message + '\n\nMake sure backend is running at: ' + API_BASE_URL);
+            } finally {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        });
+        
+        setupSliders();
+        
+        // Check authentication
+        if (!localStorage.getItem('token')) {
+            window.location.href = 'login.html';
+        }
+        
+        document.getElementById('logoutBtn')?.addEventListener('click', () => {
+            localStorage.removeItem('token');
+            window.location.href = 'index.html';
+        });
+    </script>
+</body>
+</html>
