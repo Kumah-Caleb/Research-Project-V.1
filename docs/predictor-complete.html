@@ -1,0 +1,397 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>USTED | Complete Academic Predictor</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .section-card {
+            margin-bottom: 25px;
+            border-left: 4px solid #003366;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .section-card:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        .form-label {
+            font-weight: 500;
+        }
+        .info-icon {
+            cursor: help;
+            color: #6c757d;
+            margin-left: 5px;
+        }
+        .prediction-badge {
+            font-size: 2rem;
+            font-weight: bold;
+            text-align: center;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <header class="bg-primary text-white py-3">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0">USTED</h1>
+                    <p class="mb-0 small">Complete Academic Performance Predictor</p>
+                </div>
+                <nav>
+                    <a href="student_dashboard.html" class="text-white me-3">Dashboard</a>
+                    <a href="predictor-complete.html" class="text-white me-3">Predict</a>
+                    <a href="history.html" class="text-white me-3">History</a>
+                    <a href="profile.html" class="text-white me-3">Profile</a>
+                    <a href="#" id="logoutBtn" class="text-white">Logout</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="container my-4">
+        <div class="row">
+            <div class="col-lg-10 mx-auto">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">🎓 Complete Academic Performance Predictor</h4>
+                        <small>Predict your grades based on Semester Format, Weekly Performance, Module Details, and Background</small>
+                    </div>
+                    <div class="card-body">
+                        <form id="predictionForm">
+                            <!-- Previous Performance Section -->
+                            <div class="card section-card">
+                                <div class="card-body">
+                                    <h5>📊 Previous Performance</h5>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="previousGpa" class="form-label">Previous Semester GPA</label>
+                                            <input type="number" step="0.1" class="form-control" id="previousGpa" value="3.0" min="0" max="4.0">
+                                            <small class="text-muted">Your last semester's GPA</small>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="previousGrades" class="form-label">Previous Course Grades (related modules)</label>
+                                            <input type="text" class="form-control" id="previousGrades" placeholder="e.g., B+, A-, B">
+                                            <small class="text-muted">Enter grades from related courses separated by commas</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Semester Format Section -->
+                            <div class="card section-card">
+                                <div class="card-body">
+                                    <h5>📅 Semester Format</h5>
+                                    <div class="row">
+                                        <div class="col-md-4 mb-3">
+                                            <label for="semesterType" class="form-label">Semester Type</label>
+                                            <select class="form-select" id="semesterType">
+                                                <option value="regular">Regular Semester (Sep-Dec / Jan-Apr)</option>
+                                                <option value="non-regular">Non-Regular Semester (May-Aug)</option>
+                                                <option value="modular">Modular Format</option>
+                                                <option value="sandwich">Sandwich (Work-Study)</option>
+                                                <option value="distance">Distance Learning</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label for="currentSemester" class="form-label">Current Semester</label>
+                                            <input type="number" class="form-control" id="currentSemester" value="3" min="1" max="12">
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label for="totalSemesters" class="form-label">Total Semesters in Program</label>
+                                            <input type="number" class="form-control" id="totalSemesters" value="8" min="4" max="12">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Weekly Format Section -->
+                            <div class="card section-card">
+                                <div class="card-body">
+                                    <h5>📆 Weekly Performance Format</h5>
+                                    <div class="row">
+                                        <div class="col-md-3 mb-3">
+                                            <label for="attendance" class="form-label">Attendance (%)</label>
+                                            <input type="range" class="form-range" id="attendance" min="0" max="100" value="75">
+                                            <span id="attendanceValue" class="badge bg-info">75%</span>
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <label for="assignments" class="form-label">Assignments (%)</label>
+                                            <input type="range" class="form-range" id="assignments" min="0" max="100" value="70">
+                                            <span id="assignmentsValue" class="badge bg-info">70%</span>
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <label for="studyHours" class="form-label">Study Hours/Week</label>
+                                            <input type="range" class="form-range" id="studyHours" min="0" max="40" value="12">
+                                            <span id="studyHoursValue" class="badge bg-info">12 hrs</span>
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <label for="tutorialAttendance" class="form-label">Tutorial Attendance (%)</label>
+                                            <input type="range" class="form-range" id="tutorialAttendance" min="0" max="100" value="50">
+                                            <span id="tutorialValue" class="badge bg-info">50%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Module Format Section -->
+                            <div class="card section-card">
+                                <div class="card-body">
+                                    <h5>📘 Module Format</h5>
+                                    <div class="row">
+                                        <div class="col-md-3 mb-3">
+                                            <label for="moduleCode" class="form-label">Module Code</label>
+                                            <input type="text" class="form-control" id="moduleCode" placeholder="ITE301">
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <label for="creditHours" class="form-label">Credit Hours</label>
+                                            <input type="number" class="form-control" id="creditHours" value="3" min="1" max="6">
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <label for="moduleType" class="form-label">Module Type</label>
+                                            <select class="form-select" id="moduleType">
+                                                <option value="core">Core Course</option>
+                                                <option value="elective">Elective</option>
+                                                <option value="project">Project/Research</option>
+                                                <option value="lab">Laboratory/Practical</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <label for="difficulty" class="form-label">Perceived Difficulty (1-5)</label>
+                                            <input type="range" class="form-range" id="difficulty" min="1" max="5" value="3">
+                                            <span id="difficultyValue" class="badge bg-info">Medium (3/5)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Parental Background Section -->
+                            <div class="card section-card">
+                                <div class="card-body">
+                                    <h5>👨‍👩‍👧 Parental Background</h5>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="parentalEducation" class="form-label">Parental Education Level</label>
+                                            <select class="form-select" id="parentalEducation">
+                                                <option value="none">No formal education</option>
+                                                <option value="primary">Primary School</option>
+                                                <option value="secondary">Secondary School</option>
+                                                <option value="tertiary" selected>Tertiary (University/Polytechnic)</option>
+                                                <option value="postgraduate">Postgraduate (Master's/PhD)</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="parentalSupport" class="form-label">Parental Support Level (1-5)</label>
+                                            <input type="range" class="form-range" id="parentalSupport" min="1" max="5" value="3">
+                                            <span id="supportValue" class="badge bg-info">Moderate (3/5)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Self Assessment Section -->
+                            <div class="card section-card">
+                                <div class="card-body">
+                                    <h5>🎯 Self Assessment</h5>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="selfConfidence" class="form-label">Self Confidence (1-5)</label>
+                                            <input type="range" class="form-range" id="selfConfidence" min="1" max="5" value="3">
+                                            <span id="confidenceValue" class="badge bg-info">Moderate (3/5)</span>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="readiness" class="form-label">Perceived Readiness (1-5)</label>
+                                            <input type="range" class="form-range" id="readiness" min="1" max="5" value="3">
+                                            <span id="readinessValue" class="badge bg-info">Moderate (3/5)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary w-100 py-2 mt-3">
+                                🔮 Predict My Academic Performance
+                            </button>
+                        </form>
+
+                        <div id="predictionResult" class="mt-4" style="display: none;">
+                            <div class="alert alert-success">
+                                <h5>📈 Complete Prediction Result</h5>
+                                <hr>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>🎓 Predicted Grade:</strong> <span id="resultGrade" class="fw-bold fs-1"></span></p>
+                                        <p><strong>📊 Confidence Level:</strong> <span id="resultConfidence"></span>%</p>
+                                        <div class="progress mb-3">
+                                            <div id="confidenceBar" class="progress-bar bg-success" style="width: 0%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="card bg-light">
+                                            <div class="card-body">
+                                                <h6>📋 Factors Analysis</h6>
+                                                <div id="factorsAnalysis" class="small"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <h6 class="mt-3">💡 Personalized Recommendations:</h6>
+                                <p id="recommendations" class="mb-0"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-light text-center py-3 mt-4">
+        <div class="container">
+            <p class="mb-0">&copy; 2025 USTED. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/validation.js"></script>
+    <script>
+        const API_BASE_URL = 'https://aamusted-predictor-backend2.onrender.com';
+        
+        // Range slider displays
+        document.getElementById('attendance').addEventListener('input', function() {
+            document.getElementById('attendanceValue').textContent = this.value + '%';
+        });
+        document.getElementById('assignments').addEventListener('input', function() {
+            document.getElementById('assignmentsValue').textContent = this.value + '%';
+        });
+        document.getElementById('studyHours').addEventListener('input', function() {
+            document.getElementById('studyHoursValue').textContent = this.value + ' hrs';
+        });
+        document.getElementById('tutorialAttendance').addEventListener('input', function() {
+            document.getElementById('tutorialValue').textContent = this.value + '%';
+        });
+        document.getElementById('difficulty').addEventListener('input', function() {
+            let texts = ['Very Easy', 'Easy', 'Medium', 'Hard', 'Very Hard'];
+            document.getElementById('difficultyValue').textContent = texts[this.value-1] + ' (' + this.value + '/5)';
+        });
+        document.getElementById('parentalSupport').addEventListener('input', function() {
+            let texts = ['Very Low', 'Low', 'Moderate', 'High', 'Very High'];
+            document.getElementById('supportValue').textContent = texts[this.value-1] + ' (' + this.value + '/5)';
+        });
+        document.getElementById('selfConfidence').addEventListener('input', function() {
+            let texts = ['Very Low', 'Low', 'Moderate', 'High', 'Very High'];
+            document.getElementById('confidenceValue').textContent = texts[this.value-1] + ' (' + this.value + '/5)';
+        });
+        document.getElementById('readiness').addEventListener('input', function() {
+            let texts = ['Not Ready', 'Somewhat Ready', 'Moderately Ready', 'Ready', 'Very Ready'];
+            document.getElementById('readinessValue').textContent = texts[this.value-1] + ' (' + this.value + '/5)';
+        });
+        
+        // Parse previous grades input
+        function parsePreviousGrades(input) {
+            if (!input) return [];
+            return input.split(',').map(g => g.trim().toUpperCase()).filter(g => g);
+        }
+        
+        // Prediction form submission
+        document.getElementById('predictionForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            const predictionData = {
+                student_name: JSON.parse(localStorage.getItem('user') || '{}').full_name || "Student",
+                student_id: JSON.parse(localStorage.getItem('user') || '{}').student_id || "Unknown",
+                previous_gpa: parseFloat(document.getElementById('previousGpa').value),
+                previous_course_grades: parsePreviousGrades(document.getElementById('previousGrades').value),
+                semester: {
+                    semester_type: document.getElementById('semesterType').value,
+                    current_semester: parseInt(document.getElementById('currentSemester').value),
+                    total_semesters: parseInt(document.getElementById('totalSemesters').value)
+                },
+                weekly: {
+                    attendance: parseInt(document.getElementById('attendance').value),
+                    assignments: parseInt(document.getElementById('assignments').value),
+                    study_hours: parseInt(document.getElementById('studyHours').value),
+                    tutorial_attendance: parseInt(document.getElementById('tutorialAttendance').value)
+                },
+                module: {
+                    module_code: document.getElementById('moduleCode').value.toUpperCase(),
+                    credit_hours: parseInt(document.getElementById('creditHours').value),
+                    module_type: document.getElementById('moduleType').value,
+                    difficulty: parseInt(document.getElementById('difficulty').value),
+                    previous_grades: parsePreviousGrades(document.getElementById('previousGrades').value)
+                },
+                parental: {
+                    education: document.getElementById('parentalEducation').value,
+                    support_level: parseInt(document.getElementById('parentalSupport').value)
+                },
+                self_confidence: parseInt(document.getElementById('selfConfidence').value),
+                perceived_readiness: parseInt(document.getElementById('readiness').value)
+            };
+            
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Analyzing all factors...';
+            submitBtn.disabled = true;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/predict-complete?token=${token}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(predictionData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('resultGrade').textContent = data.predicted_grade;
+                    document.getElementById('resultConfidence').textContent = data.confidence;
+                    document.getElementById('confidenceBar').style.width = `${data.confidence}%`;
+                    
+                    // Display factors analysis
+                    const factorsHtml = `
+                        <div class="mb-2"><strong>Semester Factor:</strong> ${data.factors_analysis.semester_factor}</div>
+                        <div class="mb-2"><strong>Weekly Performance:</strong> ${data.factors_analysis.weekly_performance}%</div>
+                        <div class="mb-2"><strong>Module Factor:</strong> ${data.factors_analysis.module_factor}</div>
+                        <div class="mb-2"><strong>Parental Factor:</strong> ${data.factors_analysis.parental_factor}</div>
+                        <div class="mb-2"><strong>Previous GPA:</strong> ${data.factors_analysis.previous_gpa}</div>
+                        <div class="mb-2"><strong>Study Hours:</strong> ${data.factors_analysis.study_hours}/week</div>
+                        <div class="mb-2"><strong>Attendance:</strong> ${data.factors_analysis.attendance}%</div>
+                        <div class="mb-2"><strong>Assignments:</strong> ${data.factors_analysis.assignments}%</div>
+                    `;
+                    document.getElementById('factorsAnalysis').innerHTML = factorsHtml;
+                    
+                    document.getElementById('recommendations').textContent = data.recommendations;
+                    document.getElementById('predictionResult').style.display = 'block';
+                    
+                    // Scroll to result
+                    document.getElementById('predictionResult').scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    alert(data.detail || 'Prediction failed');
+                }
+            } catch (error) {
+                console.error('Prediction error:', error);
+                alert('Network error: ' + error.message);
+            } finally {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        });
+        
+        // Check authentication
+        if (!localStorage.getItem('token')) {
+            window.location.href = 'login.html';
+        }
+        
+        // Logout
+        document.getElementById('logoutBtn')?.addEventListener('click', () => {
+            localStorage.removeItem('token');
+            window.location.href = 'index.html';
+        });
+    </script>
+</body>
+</html>
