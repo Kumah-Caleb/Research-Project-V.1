@@ -16,7 +16,7 @@ from datetime import datetime
 # DATA STORAGE
 # ============================================
 
-users_db = {}
+users_db = {}`n# Ensure users have proper role`nfor user in users_db.values():`n    if "role" not in user:`n        user["role"] = "student"
 tokens_db = {}
 predictions_db = {}
 user_counter = 1
@@ -1324,3 +1324,4 @@ def drop_course(course_id: int, token: str):
         courses_db[course_id]["enrolled"] -= 1
     
     return {"success": True, "message": "Course dropped successfully"}
+
