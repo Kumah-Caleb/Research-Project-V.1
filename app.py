@@ -1059,3 +1059,25 @@ def debug_enrollments(token: str):
         "total_enrollments": len(all_enrollments),
         "enrollments": all_enrollments
     }
+
+@app.get("/api/debug/users")
+def debug_users(admin_key: str):
+    """Debug endpoint to see all users"""
+    if admin_key != "DEBUG2024":
+        raise HTTPException(403, "Invalid key")
+    
+    users_list = []
+    for uid, u in users_db.items():
+        users_list.append({
+            "id": uid,
+            "username": u.get("username"),
+            "full_name": u.get("full_name"),
+            "email": u.get("email"),
+            "student_id": u.get("student_id"),
+            "role": u.get("role")
+        })
+    
+    return {
+        "total_users": len(users_list),
+        "users": users_list
+    }
