@@ -1010,3 +1010,281 @@ def lecturer_register(request: dict):
 
 
 
+
+# ============================================
+# COURSE MANAGEMENT ENDPOINTS
+# ============================================
+
+# In-memory course storage
+courses_db = {}
+enrollments_db = {}
+course_counter = 4  # Start after sample courses
+enrollment_counter = 1
+
+# Sample courses
+courses_db[1] = {
+    "id": 1,
+    "course_code": "ITE301",
+    "course_name": "Advanced Web Development",
+    "credits": 3,
+    "lecturer_id": 1001,
+    "lecturer_name": "Dr. John Smith",
+    "department": "Information Technology",
+    "semester": "2024/2025",
+    "capacity": 30,
+    "enrolled": 0,
+    "created_at": datetime.utcnow().isoformat()
+}
+
+courses_db[2] = {
+    "id": 2,
+    "course_code": "ITE302",
+    "course_name": "Database Management Systems",
+    "credits": 3,
+    "lecturer_id": 1001,
+    "lecturer_name": "Dr. John Smith",
+    "department": "Information Technology",
+    "semester": "2024/2025",
+    "capacity": 25,
+    "enrolled": 0,
+    "created_at": datetime.utcnow().isoformat()
+}
+
+@app.post("/api/lecturer/courses/create")
+def create_course(request: dict, token: str):
+    """Lecturer creates a new course"""
+    global course_counter
+    
+    if token not in tokens_db:
+        raise HTTPException(401, "Invalid token")
+    
+    user_id = tokens_db[token]
+    u = users_db.get(user_id)
+    
+    if not u or u.get("role") != "lecturer":
+        raise HTTPException(403, "Access denied. Lecturer only.")
+    
+    course_code = request.get("course_code", "").upper()
+    course_name = request.get("course_name")
+    credits = request.get("credits", 3)
+    capacity = request.get("capacity", 30)
+    semester = request.get("semester", "2024/2025")
+    
+    # Check if course code already exists
+    for c in courses_db.values():
+        if c["course_code"] == course_code:
+            raise HTTPException(400, f"Course {course_code} already exists")
+    
+    course_id = course_counter
+    course_counter += 1
+    
+    courses_db[course_id] = {
+        "id": course_id,
+        "course_code": course_code,
+        "course_name": course_name,
+        "credits": credits,
+        "lecturer_id": user_id,
+        "lecturer_name": u.get("full_name", "Lecturer"),
+        "department": u.get("department", "Information Technology"),
+        "semester": semester,
+        "capacity": capacity,
+        "enrolled": 0,
+        "created_at": datetime.utcnow().isoformat()
+    }
+    
+    # Add to lecturer's course list
+    if "courses" not in u:
+        u["courses"] = []
+    u["courses"].append(course_code)
+    
+    return {
+        "success": True,
+        "message": f"Course {course_code} created successfully",
+        "course": courses_db[course_id]
+    }
+
+@app.get("/api/lecturer/courses/manage")
+def lecturer_courses_manage(token: str):
+    """Get all courses created by this lecturer"""
+    if token not in tokens_db:
+        raise HTTPException(401, "Invalid token")
+    
+    user_id = tokens_db[token]
+    u = users_db.get(user_id)
+    
+    if not u or u.get("role") != "lecturer":
+        raise HTTPException(403, "Access denied. Lecturer only.")
+    
+    lecturer_courses = [c for c in courses_db.values() if c["lecturer_id"] == user_id]
+    
+    return lecturer_courses
+
+@app.get("/api/lecturer/courses/{course_id}/students")
+def get_course_students(course_id: int, token: str):
+    """Get all students enrolled in a specific course"""
+    if token not in tokens_db:
+        raise HTTPException(401, "Invalid token")
+    
+    user_id = tokens_db[token]
+    u = users_db.get(user_id)
+    
+    if not u or u.get("role") != "lecturer":
+        raise HTTPException(403, "Access denied. Lecturer only.")
+    
+    course = courses_db.get(course_id)
+    if not course or course["lecturer_id"] != user_id:
+        raise HTTPException(404, "Course not found")
+    
+    course_enrollments = [e for e in enrollments_db.values() if e["course_id"] == course_id]
+    
+    students = []
+    for e in course_enrollments:
+        student = users_db.get(e["student_id"], {})
+        students.append({
+            "student_id": student.get("student_id", f"STU{e['student_id']}"),
+            "full_name": student.get("full_name", "Unknown"),
+            "email": student.get("email", ""),
+            "enrolled_at": e["enrolled_at"],
+            "status": e.get("status", "active")
+        })
+    
+    return {
+        "course": course,
+        "total_students": len(students),
+        "students": students
+    }
+
+@app.get("/api/student/courses/available")
+def get_available_courses(token: str):
+    """Get all courses available for enrollment"""
+    if token not in tokens_db:
+        raise HTTPException(401, "Invalid token")
+    
+    user_id = tokens_db[token]
+    student = users_db.get(user_id)
+    
+    if not student or student.get("role") != "student":
+        raise HTTPException(403, "Access denied. Students only.")
+    
+    student_enrollments = [e["course_id"] for e in enrollments_db.values() if e["student_id"] == user_id]
+    
+    available_courses = []
+    for c in courses_db.values():
+        if c["id"] not in student_enrollments and c["enrolled"] < c["capacity"]:
+            available_courses.append({
+                "id": c["id"],
+                "course_code": c["course_code"],
+                "course_name": c["course_name"],
+                "credits": c["credits"],
+                "lecturer_name": c["lecturer_name"],
+                "capacity": c["capacity"],
+                "available_spots": c["capacity"] - c["enrolled"],
+                "semester": c["semester"]
+            })
+    
+    return available_courses
+
+@app.get("/api/student/courses/my-courses")
+def get_my_courses(token: str):
+    """Get all courses student is enrolled in"""
+    if token not in tokens_db:
+        raise HTTPException(401, "Invalid token")
+    
+    user_id = tokens_db[token]
+    student = users_db.get(user_id)
+    
+    if not student or student.get("role") != "student":
+        raise HTTPException(403, "Access denied. Students only.")
+    
+    my_enrollments = [e for e in enrollments_db.values() if e["student_id"] == user_id]
+    
+    my_courses = []
+    for e in my_enrollments:
+        course = courses_db.get(e["course_id"])
+        if course:
+            my_courses.append({
+                "id": course["id"],
+                "course_code": course["course_code"],
+                "course_name": course["course_name"],
+                "credits": course["credits"],
+                "lecturer_name": course["lecturer_name"],
+                "enrolled_at": e["enrolled_at"],
+                "status": e.get("status", "active")
+            })
+    
+    return my_courses
+
+@app.post("/api/student/courses/enroll")
+def enroll_course(request: dict, token: str):
+    """Student enrolls in a course"""
+    global enrollment_counter
+    
+    if token not in tokens_db:
+        raise HTTPException(401, "Invalid token")
+    
+    user_id = tokens_db[token]
+    student = users_db.get(user_id)
+    
+    if not student or student.get("role") != "student":
+        raise HTTPException(403, "Access denied. Students only.")
+    
+    course_id = request.get("course_id")
+    course = courses_db.get(course_id)
+    
+    if not course:
+        raise HTTPException(404, "Course not found")
+    
+    existing = [e for e in enrollments_db.values() if e["student_id"] == user_id and e["course_id"] == course_id]
+    if existing:
+        raise HTTPException(400, "Already enrolled in this course")
+    
+    if course["enrolled"] >= course["capacity"]:
+        raise HTTPException(400, "Course is full")
+    
+    enrollment_id = enrollment_counter
+    enrollment_counter += 1
+    
+    enrollments_db[enrollment_id] = {
+        "id": enrollment_id,
+        "student_id": user_id,
+        "course_id": course_id,
+        "course_code": course["course_code"],
+        "enrolled_at": datetime.utcnow().isoformat(),
+        "status": "active"
+    }
+    
+    courses_db[course_id]["enrolled"] += 1
+    
+    return {
+        "success": True,
+        "message": f"Successfully enrolled in {course['course_code']}",
+        "enrollment": enrollments_db[enrollment_id]
+    }
+
+@app.delete("/api/student/courses/drop/{course_id}")
+def drop_course(course_id: int, token: str):
+    """Student drops a course"""
+    if token not in tokens_db:
+        raise HTTPException(401, "Invalid token")
+    
+    user_id = tokens_db[token]
+    student = users_db.get(user_id)
+    
+    if not student or student.get("role") != "student":
+        raise HTTPException(403, "Access denied. Students only.")
+    
+    enrollment = None
+    for e in enrollments_db.values():
+        if e["student_id"] == user_id and e["course_id"] == course_id:
+            enrollment = e
+            break
+    
+    if not enrollment:
+        raise HTTPException(404, "Not enrolled in this course")
+    
+    del enrollments_db[enrollment["id"]]
+    
+    if course_id in courses_db:
+        courses_db[course_id]["enrolled"] -= 1
+    
+    return {"success": True, "message": "Course dropped successfully"}
