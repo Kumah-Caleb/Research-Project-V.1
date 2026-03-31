@@ -1,0 +1,148 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>USTED | My Profile</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <header class="bg-primary text-white py-3">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0">USTED</h1>
+                    <p class="mb-0 small">Student Self-Assessment Predictor</p>
+                </div>
+                <nav>
+                    <a href="student_dashboard.html" class="text-white me-3">Dashboard</a>
+                    <a href="predictor.html" class="text-white me-3">Predict</a>
+                    <a href="history.html" class="text-white me-3">History</a>
+                    <a href="profile.html" class="text-white me-3">Profile</a>
+                    <a href="#" id="logoutBtn" class="text-white">Logout</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="container my-4">
+        <div class="row">
+            <div class="col-md-8 mx-auto">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">👤 My Profile</h4>
+                    </div>
+                    <div class="card-body">
+                        <form id="profileForm">
+                            <div class="mb-3">
+                                <label for="profile-name" class="form-label">Full Name</label>
+                                <input type="text" class="form-control" id="profile-name" required>
+                                <div id="name-error" class="validation-error text-danger small"></div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="profile-email" class="form-label">Email Address</label>
+                                <input type="email" class="form-control" id="profile-email" readonly disabled>
+                            </div>
+                            <div class="mb-3">
+                                <label for="profile-student-id" class="form-label">Student ID</label>
+                                <input type="text" class="form-control" id="profile-student-id" readonly disabled>
+                            </div>
+                            <div class="mb-3">
+                                <label for="profile-program" class="form-label">Program of Study</label>
+                                <input type="text" class="form-control" id="profile-program" placeholder="e.g., BSc Information Technology">
+                            </div>
+                            <div class="mb-3">
+                                <label for="profile-year" class="form-label">Year of Study</label>
+                                <select class="form-select" id="profile-year">
+                                    <option value="1">Level 100</option>
+                                    <option value="2">Level 200</option>
+                                    <option value="3">Level 300</option>
+                                    <option value="4">Level 400</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Update Profile</button>
+                        </form>
+                        <hr>
+                        <div class="text-center">
+                            <h6>Account Statistics</h6>
+                            <p>Member since: <span id="memberSince">Loading...</span></p>
+                            <p>Predictions made: <span id="predictionsCount">0</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-light text-center py-3 mt-4">
+        <div class="container">
+            <p class="mb-0">&copy; 2025 USTED. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/validation.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        // Load profile data
+        async function loadProfile() {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/profile`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                const user = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('profile-name').value = user.full_name || user.name;
+                    document.getElementById('profile-email').value = user.email;
+                    document.getElementById('profile-student-id').value = user.student_id;
+                    document.getElementById('memberSince').textContent = new Date(user.created_at).toLocaleDateString();
+                    document.getElementById('predictionsCount').textContent = user.predictions_count || 0;
+                }
+            } catch (error) {
+                console.error('Error loading profile:', error);
+            }
+        }
+        
+        // Update profile
+        document.getElementById('profileForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const newName = document.getElementById('profile-name').value;
+            const nameResult = validateName(newName);
+            
+            if (!nameResult.isValid) {
+                document.getElementById('name-error').textContent = nameResult.message;
+                return;
+            }
+            
+            const token = localStorage.getItem('token');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/profile/update`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ full_name: newName })
+                });
+                
+                if (response.ok) {
+                    alert('Profile updated successfully!');
+                } else {
+                    alert('Update failed');
+                }
+            } catch (error) {
+                alert('Network error');
+            }
+        });
+        
+        document.addEventListener('DOMContentLoaded', loadProfile);
+    </script>
+</body>
+</html>
