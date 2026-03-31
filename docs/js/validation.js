@@ -27,7 +27,7 @@ function validatePassword(password) {
 function validateStudentId(studentId) {
     if (!studentId) return { isValid: false, message: 'Student ID is required' };
     if (!VALIDATION_PATTERNS.studentId.test(studentId.toUpperCase())) {
-        return { isValid: false, message: 'Student ID must be exactly 10 digits (e.g., 2024001234) (e.g., ITE12345)' };
+        return { isValid: false, message: 'Student ID must be exactly 10 digits (e.g., 2024001234)' };
     }
     return { isValid: true, message: '' };
 }
@@ -55,4 +55,5 @@ function validateUsername(username) {
     if (!/^[a-zA-Z0-9_]+$/.test(username)) return { isValid: false, message: 'Username can only contain letters, numbers, and underscore' };
     return { isValid: true, message: '' };
 }
+
 
