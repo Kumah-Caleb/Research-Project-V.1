@@ -56,6 +56,7 @@ def numeric_to_grade(value):
     return 'F'
 
 def get_parental_factor(parental_level):
+    """Convert parental education level to factor (0-1 scale)"""
     factors = {
         "none": 0.6,
         "primary": 0.7,
@@ -578,4 +579,5 @@ def update_profile(request: dict, token: str):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
 
