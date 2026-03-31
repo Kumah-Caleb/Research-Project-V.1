@@ -1026,3 +1026,36 @@ def drop_course(course_id: int, token: str):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
+
+
+
+@app.get("/api/debug/enrollments")
+def debug_enrollments(token: str):
+    """Debug endpoint to check enrollments"""
+    if token not in tokens_db:
+        return {"error": "Invalid token"}
+    
+    user_id = tokens_db[token]
+    user = users_db.get(user_id)
+    
+    if not user or user.get("role") != "lecturer":
+        return {"error": "Lecturer access required"}
+    
+    all_enrollments = []
+    for e in enrollments_db.values():
+        course = courses_db.get(e["course_id"], {})
+        student = users_db.get(e["student_id"], {})
+        all_enrollments.append({
+            "enrollment_id": e["id"],
+            "course_code": e.get("course_code"),
+            "student_id": student.get("student_id"),
+            "student_name": student.get("full_name"),
+            "student_email": student.get("email"),
+            "enrolled_at": e["enrolled_at"]
+        })
+    
+    return {
+        "total_enrollments": len(all_enrollments),
+        "enrollments": all_enrollments
+    }
