@@ -609,3 +609,287 @@ def update_profile(request: dict, token: str):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
+# ============================================
+# LECTURER ENDPOINTS
+# ============================================
+
+class LecturerLoginRequest(BaseModel):
+    username: str
+    password: str
+    role: str = "lecturer"
+
+class LecturerProfile(BaseModel):
+    id: int
+    username: str
+    full_name: str
+    email: str
+    department: str
+    courses: List[str] = []
+
+@app.post("/api/lecturer/login")
+def lecturer_login(request: LecturerLoginRequest):
+    """Login for lecturers"""
+    # For demo, create a default lecturer
+    lecturer_id = 1001
+    if request.username == "lecturer" or request.username == "dr.smith":
+        token = generate_token()
+        tokens_db[token] = lecturer_id
+        # Store lecturer info
+        users_db[lecturer_id] = {
+            "id": lecturer_id,
+            "username": request.username,
+            "full_name": "Dr. John Smith",
+            "email": "john.smith@usted.edu.gh",
+            "department": "Information Technology",
+            "role": "lecturer",
+            "courses": ["ITE301", "ITE302", "ITE303"]
+        }
+        return {
+            "token": token,
+            "user": {
+                "id": lecturer_id,
+                "username": request.username,
+                "full_name": "Dr. John Smith",
+                "email": "john.smith@usted.edu.gh",
+                "role": "lecturer"
+            }
+        }
+    raise HTTPException(401, "Invalid lecturer credentials")
+
+@app.get("/api/lecturer/profile")
+def lecturer_profile(token: str):
+    """Get lecturer profile"""
+    if token not in tokens_db:
+        raise HTTPException(401, "Invalid token")
+    
+    user_id = tokens_db[token]
+    u = users_db.get(user_id)
+    
+    if not u or u.get("role") != "lecturer":
+        raise HTTPException(403, "Access denied. Lecturer only.")
+    
+    return {
+        "id": u["id"],
+        "username": u["username"],
+        "full_name": u["full_name"],
+        "email": u["email"],
+        "department": u.get("department", "Information Technology"),
+        "courses": u.get("courses", [])
+    }
+
+@app.get("/api/lecturer/stats")
+def lecturer_stats(token: str):
+    """Get overall statistics for lecturer's courses"""
+    if token not in tokens_db:
+        raise HTTPException(401, "Invalid token")
+    
+    user_id = tokens_db[token]
+    u = users_db.get(user_id)
+    
+    if not u or u.get("role") != "lecturer":
+        raise HTTPException(403, "Access denied. Lecturer only.")
+    
+    lecturer_courses = u.get("courses", [])
+    
+    # Get all predictions for courses taught by this lecturer
+    course_predictions = [p for p in predictions_db.values() if p.get("course_code") in lecturer_courses]
+    
+    # Get all students who made predictions in these courses
+    student_ids = set(p["user_id"] for p in course_predictions)
+    
+    # Calculate stats
+    total_students = len(student_ids)
+    at_risk_count = len([p for p in course_predictions if p.get("predicted_grade") in ['D', 'F', 'D+']])
+    avg_grades = [grade_to_numeric(p.get("predicted_grade", 'C')) for p in course_predictions]
+    avg_gpa = sum(avg_grades) / len(avg_grades) if avg_grades else 0
+    
+    return {
+        "total_students": total_students,
+        "at_risk_count": at_risk_count,
+        "avg_predicted_gpa": round(avg_gpa, 2),
+        "total_predictions": len(course_predictions)
+    }
+
+@app.get("/api/lecturer/students")
+def lecturer_students(token: str):
+    """Get all students in lecturer's courses with their latest predictions"""
+    if token not in tokens_db:
+        raise HTTPException(401, "Invalid token")
+    
+    user_id = tokens_db[token]
+    u = users_db.get(user_id)
+    
+    if not u or u.get("role") != "lecturer":
+        raise HTTPException(403, "Access denied. Lecturer only.")
+    
+    lecturer_courses = u.get("courses", [])
+    
+    # Get all predictions for lecturer's courses
+    course_predictions = [p for p in predictions_db.values() if p.get("course_code") in lecturer_courses]
+    
+    # Group by student
+    student_data = {}
+    for p in course_predictions:
+        student_id = p["user_id"]
+        if student_id not in student_data:
+            student = users_db.get(student_id, {})
+            student_data[student_id] = {
+                "student_id": student.get("student_id", f"STU{student_id}"),
+                "full_name": student.get("full_name", f"Student {student_id}"),
+                "latest_grade": p["predicted_grade"],
+                "confidence": p["confidence"],
+                "course_code": p.get("course_code"),
+                "last_active": p["created_at"]
+            }
+        else:
+            # Update if this prediction is newer
+            if p["created_at"] > student_data[student_id]["last_active"]:
+                student_data[student_id]["latest_grade"] = p["predicted_grade"]
+                student_data[student_id]["confidence"] = p["confidence"]
+                student_data[student_id]["last_active"] = p["created_at"]
+    
+    # Calculate risk level
+    result = []
+    for s in student_data.values():
+        grade = s["latest_grade"]
+        if grade in ['D', 'F', 'D+']:
+            risk = "high"
+        elif grade in ['C', 'C+', 'C-']:
+            risk = "medium"
+        else:
+            risk = "low"
+        
+        result.append({
+            "student_id": s["student_id"],
+            "full_name": s["full_name"],
+            "course_code": s["course_code"],
+            "latest_grade": s["latest_grade"],
+            "confidence": s["confidence"],
+            "risk_level": risk,
+            "last_active": s["last_active"]
+        })
+    
+    return result
+
+@app.get("/api/lecturer/courses")
+def lecturer_courses(token: str):
+    """Get all courses taught by lecturer with statistics"""
+    if token not in tokens_db:
+        raise HTTPException(401, "Invalid token")
+    
+    user_id = tokens_db[token]
+    u = users_db.get(user_id)
+    
+    if not u or u.get("role") != "lecturer":
+        raise HTTPException(403, "Access denied. Lecturer only.")
+    
+    lecturer_courses = u.get("courses", [])
+    
+    result = []
+    for course in lecturer_courses:
+        course_predictions = [p for p in predictions_db.values() if p.get("course_code") == course]
+        student_ids = set(p["user_id"] for p in course_predictions)
+        at_risk = len([p for p in course_predictions if p.get("predicted_grade") in ['D', 'F', 'D+']])
+        avg_grades = [grade_to_numeric(p.get("predicted_grade", 'C')) for p in course_predictions]
+        avg_grade = sum(avg_grades) / len(avg_grades) if avg_grades else 0
+        avg_letter = numeric_to_grade(avg_grade)
+        
+        result.append({
+            "course_code": course,
+            "course_name": f"Advanced {course}",
+            "student_count": len(student_ids),
+            "avg_grade": avg_letter,
+            "at_risk_count": at_risk
+        })
+    
+    return result
+
+@app.get("/api/lecturer/alerts")
+def lecturer_alerts(token: str):
+    """Get at-risk students that need attention"""
+    if token not in tokens_db:
+        raise HTTPException(401, "Invalid token")
+    
+    user_id = tokens_db[token]
+    u = users_db.get(user_id)
+    
+    if not u or u.get("role") != "lecturer":
+        raise HTTPException(403, "Access denied. Lecturer only.")
+    
+    lecturer_courses = u.get("courses", [])
+    
+    # Get at-risk predictions
+    at_risk_predictions = [
+        p for p in predictions_db.values() 
+        if p.get("course_code") in lecturer_courses and p.get("predicted_grade") in ['D', 'F', 'D+']
+    ]
+    
+    result = []
+    for p in at_risk_predictions:
+        student = users_db.get(p["user_id"], {})
+        result.append({
+            "student_id": student.get("student_id", f"STU{p['user_id']}"),
+            "student_name": student.get("full_name", f"Student {p['user_id']}"),
+            "course_code": p.get("course_code"),
+            "predicted_grade": p["predicted_grade"],
+            "confidence": p["confidence"],
+            "risk_level": "high" if p["predicted_grade"] in ['F'] else "medium",
+            "recommendation": "Immediate academic intervention recommended" if p["predicted_grade"] == 'F' else "Monitor progress, consider additional support"
+        })
+    
+    return result
+
+@app.get("/api/lecturer/analytics")
+def lecturer_analytics(token: str):
+    """Get analytics data for charts"""
+    if token not in tokens_db:
+        raise HTTPException(401, "Invalid token")
+    
+    user_id = tokens_db[token]
+    u = users_db.get(user_id)
+    
+    if not u or u.get("role") != "lecturer":
+        raise HTTPException(403, "Access denied. Lecturer only.")
+    
+    lecturer_courses = u.get("courses", [])
+    course_predictions = [p for p in predictions_db.values() if p.get("course_code") in lecturer_courses]
+    
+    # Grade distribution
+    grade_counts = {"A": 0, "B": 0, "C": 0, "D": 0, "F": 0}
+    for p in course_predictions:
+        grade = p["predicted_grade"]
+        if grade.startswith('A'):
+            grade_counts["A"] += 1
+        elif grade.startswith('B'):
+            grade_counts["B"] += 1
+        elif grade.startswith('C'):
+            grade_counts["C"] += 1
+        elif grade.startswith('D'):
+            grade_counts["D"] += 1
+        else:
+            grade_counts["F"] += 1
+    
+    # Risk distribution
+    risk_counts = {"low": 0, "medium": 0, "high": 0}
+    for p in course_predictions:
+        grade = p["predicted_grade"]
+        if grade in ['A', 'B', 'B+', 'B-']:
+            risk_counts["low"] += 1
+        elif grade in ['C', 'C+', 'C-']:
+            risk_counts["medium"] += 1
+        else:
+            risk_counts["high"] += 1
+    
+    return {
+        "grade_a": grade_counts["A"],
+        "grade_b": grade_counts["B"],
+        "grade_c": grade_counts["C"],
+        "grade_d": grade_counts["D"],
+        "grade_f": grade_counts["F"],
+        "low_risk": risk_counts["low"],
+        "medium_risk": risk_counts["medium"],
+        "high_risk": risk_counts["high"],
+        "weeks": ["Week 1", "Week 2", "Week 3", "Week 4"],
+        "trend_data": [3.2, 3.1, 3.3, 3.4]
+    }
