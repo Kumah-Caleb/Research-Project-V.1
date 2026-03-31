@@ -25,18 +25,18 @@
                         <h4 class="mb-0">Student Login</h4>
                     </div>
                     <div class="card-body">
-                        <form id="loginForm">
+                        <form id="loginForm" method="post">
                             <div class="mb-3">
                                 <label for="login-username" class="form-label">Username</label>
-                                <input type="text" class="form-control" id="login-username" required>
+                                <input type="text" class="form-control" id="login-username" name="username" required>
                                 <div id="login-username-error" class="validation-error text-danger small"></div>
                             </div>
                             <div class="mb-3">
                                 <label for="login-password" class="form-label">Password</label>
-                                <input type="password" class="form-control" id="login-password" required>
+                                <input type="password" class="form-control" id="login-password" name="password" required>
                                 <div id="login-password-error" class="validation-error text-danger small"></div>
                             </div>
-                            <button type="submit" class="btn btn-primary w-100">Login</button>
+                            <button type="submit" id="loginBtn" class="btn btn-primary w-100">Login</button>
                         </form>
                         <hr>
                         <p class="text-center mb-0">Don't have an account? <a href="register.html">Register here</a></p>
@@ -56,46 +56,54 @@
     <script src="js/validation.js"></script>
     <script src="js/app.js"></script>
     <script>
-        // Login handler for new backend
-        document.getElementById('loginForm')?.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const username = document.getElementById('login-username')?.value;
-            const password = document.getElementById('login-password')?.value;
-            
-            if (!username || !password) {
-                showToast('Please enter username and password', 'error');
-                return;
-            }
-            
-            showLoading(true);
-            
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password })
-                });
+        const API_BASE_URL = 'https://aamusted-predictor-backend2.onrender.com';
+        
+        const loginForm = document.getElementById('loginForm');
+        
+        if (loginForm) {
+            loginForm.addEventListener('submit', async function(event) {
+                event.preventDefault();
+                event.stopPropagation();
                 
-                const data = await response.json();
+                const username = document.getElementById('login-username').value.trim();
+                const password = document.getElementById('login-password').value;
                 
-                if (response.ok) {
-                    localStorage.setItem('token', data.token);
-                    localStorage.setItem('user', JSON.stringify(data.user));
-                    showToast('Login successful! Redirecting...', 'success');
-                    setTimeout(() => {
-                        window.location.href = 'student_dashboard.html';
-                    }, 1000);
-                } else {
-                    showToast(data.detail || 'Invalid username or password', 'error');
+                if (!username || !password) {
+                    alert('Please enter username and password');
+                    return;
                 }
-            } catch (error) {
-                console.error('Login error:', error);
-                showToast('Network error. Please try again.', 'error');
-            } finally {
-                showLoading(false);
-            }
-        });
+                
+                const loginBtn = document.getElementById('loginBtn');
+                const originalText = loginBtn.innerHTML;
+                loginBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Logging in...';
+                loginBtn.disabled = true;
+                
+                try {
+                    const response = await fetch(`${API_BASE_URL}/api/login`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username, password })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        localStorage.setItem('token', data.token);
+                        localStorage.setItem('user', JSON.stringify(data.user));
+                        alert('Login successful! Redirecting...');
+                        window.location.href = 'student_dashboard.html';
+                    } else {
+                        alert('Login failed: ' + (data.detail || 'Invalid credentials'));
+                    }
+                } catch (error) {
+                    console.error('Login error:', error);
+                    alert('Network error: ' + error.message);
+                } finally {
+                    loginBtn.innerHTML = originalText;
+                    loginBtn.disabled = false;
+                }
+            });
+        }
     </script>
 </body>
 </html>

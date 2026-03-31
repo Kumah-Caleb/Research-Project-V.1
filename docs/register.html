@@ -31,6 +31,11 @@
             background: rgba(0,0,0,0.5);
             z-index: 999;
         }
+        .spinner-border-sm {
+            width: 1rem;
+            height: 1rem;
+            border-width: 0.2em;
+        }
     </style>
 </head>
 <body>
@@ -51,40 +56,42 @@
                         <h4 class="mb-0">Student Registration</h4>
                     </div>
                     <div class="card-body">
-                        <form id="registerForm">
+                        <form id="registerForm" method="post">
                             <div class="mb-3">
-                                <label for="register-name" class="form-label">Full Name</label>
-                                <input type="text" class="form-control" id="register-name" required>
+                                <label for="register-name" class="form-label">Full Name *</label>
+                                <input type="text" class="form-control" id="register-name" name="name" required>
                                 <div id="register-name-error" class="validation-error text-danger small"></div>
                             </div>
                             <div class="mb-3">
-                                <label for="register-username" class="form-label">Username</label>
-                                <input type="text" class="form-control" id="register-username" required>
+                                <label for="register-username" class="form-label">Username *</label>
+                                <input type="text" class="form-control" id="register-username" name="username" required>
                                 <div id="register-username-error" class="validation-error text-danger small"></div>
                             </div>
                             <div class="mb-3">
-                                <label for="register-email" class="form-label">Email Address</label>
-                                <input type="email" class="form-control" id="register-email" required>
+                                <label for="register-email" class="form-label">Email Address *</label>
+                                <input type="email" class="form-control" id="register-email" name="email" required>
                                 <div id="register-email-error" class="validation-error text-danger small"></div>
                             </div>
                             <div class="mb-3">
-                                <label for="register-student-id" class="form-label">Student ID</label>
-                                <input type="text" class="form-control" id="register-student-id" required placeholder="ITE12345">
+                                <label for="register-student-id" class="form-label">Student ID *</label>
+                                <input type="text" class="form-control" id="register-student-id" name="student_id" required placeholder="ITE12345">
                                 <div id="register-studentid-error" class="validation-error text-danger small"></div>
                                 <small class="text-muted">Format: 3 letters followed by 5-7 digits (e.g., ITE12345)</small>
                             </div>
                             <div class="mb-3">
-                                <label for="register-password" class="form-label">Password</label>
-                                <input type="password" class="form-control" id="register-password" required>
+                                <label for="register-password" class="form-label">Password *</label>
+                                <input type="password" class="form-control" id="register-password" name="password" required>
                                 <div id="register-password-error" class="validation-error text-danger small"></div>
                                 <small class="text-muted">Minimum 8 characters, 1 uppercase, 1 lowercase, 1 number</small>
                             </div>
                             <div class="mb-3">
-                                <label for="register-confirm-password" class="form-label">Confirm Password</label>
-                                <input type="password" class="form-control" id="register-confirm-password" required>
+                                <label for="register-confirm-password" class="form-label">Confirm Password *</label>
+                                <input type="password" class="form-control" id="register-confirm-password" name="confirm_password" required>
                                 <div id="register-confirm-error" class="validation-error text-danger small"></div>
                             </div>
-                            <button type="submit" class="btn btn-primary w-100">Register</button>
+                            <button type="submit" id="registerBtn" class="btn btn-primary w-100">
+                                Register
+                            </button>
                         </form>
                         <hr>
                         <p class="text-center mb-0">Already have an account? <a href="login.html">Login here</a></p>
@@ -115,95 +122,186 @@
     <script src="js/validation.js"></script>
     <script src="js/app.js"></script>
     <script>
-        // Add username validation
-        function validateUsername(username) {
-            if (!username) return { isValid: false, message: 'Username is required' };
-            if (username.length < 3) return { isValid: false, message: 'Username must be at least 3 characters' };
-            return { isValid: true, message: '' };
+        // API Base URL
+        const API_BASE_URL = 'https://aamusted-predictor-backend2.onrender.com';
+        
+        // Get form element
+        const registerForm = document.getElementById('registerForm');
+        
+        // Add submit event listener
+        if (registerForm) {
+            registerForm.addEventListener('submit', async function(event) {
+                // IMPORTANT: Prevent default form submission
+                event.preventDefault();
+                event.stopPropagation();
+                
+                console.log("Form submitted - preventing default");
+                
+                // Get form values
+                const name = document.getElementById('register-name').value.trim();
+                const username = document.getElementById('register-username').value.trim();
+                const email = document.getElementById('register-email').value.trim();
+                const studentId = document.getElementById('register-student-id').value.trim();
+                const password = document.getElementById('register-password').value;
+                const confirmPassword = document.getElementById('register-confirm-password').value;
+                
+                // Clear previous errors
+                document.querySelectorAll('.validation-error').forEach(el => el.textContent = '');
+                
+                // Validate all fields
+                let hasError = false;
+                
+                if (!name) {
+                    document.getElementById('register-name-error').textContent = 'Name is required';
+                    hasError = true;
+                } else if (!validateName(name).isValid) {
+                    document.getElementById('register-name-error').textContent = validateName(name).message;
+                    hasError = true;
+                }
+                
+                if (!username) {
+                    document.getElementById('register-username-error').textContent = 'Username is required';
+                    hasError = true;
+                } else if (username.length < 3) {
+                    document.getElementById('register-username-error').textContent = 'Username must be at least 3 characters';
+                    hasError = true;
+                }
+                
+                if (!email) {
+                    document.getElementById('register-email-error').textContent = 'Email is required';
+                    hasError = true;
+                } else if (!validateEmail(email).isValid) {
+                    document.getElementById('register-email-error').textContent = validateEmail(email).message;
+                    hasError = true;
+                }
+                
+                if (!studentId) {
+                    document.getElementById('register-studentid-error').textContent = 'Student ID is required';
+                    hasError = true;
+                } else if (!validateStudentId(studentId).isValid) {
+                    document.getElementById('register-studentid-error').textContent = validateStudentId(studentId).message;
+                    hasError = true;
+                }
+                
+                if (!password) {
+                    document.getElementById('register-password-error').textContent = 'Password is required';
+                    hasError = true;
+                } else if (!validatePassword(password).isValid) {
+                    document.getElementById('register-password-error').textContent = validatePassword(password).message;
+                    hasError = true;
+                }
+                
+                if (password !== confirmPassword) {
+                    document.getElementById('register-confirm-error').textContent = 'Passwords do not match';
+                    hasError = true;
+                }
+                
+                if (hasError) {
+                    console.log("Validation failed");
+                    return;
+                }
+                
+                // Show loading state
+                const submitBtn = document.getElementById('registerBtn');
+                const originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Registering...';
+                submitBtn.disabled = true;
+                
+                console.log("Sending registration request...");
+                
+                try {
+                    const response = await fetch(`${API_BASE_URL}/api/register`, {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({ 
+                            username: username,
+                            full_name: name, 
+                            email: email, 
+                            student_id: studentId.toUpperCase(), 
+                            password: password 
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    console.log("Response:", data);
+                    
+                    if (response.ok) {
+                        // Show success modal
+                        const overlay = document.getElementById('successOverlay');
+                        const modal = document.getElementById('successModal');
+                        if (overlay && modal) {
+                            overlay.style.display = 'block';
+                            modal.style.display = 'block';
+                            
+                            // Redirect to login after 3 seconds
+                            setTimeout(() => {
+                                window.location.href = 'login.html';
+                            }, 3000);
+                        } else {
+                            // Fallback if modal doesn't exist
+                            alert('Registration successful! Redirecting to login...');
+                            setTimeout(() => {
+                                window.location.href = 'login.html';
+                            }, 2000);
+                        }
+                    } else {
+                        let errorMsg = data.detail || data.message || 'Registration failed';
+                        if (typeof errorMsg === 'object') errorMsg = JSON.stringify(errorMsg);
+                        alert('Registration failed: ' + errorMsg);
+                    }
+                } catch (error) {
+                    console.error('Registration error:', error);
+                    alert('Network error: ' + error.message + '\n\nPlease check if the backend is running at: ' + API_BASE_URL);
+                } finally {
+                    // Reset button
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                }
+            });
+        } else {
+            console.error("Register form not found!");
         }
         
-        // Override register function to show success modal
-        const originalHandleRegister = window.handleRegister;
-        window.handleRegister = async function(event) {
-            event.preventDefault();
-            
-            const name = document.getElementById('register-name')?.value;
-            const username = document.getElementById('register-username')?.value;
-            const email = document.getElementById('register-email')?.value;
-            const studentId = document.getElementById('register-student-id')?.value;
-            const password = document.getElementById('register-password')?.value;
-            const confirmPassword = document.getElementById('register-confirm-password')?.value;
-            
-            // Validate
-            const nameResult = validateName(name);
-            const usernameResult = validateUsername(username);
-            const emailResult = validateEmail(email);
-            const studentIdResult = validateStudentId(studentId);
-            const passwordResult = validatePassword(password);
-            
-            if (!nameResult.isValid) {
-                document.getElementById('register-name-error').textContent = nameResult.message;
-                return;
+        // Add real-time validation
+        document.getElementById('register-name')?.addEventListener('input', function() {
+            const result = validateName(this.value);
+            document.getElementById('register-name-error').textContent = result.isValid ? '' : result.message;
+        });
+        
+        document.getElementById('register-username')?.addEventListener('input', function() {
+            if (this.value.length < 3 && this.value.length > 0) {
+                document.getElementById('register-username-error').textContent = 'Username must be at least 3 characters';
+            } else {
+                document.getElementById('register-username-error').textContent = '';
             }
-            if (!usernameResult.isValid) {
-                document.getElementById('register-username-error').textContent = usernameResult.message;
-                return;
-            }
-            if (!emailResult.isValid) {
-                document.getElementById('register-email-error').textContent = emailResult.message;
-                return;
-            }
-            if (!studentIdResult.isValid) {
-                document.getElementById('register-studentid-error').textContent = studentIdResult.message;
-                return;
-            }
-            if (!passwordResult.isValid) {
-                document.getElementById('register-password-error').textContent = passwordResult.message;
-                return;
-            }
-            if (password !== confirmPassword) {
+        });
+        
+        document.getElementById('register-email')?.addEventListener('input', function() {
+            const result = validateEmail(this.value);
+            document.getElementById('register-email-error').textContent = result.isValid ? '' : result.message;
+        });
+        
+        document.getElementById('register-student-id')?.addEventListener('input', function() {
+            const result = validateStudentId(this.value);
+            document.getElementById('register-studentid-error').textContent = result.isValid ? '' : result.message;
+        });
+        
+        document.getElementById('register-password')?.addEventListener('input', function() {
+            const result = validatePassword(this.value);
+            document.getElementById('register-password-error').textContent = result.isValid ? '' : result.message;
+        });
+        
+        document.getElementById('register-confirm-password')?.addEventListener('input', function() {
+            const password = document.getElementById('register-password').value;
+            if (this.value !== password) {
                 document.getElementById('register-confirm-error').textContent = 'Passwords do not match';
-                return;
+            } else {
+                document.getElementById('register-confirm-error').textContent = '';
             }
-            
-            showLoading(true);
-            
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/register`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        username, 
-                        full_name: name, 
-                        email, 
-                        student_id: studentId, 
-                        password 
-                    })
-                });
-                
-                const data = await response.json();
-                
-                if (response.ok) {
-                    // Show success modal
-                    const overlay = document.getElementById('successOverlay');
-                    const modal = document.getElementById('successModal');
-                    overlay.style.display = 'block';
-                    modal.style.display = 'block';
-                    
-                    // Redirect to login after 3 seconds
-                    setTimeout(() => {
-                        window.location.href = 'login.html';
-                    }, 3000);
-                } else {
-                    showToast(data.detail || data.message || 'Registration failed', 'error');
-                }
-            } catch (error) {
-                console.error('Registration error:', error);
-                showToast('Network error. Please try again.', 'error');
-            } finally {
-                showLoading(false);
-            }
-        };
+        });
     </script>
 </body>
 </html>
