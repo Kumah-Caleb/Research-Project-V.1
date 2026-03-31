@@ -5,39 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>USTED | Student Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="css/styles.css">
     <style>
-        .stat-card {
-            transition: transform 0.2s;
-            cursor: pointer;
-        }
-        .stat-card:hover {
-            transform: translateY(-5px);
-        }
-        .course-card {
-            transition: all 0.3s;
-            margin-bottom: 15px;
-        }
-        .course-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-        .enrolled-card {
-            border-left: 4px solid #28a745;
-        }
-        .available-card {
-            border-left: 4px solid #003366;
-        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8f9fa; }
+        .stat-card { transition: transform 0.2s; cursor: pointer; background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .stat-card:hover { transform: translateY(-5px); }
+        .course-card { transition: all 0.3s; margin-bottom: 15px; background: white; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .course-card:hover { transform: translateY(-3px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .enrolled-card { border-left: 4px solid #28a745; }
+        .available-card { border-left: 4px solid #003366; }
+        .btn-enroll { background-color: #28a745; color: white; }
+        .btn-enroll:hover { background-color: #218838; }
+        .btn-drop { background-color: #dc3545; color: white; }
+        .btn-drop:hover { background-color: #c82333; }
     </style>
 </head>
 <body>
     <header style="background-color: #003366; color: white; padding: 15px 0;">
         <div class="container">
             <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h1 class="h3 mb-0">USTED</h1>
-                    <p class="mb-0 small">Student Self-Assessment Predictor</p>
-                </div>
+                <div><h1 class="h3 mb-0">USTED</h1><p class="mb-0 small">Student Self-Assessment Predictor</p></div>
                 <nav>
                     <a href="student_dashboard.html" style="color: white; margin-right: 15px; text-decoration: none;">Dashboard</a>
                     <a href="predictor-three-format.html" style="color: white; margin-right: 15px; text-decoration: none;">Predict</a>
@@ -51,50 +37,22 @@
 
     <main class="container my-4">
         <!-- Welcome Section -->
-        <div class="card mb-4" style="background: linear-gradient(135deg, #003366 0%, #0055aa 100%); color: white; border: none;">
+        <div class="card mb-4" style="background: linear-gradient(135deg, #003366 0%, #0055aa 100%); color: white;">
             <div class="card-body">
                 <h3 id="welcomeMessage">Welcome back, Student!</h3>
-                <p class="mb-0">Track your academic progress, enroll in courses, and get AI-powered predictions.</p>
+                <p>Track your progress, enroll in courses, and get AI-powered predictions.</p>
             </div>
         </div>
 
         <!-- Statistics Cards -->
         <div class="row mb-4">
-            <div class="col-md-3 mb-3">
-                <div class="card stat-card text-center">
-                    <div class="card-body">
-                        <h1 class="display-4 text-primary" id="currentGpa">3.45</h1>
-                        <p class="text-muted mb-0">Current GPA</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3 mb-3">
-                <div class="card stat-card text-center">
-                    <div class="card-body">
-                        <h1 class="display-4 text-success" id="creditsCompleted">72</h1>
-                        <p class="text-muted mb-0">Credits Completed</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3 mb-3">
-                <div class="card stat-card text-center">
-                    <div class="card-body">
-                        <h1 class="display-4 text-info" id="coursesEnrolled">0</h1>
-                        <p class="text-muted mb-0">Courses Enrolled</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3 mb-3">
-                <div class="card stat-card text-center">
-                    <div class="card-body">
-                        <h1 class="display-4 text-warning" id="predictionsMade">0</h1>
-                        <p class="text-muted mb-0">Predictions Made</p>
-                    </div>
-                </div>
-            </div>
+            <div class="col-md-3"><div class="stat-card text-center"><h6>Current GPA</h6><div class="display-6 text-primary" id="currentGpa">3.45</div></div></div>
+            <div class="col-md-3"><div class="stat-card text-center"><h6>Credits Completed</h6><div class="display-6 text-success" id="creditsCompleted">72</div></div></div>
+            <div class="col-md-3"><div class="stat-card text-center"><h6>Courses Enrolled</h6><div class="display-6 text-info" id="coursesEnrolledCount">0</div></div></div>
+            <div class="col-md-3"><div class="stat-card text-center"><h6>Predictions Made</h6><div class="display-6 text-warning" id="predictionsMade">0</div></div></div>
         </div>
 
-        <!-- MY ENROLLED COURSES Section -->
+        <!-- MY ENROLLED COURSES -->
         <div class="card mb-4">
             <div class="card-header" style="background-color: #28a745; color: white;">
                 <h5 class="mb-0">✅ My Enrolled Courses</h5>
@@ -106,7 +64,7 @@
             </div>
         </div>
 
-        <!-- AVAILABLE COURSES Section -->
+        <!-- AVAILABLE COURSES -->
         <div class="card mb-4">
             <div class="card-header" style="background-color: #003366; color: white;">
                 <h5 class="mb-0">📚 Available Courses for Enrollment</h5>
@@ -124,31 +82,18 @@
                 <h5 class="mb-0">📊 Recent Predictions</h5>
             </div>
             <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead>
-                            <tr><th>Course</th><th>Predicted Grade</th><th>Confidence</th><th>Date</th></tr>
-                        </thead>
-                        <tbody id="recentPredictions">
-                            <tr><td colspan="4" class="text-center">Login to see your predictions</tr</tbody>
-                    </table>
-                </div>
+                <div id="recentPredictions" class="text-center">Loading...</div>
             </div>
         </div>
     </main>
 
     <footer style="background-color: #f8f9fa; text-align: center; padding: 20px; margin-top: 40px;">
-        <div class="container">
-            <p class="mb-0">&copy; 2025 USTED. All rights reserved.</p>
-        </div>
+        <div class="container"><p>&copy; 2025 USTED. All rights reserved.</p></div>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="js/validation.js"></script>
-    <script src="js/app.js"></script>
     <script>
         const API_BASE_URL = 'https://aamusted-predictor-backend2.onrender.com';
-        let currentUser = null;
         
         // Check authentication
         const token = localStorage.getItem('token');
@@ -162,22 +107,17 @@
             document.getElementById('welcomeMessage').textContent = `Welcome back, ${user.full_name}!`;
         }
         
-        // ============================================
-        // COURSE ENROLLMENT FUNCTIONS
-        // ============================================
-        
+        // Load My Enrolled Courses
         async function loadMyEnrolledCourses() {
             const token = localStorage.getItem('token');
             const container = document.getElementById('myEnrolledCoursesList');
-            
-            if (!token) return;
             
             try {
                 const response = await fetch(`${API_BASE_URL}/api/student/courses/my-courses?token=${token}`);
                 const courses = await response.json();
                 
                 if (courses && courses.length > 0) {
-                    document.getElementById('coursesEnrolled').textContent = courses.length;
+                    document.getElementById('coursesEnrolledCount').textContent = courses.length;
                     container.innerHTML = `<div class="row">${courses.map(c => `
                         <div class="col-md-4 mb-3">
                             <div class="card course-card enrolled-card h-100">
@@ -186,7 +126,7 @@
                                     <p class="mb-1">${c.course_name}</p>
                                     <p class="small text-muted mb-2">Credits: ${c.credits} | Lecturer: ${c.lecturer_name}</p>
                                     <p class="small text-success mb-2">Enrolled: ${new Date(c.enrolled_at).toLocaleDateString()}</p>
-                                    <button class="btn btn-danger btn-sm w-100" onclick="dropCourse(${c.id})">Drop Course</button>
+                                    <button class="btn btn-drop btn-sm w-100" onclick="dropCourse(${c.id})">Drop Course</button>
                                 </div>
                             </div>
                         </div>
@@ -196,15 +136,14 @@
                 }
             } catch (error) {
                 console.error('Error loading enrolled courses:', error);
-                container.innerHTML = '<div class="alert alert-danger">Error loading your courses</div>';
+                container.innerHTML = '<div class="alert alert-danger">Error loading your courses. Please make sure backend is running.</div>';
             }
         }
         
+        // Load Available Courses
         async function loadAvailableCourses() {
             const token = localStorage.getItem('token');
             const container = document.getElementById('availableCoursesList');
-            
-            if (!token) return;
             
             try {
                 const response = await fetch(`${API_BASE_URL}/api/student/courses/available?token=${token}`);
@@ -219,20 +158,21 @@
                                     <p class="mb-1">${c.course_name}</p>
                                     <p class="small text-muted mb-2">Credits: ${c.credits} | Lecturer: ${c.lecturer_name}</p>
                                     <p class="small mb-2">Available: ${c.available_spots} / ${c.capacity} spots</p>
-                                    <button class="btn btn-success btn-sm w-100" onclick="enrollCourse(${c.id})">Enroll Now</button>
+                                    <button class="btn btn-enroll btn-sm w-100" onclick="enrollCourse(${c.id})">Enroll Now</button>
                                 </div>
                             </div>
                         </div>
                     `).join('')}</div>`;
                 } else {
-                    container.innerHTML = '<div class="alert alert-info">No courses available for enrollment at this time.</div>';
+                    container.innerHTML = '<div class="alert alert-info">No courses available for enrollment at this time. Check back later!</div>';
                 }
             } catch (error) {
                 console.error('Error loading available courses:', error);
-                container.innerHTML = '<div class="alert alert-danger">Error loading courses</div>';
+                container.innerHTML = '<div class="alert alert-danger">Error loading courses. Please make sure backend is running.</div>';
             }
         }
         
+        // Enroll in Course
         async function enrollCourse(courseId) {
             const token = localStorage.getItem('token');
             
@@ -247,8 +187,8 @@
                 
                 if (response.ok) {
                     alert('✅ Successfully enrolled in the course!');
-                    loadAvailableCourses();
                     loadMyEnrolledCourses();
+                    loadAvailableCourses();
                 } else {
                     alert('❌ Enrollment failed: ' + (data.detail || 'Unknown error'));
                 }
@@ -258,6 +198,7 @@
             }
         }
         
+        // Drop Course
         async function dropCourse(courseId) {
             if (!confirm('Are you sure you want to drop this course?')) return;
             
@@ -272,8 +213,8 @@
                 
                 if (response.ok) {
                     alert('✅ Course dropped successfully');
-                    loadAvailableCourses();
                     loadMyEnrolledCourses();
+                    loadAvailableCourses();
                 } else {
                     alert('❌ Failed to drop course: ' + (data.detail || 'Unknown error'));
                 }
@@ -283,60 +224,56 @@
             }
         }
         
-        // ============================================
-        // DASHBOARD FUNCTIONS
-        // ============================================
-        
-        async function loadDashboardData() {
-            const token = localStorage.getItem('token');
-            if (!token) return;
-            
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/dashboard/stats?token=${token}`);
-                const data = await response.json();
-                
-                if (response.ok) {
-                    document.getElementById('currentGpa').textContent = data.gpa || '3.45';
-                    document.getElementById('creditsCompleted').textContent = data.credits_completed || '72';
-                }
-            } catch (error) {
-                console.error('Error loading dashboard:', error);
-            }
-        }
-        
+        // Load Recent Predictions
         async function loadRecentPredictions() {
             const token = localStorage.getItem('token');
-            const tbody = document.getElementById('recentPredictions');
-            
-            if (!token) return;
+            const container = document.getElementById('recentPredictions');
             
             try {
                 const response = await fetch(`${API_BASE_URL}/api/predictions/recent?token=${token}`);
                 const predictions = await response.json();
                 
                 if (predictions && predictions.length > 0) {
-                    tbody.innerHTML = predictions.map(p => `
-                        <tr>
-                            <td><strong>${p.course_code}</strong></td>
-                            <td><span class="badge bg-primary">${p.predicted_grade}</span></td>
-                            <td>${p.confidence}%</td>
-                            <td>${new Date(p.created_at).toLocaleDateString()}</td>
-                        </tr>
-                    `).join('');
                     document.getElementById('predictionsMade').textContent = predictions.length;
+                    container.innerHTML = `
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead><tr><th>Course</th><th>Predicted Grade</th><th>Confidence</th><th>Date</th></thead>
+                                <tbody>${predictions.map(p => `
+                                    <tr>
+                                        <td><strong>${p.course_code}</strong></td>
+                                        <td><span class="badge bg-primary">${p.predicted_grade}</span></td>
+                                        <td>${p.confidence}%</td>
+                                        <td>${new Date(p.created_at).toLocaleDateString()}</td>
+                                     </tr>
+                                `).join('')}</tbody>
+                            </table>
+                        </div>
+                    `;
                 } else {
-                    tbody.innerHTML = '<tr><td colspan="4" class="text-center">No predictions yet. Make your first prediction!</td></tr>';
+                    container.innerHTML = '<p class="text-center">No predictions yet. Make your first prediction!</p>';
                 }
             } catch (error) {
                 console.error('Error loading predictions:', error);
+                container.innerHTML = '<p class="text-center text-danger">Error loading predictions</p>';
             }
         }
         
-        // Initialize dashboard
-        loadDashboardData();
-        loadRecentPredictions();
-        loadMyEnrolledCourses();
-        loadAvailableCourses();
+        // Load Dashboard Stats
+        async function loadDashboardStats() {
+            const token = localStorage.getItem('token');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/dashboard/stats?token=${token}`);
+                const data = await response.json();
+                if (response.ok) {
+                    document.getElementById('currentGpa').textContent = data.gpa || '3.45';
+                    document.getElementById('creditsCompleted').textContent = data.credits_completed || '72';
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
         
         // Logout
         document.getElementById('logoutBtn').addEventListener('click', () => {
@@ -344,6 +281,12 @@
             localStorage.removeItem('user');
             window.location.href = 'index.html';
         });
+        
+        // Load all data
+        loadDashboardStats();
+        loadMyEnrolledCourses();
+        loadAvailableCourses();
+        loadRecentPredictions();
     </script>
 </body>
 </html>
