@@ -191,5 +191,46 @@
             }
         });
     </script>
+    <script>
+        const API_BASE_URL = 'https://aamusted-predictor-backend2.onrender.com';
+        
+        async function loadRecentPredictions() {
+            const token = localStorage.getItem('token');
+            const tbody = document.getElementById('recentPredictions');
+            
+            if (!token || !tbody) return;
+            
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center"><div class="spinner-border spinner-border-sm"></div> Loading...</td></tr>';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/predictions/recent?token=${token}`);
+                const predictions = await response.json();
+                
+                if (response.ok && predictions && predictions.length > 0) {
+                    tbody.innerHTML = predictions.map(p => `
+                        <tr>
+                            <td><strong>${p.course_code}</strong></td>
+                            <td><span class="badge bg-primary">${p.predicted_grade}</span></td>
+                            <td>${p.confidence}%</td>
+                            <td>${new Date(p.created_at).toLocaleDateString()}</td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="4" class="text-center">No predictions yet</td></tr>';
+                }
+            } catch (error) {
+                console.error('Error loading predictions:', error);
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Error loading</td></tr>';
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            if (localStorage.getItem('token')) {
+                loadRecentPredictions();
+            }
+        });
+    </script>
 </body>
 </html>
+
+

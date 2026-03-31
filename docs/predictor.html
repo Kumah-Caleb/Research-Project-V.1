@@ -147,5 +147,16 @@
             document.getElementById('confidenceValue').textContent = text + ' (' + this.value + '/5)';
         });
     </script>
+    <script>
+        // Add after prediction success
+        function afterPrediction() {
+            console.log('Prediction saved!');
+            if (window.location.pathname.includes('history.html')) {
+                setTimeout(() => location.reload(), 1500);
+            }
+        }
+    </script>
 </body>
 </html>
+
+
