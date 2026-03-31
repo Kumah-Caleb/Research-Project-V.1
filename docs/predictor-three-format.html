@@ -228,12 +228,29 @@
                 </form>
 
                 <div id="predictionResult" class="mt-4" style="display: none;">
-                    <div class="alert alert-success">
-                        <h5>📈 Prediction Result</h5>
-                        <hr>
-                        <p><strong>🎓 Predicted Grade:</strong> <span id="resultGrade" style="font-size: 3rem; font-weight: bold;"></span></p>
-                        <p><strong>📊 Confidence:</strong> <span id="resultConfidence"></span>%</p>
-                        <div class="progress mb-3"><div id="confidenceBar" class="progress-bar bg-success" style="width: 0%"></div></div>
+    <div class="alert alert-success">
+        <h5>📈 Prediction Result</h5>
+        <hr>
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>🎓 Predicted Grade:</strong> <span id="resultGrade" style="font-size: 2.5rem; font-weight: bold;"></span></p>
+                <p><strong>📝 Grade Description:</strong> <span id="gradeDescription"></span></p>
+                <p><strong>📊 Confidence:</strong> <span id="resultConfidence"></span>%</p>
+                <div class="progress mb-3"><div id="confidenceBar" class="progress-bar bg-success" style="width: 0%"></div></div>
+            </div>
+            <div class="col-md-6">
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <h6>📋 Factors Summary</h6>
+                        <p id="factorsSummary" class="small mb-0"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <h6 class="mt-3">💡 Recommendations:</h6>
+        <p id="recommendations"></p>
+    </div>
+</div></div>
                         <h6>💡 Recommendations:</h6>
                         <p id="recommendations"></p>
                     </div>
@@ -246,7 +263,22 @@
         <div class="container"><p class="mb-0">&copy; 2025 USTED. All rights reserved.</p></div>
     </footer>
 
-    <script>
+    <script>        function getGradeDescription(grade) {
+            const descriptions = {
+                'A': 'Excellent - Outstanding performance',
+                'A-': 'Excellent - Very strong performance', 
+                'B+': 'Very Good - Above average performance',
+                'B': 'Good - Solid performance',
+                'B-': 'Good - Satisfactory performance',
+                'C+': 'Average - Acceptable performance',
+                'C': 'Average - Fair performance',
+                'C-': 'Average - Below satisfactory',
+                'D+': 'Poor - Needs improvement',
+                'D': 'Poor - Significant improvement needed',
+                'F': 'Failing - Immediate intervention required'
+            };
+            return descriptions[grade] || 'Grade not recognized';
+        }
         const API_BASE_URL = 'https://aamusted-predictor-backend2.onrender.com';
         let selectedFormat = null;
         
@@ -340,7 +372,16 @@
                 });
                 const result = await res.json();
                 if(res.ok) {
+                                    if(res.ok) {
                     document.getElementById('resultGrade').textContent = result.predicted_grade;
+                    document.getElementById('gradeDescription').textContent = result.grade_description || getGradeDescription(result.predicted_grade);
+                    document.getElementById('resultConfidence').textContent = result.confidence;
+                    document.getElementById('confidenceBar').style.width = `${result.confidence}%`;
+                    document.getElementById('factorsSummary').textContent = result.factors_summary || '';
+                    document.getElementById('recommendations').textContent = result.recommendations || 'Keep up the good work!';
+                    document.getElementById('predictionResult').style.display = 'block';
+                    document.getElementById('predictionResult').scrollIntoView({ behavior: 'smooth' });
+                }
                     document.getElementById('resultConfidence').textContent = result.confidence;
                     document.getElementById('confidenceBar').style.width = `${result.confidence}%`;
                     document.getElementById('recommendations').textContent = result.recommendations || 'Keep up the good work!';
@@ -356,5 +397,6 @@
     </script>
 </body>
 </html>
+
 
 

@@ -43,6 +43,41 @@ def grade_to_numeric(grade):
     }
     return grade_map.get(grade, 2.0)
 
+
+def get_grade_description(grade):
+    """Return description based on USTED grading system"""
+    descriptions = {
+        'A': 'Excellent - Outstanding performance',
+        'A-': 'Excellent - Very strong performance',
+        'B+': 'Very Good - Above average performance',
+        'B': 'Good - Solid performance',
+        'B-': 'Good - Satisfactory performance',
+        'C+': 'Average - Acceptable performance',
+        'C': 'Average - Fair performance',
+        'C-': 'Average - Below satisfactory',
+        'D+': 'Poor - Needs improvement',
+        'D': 'Poor - Significant improvement needed',
+        'F': 'Failing - Immediate intervention required'
+    }
+    return descriptions.get(grade, 'Grade not recognized')
+
+def get_grade_category(grade):
+    """Return category based on USTED grading system"""
+    categories = {
+        'A': 'Excellent',
+        'A-': 'Excellent',
+        'B+': 'Very Good',
+        'B': 'Good',
+        'B-': 'Good',
+        'C+': 'Average',
+        'C': 'Average',
+        'C-': 'Average',
+        'D+': 'Poor',
+        'D': 'Poor',
+        'F': 'Failing'
+    }
+    return categories.get(grade, 'Unknown')
+
 def numeric_to_grade(value):
     if value >= 3.7: return 'A'
     if value >= 3.3: return 'B+'
@@ -320,8 +355,10 @@ def predict_semester(request: SemesterPredictionRequest, token: str):
         "created_at": datetime.utcnow().isoformat()
     }
     
-    return PredictionResponse(
+        return PredictionResponse(
         predicted_grade=predicted_grade,
+        grade_description=get_grade_description(predicted_grade),
+        grade_category=get_grade_category(predicted_grade),
         confidence=round(confidence, 1),
         recommendations=recommendations,
         factors_summary=factors_summary
@@ -401,8 +438,10 @@ def predict_weekly(request: WeeklyPredictionRequest, token: str):
         "created_at": datetime.utcnow().isoformat()
     }
     
-    return PredictionResponse(
+        return PredictionResponse(
         predicted_grade=predicted_grade,
+        grade_description=get_grade_description(predicted_grade),
+        grade_category=get_grade_category(predicted_grade),
         confidence=round(confidence, 1),
         recommendations=recommendations,
         factors_summary=factors_summary
@@ -487,8 +526,10 @@ def predict_module(request: ModulePredictionRequest, token: str):
         "created_at": datetime.utcnow().isoformat()
     }
     
-    return PredictionResponse(
+        return PredictionResponse(
         predicted_grade=predicted_grade,
+        grade_description=get_grade_description(predicted_grade),
+        grade_category=get_grade_category(predicted_grade),
         confidence=round(confidence, 1),
         recommendations=recommendations,
         factors_summary=factors_summary
@@ -579,5 +620,7 @@ def update_profile(request: dict, token: str):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
+
 
 

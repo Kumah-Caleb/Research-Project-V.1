@@ -5,75 +5,131 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>USTED | Prediction History</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+        }
+        .history-card {
+            margin-bottom: 15px;
+            border-left: 4px solid #003366;
+            transition: transform 0.2s;
+        }
+        .history-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .grade-A { background-color: #d4edda; border-left-color: #28a745; }
+        .grade-B { background-color: #d1ecf1; border-left-color: #17a2b8; }
+        .grade-C { background-color: #fff3cd; border-left-color: #ffc107; }
+        .grade-D { background-color: #f8d7da; border-left-color: #fd7e14; }
+        .grade-F { background-color: #f8d7da; border-left-color: #dc3545; }
+        .badge-excellent { background-color: #28a745; }
+        .badge-verygood { background-color: #17a2b8; }
+        .badge-good { background-color: #20c997; }
+        .badge-average { background-color: #ffc107; color: #333; }
+        .badge-poor { background-color: #fd7e14; }
+        .badge-failing { background-color: #dc3545; }
+    </style>
 </head>
 <body>
-    <header class="bg-primary text-white py-3">
+    <header style="background-color: #003366; color: white; padding: 15px 0;">
         <div class="container">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <h1 class="h3 mb-0">USTED</h1>
-                    <p class="mb-0 small">Student Self-Assessment Predictor</p>
+                    <p class="mb-0 small">Prediction History</p>
                 </div>
                 <nav>
-                    <a href="student_dashboard.html" class="text-white me-3">Dashboard</a>
-                    <a href="predictor-three-format.html" class="text-white me-3">Predict</a>
-                    <a href="history.html" class="text-white me-3">History</a>
-                    <a href="profile.html" class="text-white me-3">Profile</a>
-                    <a href="#" id="logoutBtn" class="text-white">Logout</a>
+                    <a href="student_dashboard.html" style="color: white; margin-right: 15px; text-decoration: none;">Dashboard</a>
+                    <a href="predictor-three-format.html" style="color: white; margin-right: 15px; text-decoration: none;">Predict</a>
+                    <a href="history.html" style="color: white; margin-right: 15px; text-decoration: none;">History</a>
+                    <a href="profile.html" style="color: white; margin-right: 15px; text-decoration: none;">Profile</a>
+                    <a href="#" id="logoutBtn" style="color: white; text-decoration: none;">Logout</a>
                 </nav>
             </div>
         </div>
     </header>
 
     <main class="container my-4">
-        <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h4 class="mb-0">📜 Prediction History</h4>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-striped table-hover">
-                        <thead>
-                             <tr>
-                                <th>Course Code</th>
-                                <th>Predicted Grade</th>
-                                <th>Confidence</th>
-                                <th>Actual Grade</th>
-                                <th>Date</th>
-                                <th>Status</th>
-                             </tr>
-                        </thead>
-                        <tbody id="historyTable">
-                             <tr>
-                                <td colspan="6" class="text-center text-muted">Loading predictions...</td>
-                             </tr>
-                        </tbody>
-                    </table>
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header" style="background-color: #003366; color: white;">
+                        <h4 class="mb-0">📜 Your Prediction History</h4>
+                    </div>
+                    <div class="card-body">
+                        <div id="historyList" class="list-group">
+                            <div class="text-center py-4">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="mt-2">Loading your predictions...</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </main>
 
-    <footer class="bg-light text-center py-3 mt-4">
+    <footer style="background-color: #f8f9fa; text-align: center; padding: 20px; margin-top: 40px;">
         <div class="container">
             <p class="mb-0">&copy; 2025 USTED. All rights reserved.</p>
         </div>
     </footer>
 
-        <script>`n    const API_BASE_URL = "https://aamusted-predictor-backend2.onrender.com";
+    <script>
+        const API_BASE_URL = 'https://aamusted-predictor-backend2.onrender.com';
         
+        function getGradeBadgeClass(grade) {
+            const gradeMap = {
+                'A': 'badge-excellent', 'A-': 'badge-excellent',
+                'B+': 'badge-verygood', 'B': 'badge-good', 'B-': 'badge-good',
+                'C+': 'badge-average', 'C': 'badge-average', 'C-': 'badge-average',
+                'D+': 'badge-poor', 'D': 'badge-poor',
+                'F': 'badge-failing'
+            };
+            return gradeMap[grade] || 'badge-secondary';
+        }
+        
+        function getCardClass(grade) {
+            const gradeMap = {
+                'A': 'grade-A', 'A-': 'grade-A',
+                'B+': 'grade-B', 'B': 'grade-B', 'B-': 'grade-B',
+                'C+': 'grade-C', 'C': 'grade-C', 'C-': 'grade-C',
+                'D+': 'grade-D', 'D': 'grade-D',
+                'F': 'grade-F'
+            };
+            return gradeMap[grade] || '';
+        }
+        
+        function getGradeDescription(grade) {
+            const descriptions = {
+                'A': 'Excellent - Outstanding performance',
+                'A-': 'Excellent - Very strong performance',
+                'B+': 'Very Good - Above average performance',
+                'B': 'Good - Solid performance',
+                'B-': 'Good - Satisfactory performance',
+                'C+': 'Average - Acceptable performance',
+                'C': 'Average - Fair performance',
+                'C-': 'Average - Below satisfactory',
+                'D+': 'Poor - Needs improvement',
+                'D': 'Poor - Significant improvement needed',
+                'F': 'Failing - Immediate intervention required'
+            };
+            return descriptions[grade] || 'Grade not recognized';
+        }
         
         async function loadHistory() {
             const token = localStorage.getItem('token');
-            const tbody = document.getElementById('historyTable');
+            const historyDiv = document.getElementById('historyList');
             
             if (!token) {
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center">Please login to view history</td></tr>';
+                historyDiv.innerHTML = '<div class="alert alert-warning">Please login to view your prediction history</div>';
+                window.location.href = 'login.html';
                 return;
             }
-            
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></td></tr>';
             
             try {
                 const response = await fetch(`${API_BASE_URL}/api/predictions/history?token=${token}`);
@@ -88,246 +144,60 @@
                 console.log('Predictions loaded:', predictions);
                 
                 if (predictions && predictions.length > 0) {
-                    tbody.innerHTML = predictions.map(p => `
-                        <tr>
-                            <td><strong>${p.course_code}</strong></td>
-                            <td><span class="badge bg-primary">${p.predicted_grade}</span></td>
-                            <td>
-                                <div class="progress" style="height: 20px;">
-                                    <div class="progress-bar bg-info" style="width: ${p.confidence}%">
-                                        ${p.confidence}%
+                    historyDiv.innerHTML = predictions.map(p => {
+                        const grade = p.predicted_grade;
+                        const cardClass = getCardClass(grade);
+                        const badgeClass = getGradeBadgeClass(grade);
+                        const description = getGradeDescription(grade);
+                        const formatName = p.format === 'semester' ? '📅 Semester Format' : (p.format === 'weekly' ? '📆 Weekly Format' : '📘 Module Format');
+                        const moduleInfo = p.module_code ? `<div class="mt-1"><small class="text-muted">Module: ${p.module_code}</small></div>` : '';
+                        const date = new Date(p.created_at).toLocaleString();
+                        
+                        return `
+                            <div class="list-group-item history-card ${cardClass} mb-2">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h5 class="mb-1">
+                                            <span class="badge ${badgeClass} fs-6 me-2">${grade}</span>
+                                            ${formatName}
+                                        </h5>
+                                        ${moduleInfo}
+                                        <p class="mb-1 mt-2"><strong>${description}</strong></p>
+                                        <small class="text-muted">📊 Confidence: ${p.confidence}%</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <small class="text-muted">${date}</small>
                                     </div>
                                 </div>
-                            </td>
-                            <td>${p.actual_grade || '<span class="text-muted">Pending</span>'}</td>
-                            <td>${new Date(p.created_at).toLocaleDateString()}</td>
-                            <td>${p.actual_grade ? '✅ Completed' : '⏳ Pending'}</td>
-                        </tr>
-                    `).join('');
+                            </div>
+                        `;
+                    }).join('');
                 } else {
-                    tbody.innerHTML = '<tr><td colspan="6" class="text-center">No predictions yet. Make your first prediction!</td></tr>';
+                    historyDiv.innerHTML = `
+                        <div class="alert alert-info text-center">
+                            <h5>No predictions yet</h5>
+                            <p>Make your first prediction to see it here!</p>
+                            <a href="predictor-three-format.html" class="btn btn-primary">Make a Prediction</a>
+                        </div>
+                    `;
                 }
             } catch (error) {
                 console.error('Error loading history:', error);
-                tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">Error loading history: ${error.message}</td></tr>`;
+                historyDiv.innerHTML = `<div class="alert alert-danger">Error loading predictions: ${error.message}</div>`;
             }
         }
         
-        document.addEventListener('DOMContentLoaded', function() {
-            if (localStorage.getItem('token')) {
-                loadHistory();
-            } else {
-                window.location.href = 'login.html';
-            }
-        });
-        
-        // Logout button
-        document.getElementById('logoutBtn')?.addEventListener('click', function() {
-            localStorage.removeItem('token');
-            window.location.href = 'index.html';
-        });
-    </script>
-        <script>`n    const API_BASE_URL = "https://aamusted-predictor-backend2.onrender.com";
-        
-        
-        async function loadHistory() {
-            const token = localStorage.getItem('token');
-            const tbody = document.getElementById('historyTable');
-            
-            if (!token) {
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center">Please login to view history</td></tr>';
-                return;
-            }
-            
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></td></tr>';
-            
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/predictions/history?token=${token}`);
-                
-                if (response.status === 401) {
-                    localStorage.removeItem('token');
-                    window.location.href = 'login.html';
-                    return;
-                }
-                
-                const predictions = await response.json();
-                console.log('Predictions loaded:', predictions);
-                
-                if (predictions && predictions.length > 0) {
-                    tbody.innerHTML = predictions.map(p => `
-                        <tr>
-                            <td><strong>${p.course_code}</strong></td>
-                            <td><span class="badge bg-primary">${p.predicted_grade}</span></td>
-                            <td>
-                                <div class="progress" style="height: 20px;">
-                                    <div class="progress-bar bg-info" style="width: ${p.confidence}%">
-                                        ${p.confidence}%
-                                    </div>
-                                </div>
-                            </td>
-                            <td>${p.actual_grade || '<span class="text-muted">Pending</span>'}</td>
-                            <td>${new Date(p.created_at).toLocaleDateString()}</td>
-                            <td>${p.actual_grade ? '✅ Completed' : '⏳ Pending'}</td>
-                        </tr>
-                    `).join('');
-                } else {
-                    tbody.innerHTML = '<tr><td colspan="6" class="text-center">No predictions yet. Make your first prediction!</td></tr>';
-                }
-            } catch (error) {
-                console.error('Error loading history:', error);
-                tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">Error loading history: ${error.message}</td></tr>`;
-            }
+        // Check authentication
+        if (!localStorage.getItem('token')) {
+            window.location.href = 'login.html';
+        } else {
+            loadHistory();
         }
         
-        document.addEventListener('DOMContentLoaded', function() {
-            if (localStorage.getItem('token')) {
-                loadHistory();
-            } else {
-                window.location.href = 'login.html';
-            }
-        });
-        
-        // Logout button
-        document.getElementById('logoutBtn')?.addEventListener('click', function() {
-            localStorage.removeItem('token');
-            window.location.href = 'index.html';
-        });
-    </script>
-        <script>`n    const API_BASE_URL = "https://aamusted-predictor-backend2.onrender.com";
-        
-        
-        async function loadHistory() {
-            const token = localStorage.getItem('token');
-            const tbody = document.getElementById('historyTable');
-            
-            if (!token) {
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center">Please login to view history</td></tr>';
-                return;
-            }
-            
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></td></tr>';
-            
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/predictions/history?token=${token}`);
-                
-                if (response.status === 401) {
-                    localStorage.removeItem('token');
-                    window.location.href = 'login.html';
-                    return;
-                }
-                
-                const predictions = await response.json();
-                console.log('Predictions loaded:', predictions);
-                
-                if (predictions && predictions.length > 0) {
-                    tbody.innerHTML = predictions.map(p => `
-                        <tr>
-                            <td><strong>${p.course_code}</strong></td>
-                            <td><span class="badge bg-primary">${p.predicted_grade}</span></td>
-                            <td>
-                                <div class="progress" style="height: 20px;">
-                                    <div class="progress-bar bg-info" style="width: ${p.confidence}%">
-                                        ${p.confidence}%
-                                    </div>
-                                </div>
-                            </td>
-                            <td>${p.actual_grade || '<span class="text-muted">Pending</span>'}</td>
-                            <td>${new Date(p.created_at).toLocaleDateString()}</td>
-                            <td>${p.actual_grade ? '✅ Completed' : '⏳ Pending'}</td>
-                        </tr>
-                    `).join('');
-                } else {
-                    tbody.innerHTML = '<tr><td colspan="6" class="text-center">No predictions yet. Make your first prediction!</td></tr>';
-                }
-            } catch (error) {
-                console.error('Error loading history:', error);
-                tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">Error loading history: ${error.message}</td></tr>`;
-            }
-        }
-        
-        document.addEventListener('DOMContentLoaded', function() {
-            if (localStorage.getItem('token')) {
-                loadHistory();
-            } else {
-                window.location.href = 'login.html';
-            }
-        });
-        
-        // Logout button
-        document.getElementById('logoutBtn')?.addEventListener('click', function() {
-            localStorage.removeItem('token');
-            window.location.href = 'index.html';
-        });
-    </script>
-        <script>`n    const API_BASE_URL = "https://aamusted-predictor-backend2.onrender.com";
-        
-        
-        async function loadHistory() {
-            const token = localStorage.getItem('token');
-            const tbody = document.getElementById('historyTable');
-            
-            if (!token) {
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center">Please login to view history</td></tr>';
-                return;
-            }
-            
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></td></tr>';
-            
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/predictions/history?token=${token}`);
-                
-                if (response.status === 401) {
-                    localStorage.removeItem('token');
-                    window.location.href = 'login.html';
-                    return;
-                }
-                
-                const predictions = await response.json();
-                console.log('Predictions loaded:', predictions);
-                
-                if (predictions && predictions.length > 0) {
-                    tbody.innerHTML = predictions.map(p => `
-                        <tr>
-                            <td><strong>${p.course_code}</strong></td>
-                            <td><span class="badge bg-primary">${p.predicted_grade}</span></td>
-                            <td>
-                                <div class="progress" style="height: 20px;">
-                                    <div class="progress-bar bg-info" style="width: ${p.confidence}%">
-                                        ${p.confidence}%
-                                    </div>
-                                </div>
-                            </td>
-                            <td>${p.actual_grade || '<span class="text-muted">Pending</span>'}</td>
-                            <td>${new Date(p.created_at).toLocaleDateString()}</td>
-                            <td>${p.actual_grade ? '✅ Completed' : '⏳ Pending'}</td>
-                        </tr>
-                    `).join('');
-                } else {
-                    tbody.innerHTML = '<tr><td colspan="6" class="text-center">No predictions yet. Make your first prediction!</td></tr>';
-                }
-            } catch (error) {
-                console.error('Error loading history:', error);
-                tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">Error loading history: ${error.message}</td></tr>`;
-            }
-        }
-        
-        document.addEventListener('DOMContentLoaded', function() {
-            if (localStorage.getItem('token')) {
-                loadHistory();
-            } else {
-                window.location.href = 'login.html';
-            }
-        });
-        
-        // Logout button
-        document.getElementById('logoutBtn')?.addEventListener('click', function() {
+        document.getElementById('logoutBtn')?.addEventListener('click', () => {
             localStorage.removeItem('token');
             window.location.href = 'index.html';
         });
     </script>
 </body>
 </html>
-
-
-
-
