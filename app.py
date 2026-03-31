@@ -1,13 +1,13 @@
 ﻿"""
-USTED Complete Academic Predictor - All Formats
-Includes: Semester, Weekly, and Module formats
+USTED Complete Academic Predictor - Three Format System
+Each format has: Assignments, Attendance, Engagement, Parental Level, Study Hours, Extracurricular (from calendar)
+Semester Type influences Weekly Format
 """
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict
-import re
 import secrets
 import hashlib
 from datetime import datetime
@@ -56,205 +56,240 @@ def numeric_to_grade(value):
     return 'F'
 
 # ============================================
+# PARENTAL LEVEL FACTORS
+# ============================================
+
+def get_parental_factor(parental_level):
+    """Convert parental education level to factor"""
+    factors = {
+        "none": 0.6,
+        "primary": 0.7,
+        "secondary": 0.8,
+        "tertiary": 0.9,
+        "postgraduate": 1.0
+    }
+    return factors.get(parental_level.lower(), 0.8)
+
+# ============================================
+# EXTRACURRICULAR CALENDAR
+# ============================================
+
+# Academic calendar events that count as extracurricular activities
+EXTRACURRICULAR_TYPES = {
+    "sports": "Sports competitions, matches, tournaments",
+    "cultural": "Cultural festivals, drama, music performances",
+    "academic_clubs": "Academic clubs, debates, quiz competitions",
+    "volunteering": "Community service, volunteering events",
+    "leadership": "Student leadership roles, committee work",
+    "workshops": "Workshops, seminars, conferences",
+    "hackathons": "Hackathons, coding competitions",
+    "research": "Research projects, presentations"
+}
+
+def calculate_extracurricular_factor(events_count, event_types, event_hours):
+    """Calculate factor based on extracurricular activities during academic calendar"""
+    # Base factor - moderate extracurricular is good, too many or too few is bad
+    if events_count == 0:
+        base_factor = 0.7  # No extracurricular = less holistic development
+    elif events_count <= 3:
+        base_factor = 0.9  # Balanced extracurricular
+    elif events_count <= 6:
+        base_factor = 1.0  # Optimal extracurricular involvement
+    elif events_count <= 10:
+        base_factor = 0.85  # Too many events - may affect studies
+    else:
+        base_factor = 0.7   # Overwhelming extracurricular
+    
+    # Type diversity factor
+    unique_types = len(set(event_types))
+    diversity_factor = 0.8 + (unique_types / len(EXTRACURRICULAR_TYPES)) * 0.3
+    diversity_factor = min(1.0, diversity_factor)
+    
+    # Hours factor (5-15 hours per week is optimal)
+    if event_hours == 0:
+        hours_factor = 0.7
+    elif event_hours <= 5:
+        hours_factor = 0.85
+    elif event_hours <= 10:
+        hours_factor = 1.0
+    elif event_hours <= 15:
+        hours_factor = 0.9
+    else:
+        hours_factor = 0.75
+    
+    return (base_factor + diversity_factor + hours_factor) / 3
+
+# ============================================
 # FORMAT CALCULATIONS
 # ============================================
 
-def calculate_semester_factor(semester_type, current_semester, total_semesters=8):
-    """Calculate factor based on semester format"""
-    factors = {
-        "regular": 1.0,
-        "non-regular": 0.92,  # Non-regular is slightly more challenging
-        "modular": 0.88,      # Modular courses are intensive
-        "sandwich": 0.95,     # Work-study combination
-        "distance": 0.85      # Distance learning needs more self-discipline
-    }
-    
-    base_factor = factors.get(semester_type.lower(), 1.0)
-    
-    # Progress factor - later semesters are harder
-    progress_factor = 1 - (current_semester / total_semesters) * 0.15
-    
-    return base_factor * progress_factor
-
-def calculate_weekly_factor(attendance, assignments, study_hours, tutorial_attendance=0):
-    """Calculate factor based on weekly performance"""
-    # Attendance factor (0-100%)
-    attendance_factor = attendance / 100
+def calculate_factor_score(assignments, attendance, engagement, parental_level, study_hours, extracurricular):
+    """Calculate score from individual factors (0-4 scale)"""
     
     # Assignments factor (0-100%)
     assignments_factor = assignments / 100
     
-    # Study hours factor (0-40 hours)
-    study_factor = min(1.0, study_hours / 25)
+    # Attendance factor (0-100%)
+    attendance_factor = attendance / 100
     
-    # Tutorial attendance factor (optional)
-    tutorial_factor = tutorial_attendance / 100 if tutorial_attendance > 0 else 0.7
+    # Engagement factor (0-100%)
+    engagement_factor = engagement / 100
     
-    # Weighted average
-    weekly_score = (
-        attendance_factor * 0.25 +
-        assignments_factor * 0.35 +
-        study_factor * 0.30 +
-        tutorial_factor * 0.10
-    )
+    # Parental level factor
+    parental_factor = get_parental_factor(parental_level)
     
-    return weekly_score
-
-def calculate_module_factor(module_data):
-    """Calculate factor based on module-specific performance"""
-    # Module credit hours impact
-    credit_factor = min(1.2, module_data.get("credit_hours", 3) / 3)
-    
-    # Previous module grades impact
-    previous_grades = module_data.get("previous_grades", [])
-    if previous_grades:
-        avg_previous = sum(grade_to_numeric(g) for g in previous_grades) / len(previous_grades)
-        previous_factor = avg_previous / 4.0
+    # Study hours factor (0-40 hours, optimal 20-25)
+    if study_hours == 0:
+        study_factor = 0.4
+    elif study_hours <= 10:
+        study_factor = 0.6
+    elif study_hours <= 15:
+        study_factor = 0.8
+    elif study_hours <= 25:
+        study_factor = 1.0
+    elif study_hours <= 35:
+        study_factor = 0.85
     else:
-        previous_factor = 0.7
+        study_factor = 0.7
     
-    # Module difficulty (1-5 scale)
-    difficulty_factor = 1 - (module_data.get("difficulty", 3) - 3) * 0.1
+    # Extracurricular factor (from calendar events)
+    extracurricular_factor = extracurricular.get("factor", 0.8)
     
-    # Module type impact (core, elective, project)
-    module_type_factors = {
-        "core": 0.95,      # Core courses are harder
-        "elective": 1.05,   # Electives are often easier
-        "project": 0.90,    # Projects require more effort
-        "lab": 0.92         # Labs need practical skills
-    }
-    type_factor = module_type_factors.get(module_data.get("module_type", "core"), 1.0)
+    # Weighted calculation (0-1 scale)
+    score = (
+        assignments_factor * 0.25 +
+        attendance_factor * 0.20 +
+        engagement_factor * 0.20 +
+        parental_factor * 0.15 +
+        study_factor * 0.15 +
+        extracurricular_factor * 0.05
+    )
     
-    return (credit_factor + previous_factor + difficulty_factor + type_factor) / 4
+    return score * 4.0
 
-def calculate_parental_factor(parent_education, parent_support=3):
-    """Calculate factor based on parental education and support"""
-    education_factors = {
-        "none": 0.7,
-        "primary": 0.8,
-        "secondary": 0.9,
-        "tertiary": 1.0,
-        "postgraduate": 1.1
+def get_semester_type_factor(semester_type):
+    """Get factor for different semester types"""
+    factors = {
+        "regular": 1.0,
+        "non-regular": 0.92,
+        "modular": 0.88,
+        "sandwich": 0.95,
+        "distance": 0.85
     }
-    edu_factor = education_factors.get(parent_education.lower(), 0.9)
-    
-    # Parental support (1-5 scale)
-    support_factor = 0.8 + (parent_support / 5) * 0.4
-    
-    return (edu_factor + support_factor) / 2
+    return factors.get(semester_type.lower(), 1.0)
 
-def predict_complete_grade(data):
-    """Complete prediction using all factors"""
-    
-    # 1. Base from previous grades (25%)
-    previous_gpa = data.get("previous_gpa", 3.0)
-    base_score = grade_to_numeric(previous_gpa)
-    
-    # 2. Semester format factor (15%)
-    semester_factor = calculate_semester_factor(
-        data.get("semester_type", "regular"),
-        data.get("current_semester", 3)
+def calculate_semester_format(data, extracurricular_data):
+    """Calculate semester format score"""
+    base_score = calculate_factor_score(
+        data.assignments,
+        data.attendance,
+        data.engagement,
+        data.parental_level,
+        data.study_hours,
+        extracurricular_data
     )
     
-    # 3. Weekly performance factor (20%)
-    weekly_factor = calculate_weekly_factor(
-        data.get("attendance", 75),
-        data.get("assignments", 70),
-        data.get("study_hours", 12),
-        data.get("tutorial_attendance", 50)
+    # Semester type adjustment
+    type_factor = get_semester_type_factor(data.semester_type)
+    
+    # Semester progression (later semesters harder)
+    progression_factor = 1 - ((data.current_semester - 1) / data.total_semesters) * 0.15
+    
+    return base_score * type_factor * progression_factor
+
+def calculate_weekly_format(data, semester_type_factor, extracurricular_data):
+    """Calculate weekly format score - influenced by semester type"""
+    base_score = calculate_factor_score(
+        data.assignments,
+        data.attendance,
+        data.engagement,
+        data.parental_level,
+        data.study_hours,
+        extracurricular_data
     )
     
-    # 4. Module format factor (15%)
-    module_factor = calculate_module_factor({
-        "credit_hours": data.get("credit_hours", 3),
-        "previous_grades": data.get("previous_course_grades", []),
-        "difficulty": data.get("difficulty", 3),
-        "module_type": data.get("module_type", "core")
-    })
+    # Week progression factor (mid-semester pressure)
+    week_factor = 1 - ((data.week_number - 1) / data.total_weeks) * 0.1
     
-    # 5. Parental education factor (10%)
-    parent_factor = calculate_parental_factor(
-        data.get("parental_education", "secondary"),
-        data.get("parental_support", 3)
+    # Consistency factor (how consistent is the student)
+    consistency_factor = 0.9 + (data.consistency / 100) * 0.1
+    
+    # Semester type influence on weekly workload
+    semester_influence = semester_type_factor
+    
+    return base_score * week_factor * consistency_factor * semester_influence
+
+def calculate_module_format(data, extracurricular_data):
+    """Calculate module format score"""
+    base_score = calculate_factor_score(
+        data.assignments,
+        data.attendance,
+        data.engagement,
+        data.parental_level,
+        data.study_hours,
+        extracurricular_data
     )
     
-    # 6. Self-assessment factor (15%)
-    self_factor = (data.get("self_confidence", 3) + data.get("perceived_readiness", 3)) / 10
+    # Module type adjustment
+    type_factors = {"core": 0.95, "elective": 1.05, "project": 0.90, "lab": 0.92}
+    type_factor = type_factors.get(data.module_type.lower(), 1.0)
     
-    # Calculate final score
-    final_score = (
-        base_score * 0.25 +
-        semester_factor * 4.0 * 0.15 +
-        weekly_factor * 4.0 * 0.20 +
-        module_factor * 4.0 * 0.15 +
-        parent_factor * 0.10 +
-        self_factor * 4.0 * 0.15
-    )
+    # Credit hours impact
+    credit_factor = min(1.2, data.credit_hours / 3)
     
-    final_score = min(4.0, max(0, final_score))
-    
-    # Calculate confidence based on data completeness
-    confidence = 50 + (weekly_factor * 20) + (module_factor * 15) + (self_factor * 15)
-    confidence = min(95, max(50, confidence))
-    
-    return numeric_to_grade(final_score), round(confidence, 1)
+    return base_score * type_factor * credit_factor
 
 # ============================================
 # PYDANTIC MODELS
 # ============================================
 
-class WeeklyData(BaseModel):
-    attendance: int = Field(75, ge=0, le=100, description="Attendance percentage")
-    assignments: int = Field(70, ge=0, le=100, description="Assignment submission/completion percentage")
-    study_hours: int = Field(12, ge=0, le=40, description="Weekly study hours")
-    tutorial_attendance: int = Field(50, ge=0, le=100, description="Tutorial attendance percentage")
+class ExtracurricularActivities(BaseModel):
+    events_count: int = Field(3, ge=0, le=20, description="Number of extracurricular events participated in")
+    event_types: List[str] = Field(["academic_clubs"], description="Types of events: sports, cultural, academic_clubs, volunteering, leadership, workshops, hackathons, research")
+    event_hours_per_week: int = Field(5, ge=0, le=30, description="Average hours per week on extracurricular")
 
-class ModuleData(BaseModel):
-    module_code: str
-    credit_hours: int = Field(3, ge=1, le=6)
-    module_type: str = Field("core", description="core, elective, project, lab")
-    difficulty: int = Field(3, ge=1, le=5)
-    previous_grades: Optional[List[str]] = Field([], description="Grades from related modules")
-
-class SemesterData(BaseModel):
+class SemesterFormat(BaseModel):
     semester_type: str = Field("regular", description="regular, non-regular, modular, sandwich, distance")
-    current_semester: int = Field(1, ge=1, le=8)
+    current_semester: int = Field(3, ge=1, le=12)
     total_semesters: int = Field(8, ge=4, le=12)
+    assignments: int = Field(75, ge=0, le=100, description="Semester assignments completion %")
+    attendance: int = Field(80, ge=0, le=100, description="Semester attendance %")
+    engagement: int = Field(70, ge=0, le=100, description="Semester engagement %")
+    parental_level: str = Field("secondary", description="none, primary, secondary, tertiary, postgraduate")
+    study_hours: int = Field(12, ge=0, le=40, description="Weekly study hours")
 
-class ParentalData(BaseModel):
-    education: str = Field("secondary", description="none, primary, secondary, tertiary, postgraduate")
-    support_level: int = Field(3, ge=1, le=5, description="Parental support level 1-5")
+class WeeklyFormat(BaseModel):
+    week_number: int = Field(8, ge=1, le=16)
+    total_weeks: int = Field(16, ge=12, le=20)
+    assignments: int = Field(70, ge=0, le=100, description="Weekly assignments submission %")
+    attendance: int = Field(75, ge=0, le=100, description="Weekly attendance %")
+    engagement: int = Field(65, ge=0, le=100, description="Weekly engagement %")
+    parental_level: str = Field("secondary", description="Parental education level")
+    study_hours: int = Field(10, ge=0, le=40, description="Weekly study hours")
+    consistency: int = Field(70, ge=0, le=100, description="Weekly consistency score")
+
+class ModuleFormat(BaseModel):
+    module_code: str = Field("ITE301", description="Module code")
+    module_type: str = Field("core", description="core, elective, project, lab")
+    credit_hours: int = Field(3, ge=1, le=6)
+    assignments: int = Field(80, ge=0, le=100, description="Module assignments completion %")
+    attendance: int = Field(85, ge=0, le=100, description="Module attendance %")
+    engagement: int = Field(75, ge=0, le=100, description="Module engagement %")
+    parental_level: str = Field("secondary", description="Parental education level")
+    study_hours: int = Field(8, ge=0, le=40, description="Study hours for this module")
 
 class CompletePredictionRequest(BaseModel):
-    # Student Info
-    student_name: str
-    student_id: str
-    
-    # Previous Performance
+    semester: SemesterFormat
+    weekly: WeeklyFormat
+    module: ModuleFormat
+    extracurricular: ExtracurricularActivities
     previous_gpa: float = Field(3.0, ge=0, le=4.0)
-    previous_course_grades: Optional[List[str]] = []
-    
-    # Semester Format
-    semester: SemesterData
-    
-    # Weekly Format
-    weekly: WeeklyData
-    
-    # Module Format
-    module: ModuleData
-    
-    # Parental Background
-    parental: ParentalData
-    
-    # Self Assessment
-    self_confidence: int = Field(3, ge=1, le=5)
-    perceived_readiness: int = Field(3, ge=1, le=5)
 
 # ============================================
 # FASTAPI APP
 # ============================================
 
-app = FastAPI(title="USTED Complete Predictor API", version="3.0")
+app = FastAPI(title="USTED Three-Format Predictor", version="3.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -265,17 +300,16 @@ app.add_middleware(
 )
 
 # ============================================
-# ENDPOINTS
+# AUTH ENDPOINTS
 # ============================================
 
 @app.get("/")
 def root():
-    return {"message": "USTED Complete Predictor API is running", "version": "3.0"}
+    return {"message": "USTED Three-Format Predictor API", "version": "3.0"}
 
 @app.post("/api/register")
 def register(user: dict):
     global user_counter
-    # Simple registration for now
     user_id = user_counter
     user_counter += 1
     users_db[user_id] = {
@@ -324,8 +358,12 @@ def verify(token: str):
         }
     raise HTTPException(401, "Invalid token")
 
-@app.post("/api/predict-complete")
-def predict_complete(request: CompletePredictionRequest, token: str):
+# ============================================
+# PREDICTION ENDPOINT
+# ============================================
+
+@app.post("/api/predict-three-format")
+def predict_three_format(request: CompletePredictionRequest, token: str):
     global prediction_counter
     
     if token not in tokens_db:
@@ -333,52 +371,43 @@ def predict_complete(request: CompletePredictionRequest, token: str):
     
     user_id = tokens_db[token]
     
-    # Prepare data for prediction
-    prediction_data = {
-        "previous_gpa": request.previous_gpa,
-        "previous_course_grades": request.previous_course_grades,
-        "semester_type": request.semester.semester_type,
-        "current_semester": request.semester.current_semester,
-        "attendance": request.weekly.attendance,
-        "assignments": request.weekly.assignments,
-        "study_hours": request.weekly.study_hours,
-        "tutorial_attendance": request.weekly.tutorial_attendance,
-        "credit_hours": request.module.credit_hours,
-        "module_type": request.module.module_type,
-        "difficulty": request.module.difficulty,
-        "parental_education": request.parental.education,
-        "parental_support": request.parental.support_level,
-        "self_confidence": request.self_confidence,
-        "perceived_readiness": request.perceived_readiness
+    # Calculate extracurricular factor
+    extracurricular_factor = calculate_extracurricular_factor(
+        request.extracurricular.events_count,
+        request.extracurricular.event_types,
+        request.extracurricular.event_hours_per_week
+    )
+    
+    extracurricular_data = {
+        "factor": extracurricular_factor,
+        "events_count": request.extracurricular.events_count,
+        "event_types": request.extracurricular.event_types,
+        "hours_per_week": request.extracurricular.event_hours_per_week
     }
     
-    # Make prediction
-    predicted_grade, confidence = predict_complete_grade(prediction_data)
+    # Calculate semester format score
+    semester_type_factor = get_semester_type_factor(request.semester.semester_type)
+    semester_score = calculate_semester_format(request.semester, extracurricular_data)
     
-    # Calculate all factors for display
-    semester_factor = calculate_semester_factor(request.semester.semester_type, request.semester.current_semester)
-    weekly_score = calculate_weekly_factor(
-        request.weekly.attendance,
-        request.weekly.assignments,
-        request.weekly.study_hours,
-        request.weekly.tutorial_attendance
-    )
-    module_factor = calculate_module_factor({
-        "credit_hours": request.module.credit_hours,
-        "previous_grades": request.previous_course_grades,
-        "difficulty": request.module.difficulty,
-        "module_type": request.module.module_type
-    })
-    parent_factor = calculate_parental_factor(request.parental.education, request.parental.support_level)
+    # Calculate weekly format score (influenced by semester type)
+    weekly_score = calculate_weekly_format(request.weekly, semester_type_factor, extracurricular_data)
     
-    # Generate detailed recommendations
-    recommendations = generate_detailed_recommendations(
-        predicted_grade, confidence,
-        weekly_score, module_factor,
-        request.weekly.study_hours,
-        request.weekly.attendance,
-        request.weekly.assignments
-    )
+    # Calculate module format score
+    module_score = calculate_module_format(request.module, extracurricular_data)
+    
+    # Combine all three formats with weights
+    # Semester: 40%, Weekly: 30%, Module: 30%
+    final_score = (semester_score * 0.4) + (weekly_score * 0.3) + (module_score * 0.3)
+    
+    # Adjust with previous GPA (20% influence)
+    final_score = (final_score * 0.8) + (request.previous_gpa * 0.2)
+    
+    final_score = min(4.0, max(0, final_score))
+    predicted_grade = numeric_to_grade(final_score)
+    
+    # Calculate confidence based on data completeness
+    confidence = 50 + (semester_score / 4.0 * 20) + (weekly_score / 4.0 * 15) + (module_score / 4.0 * 15)
+    confidence = min(95, max(50, confidence))
     
     # Save prediction
     prediction_id = prediction_counter
@@ -389,62 +418,79 @@ def predict_complete(request: CompletePredictionRequest, token: str):
         "user_id": user_id,
         "course_code": request.module.module_code,
         "predicted_grade": predicted_grade,
-        "confidence": confidence,
-        "input_data": prediction_data,
-        "actual_grade": None,
+        "confidence": round(confidence, 1),
+        "semester_score": round(semester_score, 2),
+        "weekly_score": round(weekly_score, 2),
+        "module_score": round(module_score, 2),
+        "extracurricular_factor": round(extracurricular_factor, 2),
         "created_at": datetime.utcnow().isoformat()
     }
     
+    # Generate recommendations
+    recommendations = generate_recommendations(
+        predicted_grade, semester_score, weekly_score, module_score,
+        request.semester, request.weekly, request.module, extracurricular_data
+    )
+    
     return {
         "predicted_grade": predicted_grade,
-        "confidence": confidence,
-        "recommendations": recommendations,
-        "factors_analysis": {
-            "semester_factor": round(semester_factor, 2),
-            "weekly_performance": round(weekly_score * 100, 1),
-            "module_factor": round(module_factor, 2),
-            "parental_factor": round(parent_factor, 2),
-            "previous_gpa": request.previous_gpa,
-            "study_hours": request.weekly.study_hours,
-            "attendance": request.weekly.attendance,
-            "assignments": request.weekly.assignments
+        "confidence": round(confidence, 1),
+        "scores": {
+            "semester_format": round(semester_score, 2),
+            "weekly_format": round(weekly_score, 2),
+            "module_format": round(module_score, 2)
         },
+        "extracurricular": {
+            "factor": round(extracurricular_factor, 2),
+            "events_count": request.extracurricular.events_count,
+            "event_types": request.extracurricular.event_types,
+            "hours_per_week": request.extracurricular.event_hours_per_week
+        },
+        "recommendations": recommendations,
         "prediction_id": prediction_id
     }
 
-def generate_detailed_recommendations(grade, confidence, weekly_score, module_factor, study_hours, attendance, assignments):
-    recommendations = []
+def generate_recommendations(grade, semester_score, weekly_score, module_score, semester, weekly, module, extracurricular):
+    recs = []
     
-    # Grade-based recommendations
+    # Grade-based
     if grade in ['D', 'F']:
-        recommendations.append("🚨 CRITICAL: Schedule immediate meeting with academic advisor")
+        recs.append("🚨 URGENT: Schedule meeting with academic advisor immediately")
     
-    # Study hours recommendations
-    if study_hours < 15:
-        recommendations.append(f"📚 INCREASE STUDY HOURS: Currently {study_hours}/week. Aim for 20-25 hours per course")
-    elif study_hours > 30:
-        recommendations.append("⚠️ Monitor burnout risk. Ensure quality over quantity")
+    # Semester format recommendations
+    if semester_score < 2.5:
+        recs.append(f"📚 IMPROVE SEMESTER PERFORMANCE: Increase study hours ({semester.study_hours}/week recommended: 20-25)")
+        if semester.attendance < 80:
+            recs.append("📅 BOOST ATTENDANCE: Current semester attendance is low. Aim for 85%+")
+        if semester.assignments < 75:
+            recs.append("📝 COMPLETE ASSIGNMENTS: Submit all semester assignments on time")
     
-    # Attendance recommendations
-    if attendance < 80:
-        recommendations.append("📅 IMPROVE ATTENDANCE: Missing lectures affects understanding. Aim for 90%+")
+    # Weekly format recommendations
+    if weekly_score < 2.5:
+        recs.append(f"⏰ IMPROVE WEEKLY CONSISTENCY: Current consistency score {weekly.consistency}%")
+        if weekly.attendance < 80:
+            recs.append("📆 WEEKLY ATTENDANCE: Attend all lectures this week")
     
-    # Assignments recommendations
-    if assignments < 70:
-        recommendations.append("📝 COMPLETE ASSIGNMENTS: Submit all assignments on time for better understanding")
+    # Module format recommendations
+    if module_score < 2.5:
+        recs.append(f"📖 FOCUS ON MODULE: Spend more time on {module.module_code}")
+        if module.study_hours < 10:
+            recs.append(f"⏱️ INCREASE MODULE STUDY TIME: Currently {module.study_hours}hrs/week, aim for 12-15")
     
-    # Weekly performance
-    if weekly_score < 0.6:
-        recommendations.append("📊 IMPROVE WEEKLY ENGAGEMENT: Participate actively in tutorials and lab sessions")
+    # Extracurricular recommendations
+    if extracurricular["events_count"] > 8:
+        recs.append("⚖️ BALANCE EXTRACURRICULARS: Too many activities may affect studies. Consider reducing to 3-5 events")
+    elif extracurricular["events_count"] == 0:
+        recs.append("🌟 GET INVOLVED: Join academic clubs or participate in extracurricular activities for holistic development")
     
-    # Module-specific
-    if module_factor < 0.7:
-        recommendations.append("📖 MODULE PREPARATION: Review prerequisites and strengthen foundation")
+    # Parental level recommendations
+    if semester.parental_level == "none" or semester.parental_level == "primary":
+        recs.append("👨‍👩‍👧 SEEK SUPPORT: Discuss your academic goals with family for encouragement")
     
-    if not recommendations:
-        recommendations.append("🌟 EXCELLENT PROGRESS! Maintain consistency and consider helping peers")
+    if not recs:
+        recs.append("🌟 EXCELLENT! Maintain your current strategy. You're on track for success!")
     
-    return " | ".join(recommendations)
+    return " | ".join(recs)
 
 @app.get("/api/dashboard/stats")
 def dashboard_stats(token: str):
