@@ -16,11 +16,51 @@ from datetime import datetime
 # DATA STORAGE
 # ============================================
 
-users_db = {}`n# Ensure users have proper role`nfor user in users_db.values():`n    if "role" not in user:`n        user["role"] = "student"
+users_db = {}
 tokens_db = {}
 predictions_db = {}
+courses_db = {}
+enrollments_db = {}
 user_counter = 1
 prediction_counter = 1
+course_counter = 1
+enrollment_counter = 1
+
+# Sample courses for testing
+courses_db[1] = {
+    "id": 1,
+    "course_code": "ITE301",
+    "course_name": "Advanced Web Development",
+    "credits": 3,
+    "lecturer_id": 1001,
+    "lecturer_name": "Dr. John Smith",
+    "department": "Information Technology",
+    "semester": "2024/2025",
+    "capacity": 30,
+    "enrolled": 0,
+    "created_at": datetime.utcnow().isoformat()
+}
+
+courses_db[2] = {
+    "id": 2,
+    "course_code": "ITE302",
+    "course_name": "Database Management Systems",
+    "credits": 3,
+    "lecturer_id": 1001,
+    "lecturer_name": "Dr. John Smith",
+    "department": "Information Technology",
+    "semester": "2024/2025",
+    "capacity": 25,
+    "enrolled": 0,
+    "created_at": datetime.utcnow().isoformat()
+}
+
+course_counter = 3
+
+# Ensure users have proper role
+for user in users_db.values():
+    if "role" not in user:
+        user["role"] = "student"
 
 # ============================================
 # HELPER FUNCTIONS
@@ -56,7 +96,6 @@ def numeric_to_grade(value):
     return 'F'
 
 def get_grade_description(grade):
-    """Return description based on USTED grading system"""
     descriptions = {
         'A': 'Excellent - Outstanding performance',
         'A-': 'Excellent - Very strong performance',
@@ -73,7 +112,6 @@ def get_grade_description(grade):
     return descriptions.get(grade, 'Grade not recognized')
 
 def get_grade_category(grade):
-    """Return category based on USTED grading system"""
     categories = {
         'A': 'Excellent', 'A-': 'Excellent',
         'B+': 'Very Good', 'B': 'Good', 'B-': 'Good',
@@ -84,7 +122,6 @@ def get_grade_category(grade):
     return categories.get(grade, 'Unknown')
 
 def get_parental_factor(parental_level):
-    """Convert parental education level to factor"""
     factors = {
         "none": 0.6,
         "primary": 0.7,
@@ -114,7 +151,6 @@ def get_module_type_factor(module_type):
     return factors.get(module_type.lower(), 1.0)
 
 def calculate_base_score(assignments, attendance, engagement, parental_level, study_hours):
-    """Calculate base score from core factors (0-4 scale)"""
     assignments_factor = assignments / 100
     attendance_factor = attendance / 100
     engagement_factor = engagement / 100
@@ -131,7 +167,6 @@ def calculate_base_score(assignments, attendance, engagement, parental_level, st
     return score * 4.0
 
 def calculate_confidence(scores):
-    """Calculate confidence based on data consistency"""
     base_confidence = 50
     for s in scores:
         base_confidence += (s / 4.0) * 10
@@ -244,10 +279,10 @@ def register(user: dict):
         "email": user.get("email"),
         "full_name": user.get("full_name"),
         "student_id": user.get("student_id"),
+        "role": "student",
         "created_at": datetime.utcnow().isoformat()
     }
     return {"id": user_id, "username": user.get("username")}
-
 
 @app.post("/api/login")
 def login(request: dict):
@@ -288,7 +323,7 @@ def verify(token: str):
     raise HTTPException(401, "Invalid token")
 
 # ============================================
-# SEMESTER FORMAT PREDICTION
+# PREDICTION ENDPOINTS
 # ============================================
 
 @app.post("/api/predict-semester", response_model=PredictionResponse)
@@ -300,7 +335,6 @@ def predict_semester(request: SemesterPredictionRequest, token: str):
 
     user_id = tokens_db[token]
 
-    # Calculate base score
     base_score = calculate_base_score(
         request.assignments,
         request.attendance,
@@ -309,27 +343,19 @@ def predict_semester(request: SemesterPredictionRequest, token: str):
         request.study_hours
     )
 
-    # Semester type factor
     semester_factor = get_semester_type_factor(request.semester_type)
-
-    # Semester progression factor
     progression_factor = 1 - ((request.current_semester - 1) / request.total_semesters) * 0.15
 
-    # Final score
     final_score = base_score * semester_factor * progression_factor
     final_score = (final_score * 0.8) + (request.previous_gpa * 0.2)
     final_score = min(4.0, max(0, final_score))
 
     predicted_grade = numeric_to_grade(final_score)
-
-    # Calculate confidence
     scores = [base_score, semester_factor * 4, progression_factor * 4]
     confidence = calculate_confidence(scores)
 
-    # Factors summary
     factors_summary = f"Semester: {request.semester_type} | Assignments: {request.assignments}% | Attendance: {request.attendance}% | Engagement: {request.engagement}% | Study Hours: {request.study_hours}/week"
 
-    # Recommendations
     recommendations = generate_recommendations(predicted_grade, [final_score], {
         "assignments": request.assignments,
         "attendance": request.attendance,
@@ -338,7 +364,6 @@ def predict_semester(request: SemesterPredictionRequest, token: str):
         "parental_level": request.parental_level
     })
 
-    # Save prediction
     prediction_id = prediction_counter
     prediction_counter += 1
 
@@ -361,10 +386,6 @@ def predict_semester(request: SemesterPredictionRequest, token: str):
         factors_summary=factors_summary
     )
 
-# ============================================
-# WEEKLY FORMAT PREDICTION
-# ============================================
-
 @app.post("/api/predict-weekly", response_model=PredictionResponse)
 def predict_weekly(request: WeeklyPredictionRequest, token: str):
     global prediction_counter
@@ -374,7 +395,6 @@ def predict_weekly(request: WeeklyPredictionRequest, token: str):
 
     user_id = tokens_db[token]
 
-    # Calculate base score
     base_score = calculate_base_score(
         request.assignments,
         request.attendance,
@@ -383,30 +403,20 @@ def predict_weekly(request: WeeklyPredictionRequest, token: str):
         request.study_hours
     )
 
-    # Week progression factor
     week_factor = 1 - ((request.week_number - 1) / request.total_weeks) * 0.1
-
-    # Consistency factor
     consistency_factor = 0.9 + (request.consistency / 100) * 0.1
-
-    # Semester type influence
     semester_factor = get_semester_type_factor(request.semester_type)
 
-    # Final score
     final_score = base_score * week_factor * consistency_factor * semester_factor
     final_score = (final_score * 0.8) + (request.previous_gpa * 0.2)
     final_score = min(4.0, max(0, final_score))
 
     predicted_grade = numeric_to_grade(final_score)
-
-    # Calculate confidence
     scores = [base_score, week_factor * 4, consistency_factor * 4]
     confidence = calculate_confidence(scores)
 
-    # Factors summary
     factors_summary = f"Week {request.week_number}/{request.total_weeks} | Consistency: {request.consistency}% | Assignments: {request.assignments}% | Attendance: {request.attendance}% | Study Hours: {request.study_hours}/week"
 
-    # Recommendations
     recommendations = generate_recommendations(predicted_grade, [final_score], {
         "assignments": request.assignments,
         "attendance": request.attendance,
@@ -415,11 +425,9 @@ def predict_weekly(request: WeeklyPredictionRequest, token: str):
         "parental_level": request.parental_level
     })
 
-    # Add weekly-specific recommendation
     if request.consistency < 70:
         recommendations = f"📊 IMPROVE CONSISTENCY: Your consistency score is {request.consistency}%. | {recommendations}"
 
-    # Save prediction
     prediction_id = prediction_counter
     prediction_counter += 1
 
@@ -442,10 +450,6 @@ def predict_weekly(request: WeeklyPredictionRequest, token: str):
         factors_summary=factors_summary
     )
 
-# ============================================
-# MODULE FORMAT PREDICTION
-# ============================================
-
 @app.post("/api/predict-module", response_model=PredictionResponse)
 def predict_module(request: ModulePredictionRequest, token: str):
     global prediction_counter
@@ -455,11 +459,9 @@ def predict_module(request: ModulePredictionRequest, token: str):
 
     user_id = tokens_db[token]
 
-    # Validate module code format
     if request.module_code and not re.match(r'^[A-Z]{2,4}\d{3,4}$', request.module_code.upper()):
         raise HTTPException(400, "Invalid module code format. Use format like ITE301")
 
-    # Calculate base score
     base_score = calculate_base_score(
         request.assignments,
         request.attendance,
@@ -468,30 +470,20 @@ def predict_module(request: ModulePredictionRequest, token: str):
         request.study_hours
     )
 
-    # Module type factor
     module_factor = get_module_type_factor(request.module_type)
-
-    # Credit hours factor
     credit_factor = min(1.2, request.credit_hours / 3)
-
-    # Semester type factor
     semester_factor = get_semester_type_factor(request.semester_type)
 
-    # Final score
     final_score = base_score * module_factor * credit_factor * semester_factor
     final_score = (final_score * 0.8) + (request.previous_gpa * 0.2)
     final_score = min(4.0, max(0, final_score))
 
     predicted_grade = numeric_to_grade(final_score)
-
-    # Calculate confidence
     scores = [base_score, module_factor * 4, credit_factor * 4]
     confidence = calculate_confidence(scores)
 
-    # Factors summary
     factors_summary = f"Module: {request.module_code} ({request.module_type}) | Credits: {request.credit_hours} | Assignments: {request.assignments}% | Attendance: {request.attendance}% | Study Hours: {request.study_hours}/week"
 
-    # Recommendations
     recommendations = generate_recommendations(predicted_grade, [final_score], {
         "assignments": request.assignments,
         "attendance": request.attendance,
@@ -500,11 +492,9 @@ def predict_module(request: ModulePredictionRequest, token: str):
         "parental_level": request.parental_level
     })
 
-    # Add module-specific recommendation
     if request.module_type == "core" and final_score < 2.5:
         recommendations = f"⚠️ CORE MODULE ALERT: This is a core course. Focus extra attention. {recommendations}"
 
-    # Save prediction
     prediction_id = prediction_counter
     prediction_counter += 1
 
@@ -610,17 +600,6 @@ def update_profile(request: dict, token: str):
 
     return {"success": True, "message": "Profile updated successfully"}
 
-# ✅ CORRECT — move uvicorn.run to the very END of the file
-# ... all routes defined above ...
-
-# ✅ CORRECT — move uvicorn.run to the very END of the file
-# ... all routes defined above ...
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
-
-
 # ============================================
 # LECTURER ENDPOINTS
 # ============================================
@@ -630,25 +609,13 @@ class LecturerLoginRequest(BaseModel):
     password: str
     role: str = "lecturer"
 
-class LecturerProfile(BaseModel):
-    id: int
-    username: str
-    full_name: str
-    email: str
-    department: str
-    courses: List[str] = []
-
 @app.post("/api/lecturer/login")
 def lecturer_login(request: LecturerLoginRequest):
-    """Login for lecturers - checks users_db first, falls back to demo account"""
-
-    # 1️⃣ Check registered lecturers in users_db
+    """Login for lecturers"""
     for u in users_db.values():
-        if (
-            u.get("role") == "lecturer"
-            and (u["username"] == request.username or u.get("email") == request.username or u.get("lecturer_id") == request.username)
-            and verify_password(request.password, u["password_hash"])
-        ):
+        if (u.get("role") == "lecturer" and 
+            (u["username"] == request.username or u.get("email") == request.username or u.get("lecturer_id") == request.username) and
+            verify_password(request.password, u["password_hash"])):
             token = generate_token()
             tokens_db[token] = u["id"]
             return {
@@ -663,335 +630,10 @@ def lecturer_login(request: LecturerLoginRequest):
                     "department": u.get("department", "Information Technology")
                 }
             }
-
-    # 2️⃣ Demo fallback (for testing only — remove in production)
-    DEMO_ACCOUNTS = {
-        "lecturer": {"password": "lecturer123", "name": "Dr. Demo Lecturer"},
-        "dr.smith": {"password": "smith123", "name": "Dr. John Smith"},
-    }
-    demo = DEMO_ACCOUNTS.get(request.username)
-    if demo and request.password == demo["password"]:
-        lecturer_id = 1001
-        token = generate_token()
-        tokens_db[token] = lecturer_id
-        users_db[lecturer_id] = {
-            "id": lecturer_id,
-            "username": request.username,
-            "full_name": demo["name"],
-            "email": f"{request.username}@usted.edu.gh",
-            "department": "Information Technology",
-            "role": "lecturer",
-            "courses": ["ITE301", "ITE302", "ITE303"],
-            "password_hash": hash_password(demo["password"])
-        }
-        return {
-            "token": token,
-            "user": {
-                "id": lecturer_id,
-                "username": request.username,
-                "full_name": demo["name"],
-                "email": f"{request.username}@usted.edu.gh",
-                "role": "lecturer"
-            }
-        }
-
-    raise HTTPException(status_code=401, detail="Invalid lecturer credentials")
-
-
-@app.get("/api/lecturer/profile")
-def lecturer_profile(token: str):
-    """Get lecturer profile"""
-    if token not in tokens_db:
-        raise HTTPException(401, "Invalid token")
-    
-    user_id = tokens_db[token]
-    u = users_db.get(user_id)
-    
-    if not u or u.get("role") != "lecturer":
-        raise HTTPException(403, "Access denied. Lecturer only.")
-    
-    return {
-        "id": u["id"],
-        "username": u["username"],
-        "full_name": u["full_name"],
-        "email": u["email"],
-        "lecturer_id": u.get("lecturer_id", u["username"]),
-        "department": u.get("department", "Information Technology"),
-        "courses": u.get("courses", [])
-    }
-
-@app.get("/api/lecturer/stats")
-def lecturer_stats(token: str):
-    """Get overall statistics for lecturer's courses"""
-    if token not in tokens_db:
-        raise HTTPException(401, "Invalid token")
-    
-    user_id = tokens_db[token]
-    u = users_db.get(user_id)
-    
-    if not u or u.get("role") != "lecturer":
-        raise HTTPException(403, "Access denied. Lecturer only.")
-    
-    lecturer_courses = u.get("courses", [])
-    
-    # Get all predictions for courses taught by this lecturer
-    course_predictions = [p for p in predictions_db.values() if p.get("course_code") in lecturer_courses]
-    
-    # Get all students who made predictions in these courses
-    student_ids = set(p["user_id"] for p in course_predictions)
-    
-    # Calculate stats
-    total_students = len(student_ids)
-    at_risk_count = len([p for p in course_predictions if p.get("predicted_grade") in ['D', 'F', 'D+']])
-    avg_grades = [grade_to_numeric(p.get("predicted_grade", 'C')) for p in course_predictions]
-    avg_gpa = sum(avg_grades) / len(avg_grades) if avg_grades else 0
-    
-    return {
-        "total_students": total_students,
-        "at_risk_count": at_risk_count,
-        "avg_predicted_gpa": round(avg_gpa, 2),
-        "total_predictions": len(course_predictions)
-    }
-
-@app.get("/api/lecturer/students")
-def lecturer_students(token: str):
-    """Get all students in lecturer's courses with their latest predictions"""
-    if token not in tokens_db:
-        raise HTTPException(401, "Invalid token")
-    
-    user_id = tokens_db[token]
-    u = users_db.get(user_id)
-    
-    if not u or u.get("role") != "lecturer":
-        raise HTTPException(403, "Access denied. Lecturer only.")
-    
-    lecturer_courses = u.get("courses", [])
-    
-    # Get all predictions for lecturer's courses
-    course_predictions = [p for p in predictions_db.values() if p.get("course_code") in lecturer_courses]
-    
-    # Group by student
-    student_data = {}
-    for p in course_predictions:
-        student_id = p["user_id"]
-        if student_id not in student_data:
-            student = users_db.get(student_id, {})
-            student_data[student_id] = {
-                "student_id": student.get("student_id", f"STU{student_id}"),
-                "full_name": student.get("full_name", f"Student {student_id}"),
-                "latest_grade": p["predicted_grade"],
-                "confidence": p["confidence"],
-                "course_code": p.get("course_code"),
-                "last_active": p["created_at"]
-            }
-        else:
-            # Update if this prediction is newer
-            if p["created_at"] > student_data[student_id]["last_active"]:
-                student_data[student_id]["latest_grade"] = p["predicted_grade"]
-                student_data[student_id]["confidence"] = p["confidence"]
-                student_data[student_id]["last_active"] = p["created_at"]
-    
-    # Calculate risk level
-    result = []
-    for s in student_data.values():
-        grade = s["latest_grade"]
-        if grade in ['D', 'F', 'D+']:
-            risk = "high"
-        elif grade in ['C', 'C+', 'C-']:
-            risk = "medium"
-        else:
-            risk = "low"
-        
-        result.append({
-            "student_id": s["student_id"],
-            "full_name": s["full_name"],
-            "course_code": s["course_code"],
-            "latest_grade": s["latest_grade"],
-            "confidence": s["confidence"],
-            "risk_level": risk,
-            "last_active": s["last_active"]
-        })
-    
-    return result
-
-@app.get("/api/lecturer/courses")
-def lecturer_courses(token: str):
-    """Get all courses taught by lecturer with statistics"""
-    if token not in tokens_db:
-        raise HTTPException(401, "Invalid token")
-    
-    user_id = tokens_db[token]
-    u = users_db.get(user_id)
-    
-    if not u or u.get("role") != "lecturer":
-        raise HTTPException(403, "Access denied. Lecturer only.")
-    
-    lecturer_courses = u.get("courses", [])
-    
-    result = []
-    for course in lecturer_courses:
-        course_predictions = [p for p in predictions_db.values() if p.get("course_code") == course]
-        student_ids = set(p["user_id"] for p in course_predictions)
-        at_risk = len([p for p in course_predictions if p.get("predicted_grade") in ['D', 'F', 'D+']])
-        avg_grades = [grade_to_numeric(p.get("predicted_grade", 'C')) for p in course_predictions]
-        avg_grade = sum(avg_grades) / len(avg_grades) if avg_grades else 0
-        avg_letter = numeric_to_grade(avg_grade)
-        
-        result.append({
-            "course_code": course,
-            "course_name": f"Advanced {course}",
-            "student_count": len(student_ids),
-            "avg_grade": avg_letter,
-            "at_risk_count": at_risk
-        })
-    
-    return result
-
-@app.get("/api/lecturer/alerts")
-def lecturer_alerts(token: str):
-    """Get at-risk students that need attention"""
-    if token not in tokens_db:
-        raise HTTPException(401, "Invalid token")
-    
-    user_id = tokens_db[token]
-    u = users_db.get(user_id)
-    
-    if not u or u.get("role") != "lecturer":
-        raise HTTPException(403, "Access denied. Lecturer only.")
-    
-    lecturer_courses = u.get("courses", [])
-    
-    # Get at-risk predictions
-    at_risk_predictions = [
-        p for p in predictions_db.values() 
-        if p.get("course_code") in lecturer_courses and p.get("predicted_grade") in ['D', 'F', 'D+']
-    ]
-    
-    result = []
-    for p in at_risk_predictions:
-        student = users_db.get(p["user_id"], {})
-        result.append({
-            "student_id": student.get("student_id", f"STU{p['user_id']}"),
-            "student_name": student.get("full_name", f"Student {p['user_id']}"),
-            "course_code": p.get("course_code"),
-            "predicted_grade": p["predicted_grade"],
-            "confidence": p["confidence"],
-            "risk_level": "high" if p["predicted_grade"] in ['F'] else "medium",
-            "recommendation": "Immediate academic intervention recommended" if p["predicted_grade"] == 'F' else "Monitor progress, consider additional support"
-        })
-    
-    return result
-
-@app.get("/api/lecturer/analytics")
-def lecturer_analytics(token: str):
-    """Get analytics data for charts"""
-    if token not in tokens_db:
-        raise HTTPException(401, "Invalid token")
-    
-    user_id = tokens_db[token]
-    u = users_db.get(user_id)
-    
-    if not u or u.get("role") != "lecturer":
-        raise HTTPException(403, "Access denied. Lecturer only.")
-    
-    lecturer_courses = u.get("courses", [])
-    course_predictions = [p for p in predictions_db.values() if p.get("course_code") in lecturer_courses]
-    
-    # Grade distribution
-    grade_counts = {"A": 0, "B": 0, "C": 0, "D": 0, "F": 0}
-    for p in course_predictions:
-        grade = p["predicted_grade"]
-        if grade.startswith('A'):
-            grade_counts["A"] += 1
-        elif grade.startswith('B'):
-            grade_counts["B"] += 1
-        elif grade.startswith('C'):
-            grade_counts["C"] += 1
-        elif grade.startswith('D'):
-            grade_counts["D"] += 1
-        else:
-            grade_counts["F"] += 1
-    
-    # Risk distribution
-    risk_counts = {"low": 0, "medium": 0, "high": 0}
-    for p in course_predictions:
-        grade = p["predicted_grade"]
-        if grade in ['A', 'B', 'B+', 'B-']:
-            risk_counts["low"] += 1
-        elif grade in ['C', 'C+', 'C-']:
-            risk_counts["medium"] += 1
-        else:
-            risk_counts["high"] += 1
-    
-    return {
-        "grade_a": grade_counts["A"],
-        "grade_b": grade_counts["B"],
-        "grade_c": grade_counts["C"],
-        "grade_d": grade_counts["D"],
-        "grade_f": grade_counts["F"],
-        "low_risk": risk_counts["low"],
-        "medium_risk": risk_counts["medium"],
-        "high_risk": risk_counts["high"],
-        "weeks": ["Week 1", "Week 2", "Week 3", "Week 4"],
-        "trend_data": [3.2, 3.1, 3.3, 3.4]
-    }
-
-@app.post("/api/lecturer/predict-student")
-def lecturer_predict_student(request: dict, token: str):
-    """Lecturer predicts performance for a specific student"""
-    if token not in tokens_db:
-        raise HTTPException(401, "Invalid token")
-    
-    user_id = tokens_db[token]
-    u = users_db.get(user_id)
-    
-    if not u or u.get("role") != "lecturer":
-        raise HTTPException(403, "Access denied. Lecturer only.")
-    
-    # Calculate prediction using existing logic
-    grade_value = grade_to_numeric(request.get("current_grade", "C"))
-    study_hours = min(40, max(0, request.get("study_hours", 10)))
-    attendance = request.get("attendance", 75) / 100
-    assignments = request.get("assignments", 70) / 100
-    parental_factor = get_parental_factor(request.get("parental_level", "secondary"))
-    study_factor = min(1.0, study_hours / 25)
-    
-    final_score = (grade_value * 0.25 + study_factor * 4.0 * 0.15 + assignments * 4.0 * 0.25 + attendance * 4.0 * 0.25 + parental_factor * 0.10)
-    final_score = min(4.0, max(0, final_score))
-    predicted_grade = numeric_to_grade(final_score)
-    confidence = 50 + (study_hours / 2) + (attendance * 20) + (assignments * 20)
-    confidence = min(95, max(50, confidence))
-    
-    recommendations = f"Student: {request.get('student_id')} - Keep improving study habits. Current study hours: {study_hours}/week"
-    
-    return {
-        "predicted_grade": predicted_grade,
-        "confidence": round(confidence, 1),
-        "grade_description": get_grade_description(predicted_grade),
-        "recommendations": recommendations
-    }
-
-@app.get("/api/student/predict/data")
-def get_student_predict_data(student_id: str, token: str):
-    """Get student data for prediction (placeholder)"""
-    if token not in tokens_db:
-        raise HTTPException(401, "Invalid token")
-    
-    return {
-        "course_code": "ITE301",
-        "semester": 3,
-        "study_hours": 12,
-        "attendance": 80,
-        "assignments": 75
-    }
-
-# ============================================
-# LECTURER REGISTRATION AND AUTHENTICATION
-# ============================================
+    raise HTTPException(401, "Invalid lecturer credentials")
 
 @app.post("/api/lecturer/register")
 def lecturer_register(request: dict):
-    """Register a new lecturer account"""
     global user_counter
     
     username = request.get("username") or request.get("lecturer_id")
@@ -1001,11 +643,9 @@ def lecturer_register(request: dict):
     department = request.get("department", "Information Technology")
     password = request.get("password")
     
-    # Validate input
     if not username or not email or not full_name or not lecturer_id or not password:
         raise HTTPException(400, "All fields are required")
     
-    # Check if username already exists
     for u in users_db.values():
         if u.get("username") == username:
             raise HTTPException(400, "Username already taken")
@@ -1044,51 +684,43 @@ def lecturer_register(request: dict):
         }
     }
 
+@app.get("/api/lecturer/profile")
+def lecturer_profile(token: str):
+    if token not in tokens_db:
+        raise HTTPException(401, "Invalid token")
+    
+    user_id = tokens_db[token]
+    u = users_db.get(user_id)
+    
+    if not u or u.get("role") != "lecturer":
+        raise HTTPException(403, "Access denied. Lecturer only.")
+    
+    return {
+        "id": u["id"],
+        "username": u["username"],
+        "full_name": u["full_name"],
+        "email": u["email"],
+        "lecturer_id": u.get("lecturer_id", u["username"]),
+        "department": u.get("department", "Information Technology"),
+        "courses": u.get("courses", [])
+    }
 
-
-
-# ============================================
-# COURSE MANAGEMENT ENDPOINTS
-# ============================================
-
-# In-memory course storage
-courses_db = {}
-enrollments_db = {}
-course_counter = 4  # Start after sample courses
-enrollment_counter = 1
-
-# Sample courses
-courses_db[1] = {
-    "id": 1,
-    "course_code": "ITE301",
-    "course_name": "Advanced Web Development",
-    "credits": 3,
-    "lecturer_id": 1001,
-    "lecturer_name": "Dr. John Smith",
-    "department": "Information Technology",
-    "semester": "2024/2025",
-    "capacity": 30,
-    "enrolled": 0,
-    "created_at": datetime.utcnow().isoformat()
-}
-
-courses_db[2] = {
-    "id": 2,
-    "course_code": "ITE302",
-    "course_name": "Database Management Systems",
-    "credits": 3,
-    "lecturer_id": 1001,
-    "lecturer_name": "Dr. John Smith",
-    "department": "Information Technology",
-    "semester": "2024/2025",
-    "capacity": 25,
-    "enrolled": 0,
-    "created_at": datetime.utcnow().isoformat()
-}
+@app.get("/api/lecturer/courses/manage")
+def lecturer_courses_manage(token: str):
+    if token not in tokens_db:
+        raise HTTPException(401, "Invalid token")
+    
+    user_id = tokens_db[token]
+    u = users_db.get(user_id)
+    
+    if not u or u.get("role") != "lecturer":
+        raise HTTPException(403, "Access denied. Lecturer only.")
+    
+    lecturer_courses = [c for c in courses_db.values() if c["lecturer_id"] == user_id]
+    return lecturer_courses
 
 @app.post("/api/lecturer/courses/create")
 def create_course(request: dict, token: str):
-    """Lecturer creates a new course"""
     global course_counter
     
     if token not in tokens_db:
@@ -1106,7 +738,6 @@ def create_course(request: dict, token: str):
     capacity = request.get("capacity", 30)
     semester = request.get("semester", "2024/2025")
     
-    # Check if course code already exists
     for c in courses_db.values():
         if c["course_code"] == course_code:
             raise HTTPException(400, f"Course {course_code} already exists")
@@ -1128,7 +759,6 @@ def create_course(request: dict, token: str):
         "created_at": datetime.utcnow().isoformat()
     }
     
-    # Add to lecturer's course list
     if "courses" not in u:
         u["courses"] = []
     u["courses"].append(course_code)
@@ -1139,25 +769,8 @@ def create_course(request: dict, token: str):
         "course": courses_db[course_id]
     }
 
-@app.get("/api/lecturer/courses/manage")
-def lecturer_courses_manage(token: str):
-    """Get all courses created by this lecturer"""
-    if token not in tokens_db:
-        raise HTTPException(401, "Invalid token")
-    
-    user_id = tokens_db[token]
-    u = users_db.get(user_id)
-    
-    if not u or u.get("role") != "lecturer":
-        raise HTTPException(403, "Access denied. Lecturer only.")
-    
-    lecturer_courses = [c for c in courses_db.values() if c["lecturer_id"] == user_id]
-    
-    return lecturer_courses
-
 @app.get("/api/lecturer/courses/{course_id}/students")
 def get_course_students(course_id: int, token: str):
-    """Get all students enrolled in a specific course"""
     if token not in tokens_db:
         raise HTTPException(401, "Invalid token")
     
@@ -1180,8 +793,7 @@ def get_course_students(course_id: int, token: str):
             "student_id": student.get("student_id", f"STU{e['student_id']}"),
             "full_name": student.get("full_name", "Unknown"),
             "email": student.get("email", ""),
-            "enrolled_at": e["enrolled_at"],
-            "status": e.get("status", "active")
+            "enrolled_at": e["enrolled_at"]
         })
     
     return {
@@ -1190,9 +802,94 @@ def get_course_students(course_id: int, token: str):
         "students": students
     }
 
+@app.get("/api/lecturer/students")
+def lecturer_students(token: str):
+    if token not in tokens_db:
+        raise HTTPException(401, "Invalid token")
+    
+    user_id = tokens_db[token]
+    u = users_db.get(user_id)
+    
+    if not u or u.get("role") != "lecturer":
+        raise HTTPException(403, "Access denied. Lecturer only.")
+    
+    lecturer_courses = u.get("courses", [])
+    course_predictions = [p for p in predictions_db.values() if p.get("course_code") in lecturer_courses]
+    
+    student_data = {}
+    for p in course_predictions:
+        student_id = p["user_id"]
+        if student_id not in student_data:
+            student = users_db.get(student_id, {})
+            student_data[student_id] = {
+                "student_id": student.get("student_id", f"STU{student_id}"),
+                "full_name": student.get("full_name", f"Student {student_id}"),
+                "latest_grade": p["predicted_grade"],
+                "confidence": p["confidence"],
+                "course_code": p.get("course_code"),
+                "last_active": p["created_at"]
+            }
+    
+    result = []
+    for s in student_data.values():
+        grade = s["latest_grade"]
+        if grade in ['D', 'F', 'D+']:
+            risk = "high"
+        elif grade in ['C', 'C+', 'C-']:
+            risk = "medium"
+        else:
+            risk = "low"
+        
+        result.append({
+            "student_id": s["student_id"],
+            "full_name": s["full_name"],
+            "course_code": s["course_code"],
+            "latest_grade": s["latest_grade"],
+            "confidence": s["confidence"],
+            "risk_level": risk,
+            "last_active": s["last_active"]
+        })
+    
+    return result
+
+@app.get("/api/lecturer/alerts")
+def lecturer_alerts(token: str):
+    if token not in tokens_db:
+        raise HTTPException(401, "Invalid token")
+    
+    user_id = tokens_db[token]
+    u = users_db.get(user_id)
+    
+    if not u or u.get("role") != "lecturer":
+        raise HTTPException(403, "Access denied. Lecturer only.")
+    
+    lecturer_courses = u.get("courses", [])
+    at_risk_predictions = [
+        p for p in predictions_db.values() 
+        if p.get("course_code") in lecturer_courses and p.get("predicted_grade") in ['D', 'F', 'D+']
+    ]
+    
+    result = []
+    for p in at_risk_predictions:
+        student = users_db.get(p["user_id"], {})
+        result.append({
+            "student_id": student.get("student_id", f"STU{p['user_id']}"),
+            "student_name": student.get("full_name", f"Student {p['user_id']}"),
+            "course_code": p.get("course_code"),
+            "predicted_grade": p["predicted_grade"],
+            "confidence": p["confidence"],
+            "risk_level": "high" if p["predicted_grade"] in ['F'] else "medium",
+            "recommendation": "Immediate academic intervention recommended" if p["predicted_grade"] == 'F' else "Monitor progress, consider additional support"
+        })
+    
+    return result
+
+# ============================================
+# STUDENT COURSE ENDPOINTS
+# ============================================
+
 @app.get("/api/student/courses/available")
 def get_available_courses(token: str):
-    """Get all courses available for enrollment"""
     if token not in tokens_db:
         raise HTTPException(401, "Invalid token")
     
@@ -1222,7 +919,6 @@ def get_available_courses(token: str):
 
 @app.get("/api/student/courses/my-courses")
 def get_my_courses(token: str):
-    """Get all courses student is enrolled in"""
     if token not in tokens_db:
         raise HTTPException(401, "Invalid token")
     
@@ -1252,7 +948,6 @@ def get_my_courses(token: str):
 
 @app.post("/api/student/courses/enroll")
 def enroll_course(request: dict, token: str):
-    """Student enrolls in a course"""
     global enrollment_counter
     
     if token not in tokens_db:
@@ -1299,7 +994,6 @@ def enroll_course(request: dict, token: str):
 
 @app.delete("/api/student/courses/drop/{course_id}")
 def drop_course(course_id: int, token: str):
-    """Student drops a course"""
     if token not in tokens_db:
         raise HTTPException(401, "Invalid token")
     
@@ -1325,3 +1019,10 @@ def drop_course(course_id: int, token: str):
     
     return {"success": True, "message": "Course dropped successfully"}
 
+# ============================================
+# MAIN
+# ============================================
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
