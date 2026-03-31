@@ -893,3 +893,52 @@ def lecturer_analytics(token: str):
         "weeks": ["Week 1", "Week 2", "Week 3", "Week 4"],
         "trend_data": [3.2, 3.1, 3.3, 3.4]
     }
+
+@app.post("/api/lecturer/predict-student")
+def lecturer_predict_student(request: dict, token: str):
+    """Lecturer predicts performance for a specific student"""
+    if token not in tokens_db:
+        raise HTTPException(401, "Invalid token")
+    
+    user_id = tokens_db[token]
+    u = users_db.get(user_id)
+    
+    if not u or u.get("role") != "lecturer":
+        raise HTTPException(403, "Access denied. Lecturer only.")
+    
+    # Calculate prediction using existing logic
+    grade_value = grade_to_numeric(request.get("current_grade", "C"))
+    study_hours = min(40, max(0, request.get("study_hours", 10)))
+    attendance = request.get("attendance", 75) / 100
+    assignments = request.get("assignments", 70) / 100
+    parental_factor = get_parental_factor(request.get("parental_level", "secondary"))
+    study_factor = min(1.0, study_hours / 25)
+    
+    final_score = (grade_value * 0.25 + study_factor * 4.0 * 0.15 + assignments * 4.0 * 0.25 + attendance * 4.0 * 0.25 + parental_factor * 0.10)
+    final_score = min(4.0, max(0, final_score))
+    predicted_grade = numeric_to_grade(final_score)
+    confidence = 50 + (study_hours / 2) + (attendance * 20) + (assignments * 20)
+    confidence = min(95, max(50, confidence))
+    
+    recommendations = f"Student: {request.get('student_id')} - Keep improving study habits. Current study hours: {study_hours}/week"
+    
+    return {
+        "predicted_grade": predicted_grade,
+        "confidence": round(confidence, 1),
+        "grade_description": get_grade_description(predicted_grade),
+        "recommendations": recommendations
+    }
+
+@app.get("/api/student/predict/data")
+def get_student_predict_data(student_id: str, token: str):
+    """Get student data for prediction (placeholder)"""
+    if token not in tokens_db:
+        raise HTTPException(401, "Invalid token")
+    
+    return {
+        "course_code": "ITE301",
+        "semester": 3,
+        "study_hours": 12,
+        "attendance": 80,
+        "assignments": 75
+    }
