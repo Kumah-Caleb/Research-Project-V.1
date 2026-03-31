@@ -1,0 +1,349 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>USTED | Enhanced Predictor</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .section-card {
+            margin-bottom: 20px;
+            border-left: 4px solid #003366;
+        }
+        .info-badge {
+            font-size: 0.8rem;
+            background-color: #e9ecef;
+            padding: 2px 8px;
+            border-radius: 12px;
+        }
+    </style>
+</head>
+<body>
+    <header class="bg-primary text-white py-3">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0">USTED</h1>
+                    <p class="mb-0 small">Enhanced Student Self-Assessment Predictor</p>
+                </div>
+                <nav>
+                    <a href="student_dashboard.html" class="text-white me-3">Dashboard</a>
+                    <a href="predictor-enhanced.html" class="text-white me-3">Predict</a>
+                    <a href="history.html" class="text-white me-3">History</a>
+                    <a href="profile.html" class="text-white me-3">Profile</a>
+                    <a href="#" id="logoutBtn" class="text-white">Logout</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="container my-4">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">🎓 Enhanced Performance Predictor</h4>
+                        <small>Get AI-powered predictions based on comprehensive factors</small>
+                    </div>
+                    <div class="card-body">
+                        <form id="predictionForm">
+                            <!-- Course Information -->
+                            <div class="card section-card">
+                                <div class="card-body">
+                                    <h5>📚 Course Information</h5>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="courseCode" class="form-label">Course Code *</label>
+                                            <input type="text" class="form-control" id="courseCode" placeholder="e.g., ITE301" required>
+                                            <div id="courseCodeError" class="validation-error text-danger small"></div>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="currentGrade" class="form-label">Current Grade *</label>
+                                            <select class="form-select" id="currentGrade" required>
+                                                <option value="">Select grade</option>
+                                                <option value="A">A (Excellent - 80%+)</option>
+                                                <option value="B+">B+ (Very Good - 75-79%)</option>
+                                                <option value="B">B (Good - 70-74%)</option>
+                                                <option value="C+">C+ (Above Average - 65-69%)</option>
+                                                <option value="C">C (Average - 60-64%)</option>
+                                                <option value="D+">D+ (Below Average - 55-59%)</option>
+                                                <option value="D">D (Poor - 50-54%)</option>
+                                                <option value="F">F (Fail - Below 50%)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Calendar Semester -->
+                            <div class="card section-card">
+                                <div class="card-body">
+                                    <h5>📅 Calendar Semester</h5>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="semesterType" class="form-label">Semester Type *</label>
+                                            <select class="form-select" id="semesterType" required>
+                                                <option value="regular">Regular Semester (Sep-Dec / Jan-Apr)</option>
+                                                <option value="non-regular">Non-Regular Semester (May-Aug)</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <label for="semester" class="form-label">Semester Number *</label>
+                                            <select class="form-select" id="semester" required>
+                                                <option value="">Select</option>
+                                                <option value="1">1</option><option value="2">2</option>
+                                                <option value="3">3</option><option value="4">4</option>
+                                                <option value="5">5</option><option value="6">6</option>
+                                                <option value="7">7</option><option value="8">8</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <label for="academicYear" class="form-label">Academic Year *</label>
+                                            <input type="text" class="form-control" id="academicYear" placeholder="2024" required>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Weekly Format -->
+                            <div class="card section-card">
+                                <div class="card-body">
+                                    <h5>📊 Weekly Performance</h5>
+                                    <div class="row">
+                                        <div class="col-md-4 mb-3">
+                                            <label for="assignmentsSubmitted" class="form-label">Assignments Submitted (%)</label>
+                                            <input type="range" class="form-range" id="assignmentsSubmitted" min="0" max="100" value="70">
+                                            <span id="assignmentsValue" class="badge bg-info">70%</span>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label for="attendance" class="form-label">Attendance (%)</label>
+                                            <input type="range" class="form-range" id="attendance" min="0" max="100" value="80">
+                                            <span id="attendanceValue" class="badge bg-info">80%</span>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label for="quizScores" class="form-label">Quiz Scores (%)</label>
+                                            <input type="range" class="form-range" id="quizScores" min="0" max="100" value="65">
+                                            <span id="quizValue" class="badge bg-info">65%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Overall Assessment -->
+                            <div class="card section-card">
+                                <div class="card-body">
+                                    <h5>📈 Overall Assessment</h5>
+                                    <div class="mb-3">
+                                        <label for="overallScore" class="form-label">Overall Performance Score (0-100) *</label>
+                                        <input type="range" class="form-range" id="overallScore" min="0" max="100" value="60">
+                                        <span id="overallValue" class="badge bg-info">60%</span>
+                                        <small class="text-muted d-block">Average of quizzes, assignments, and mid-term exams</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Study Hours -->
+                            <div class="card section-card">
+                                <div class="card-body">
+                                    <h5>⏰ Study Commitment</h5>
+                                    <div class="mb-3">
+                                        <label for="studyHours" class="form-label">Weekly Study Hours</label>
+                                        <input type="range" class="form-range" id="studyHours" min="0" max="40" value="12">
+                                        <span id="studyHoursValue" class="badge bg-info">12 hours/week</span>
+                                        <small class="text-muted d-block">Recommended: 15-20 hours per course</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Parental Education -->
+                            <div class="card section-card">
+                                <div class="card-body">
+                                    <h5>👨‍👩‍👧 Parental Education Level</h5>
+                                    <div class="mb-3">
+                                        <select class="form-select" id="parentalEducation">
+                                            <option value="none">No formal education</option>
+                                            <option value="primary">Primary School</option>
+                                            <option value="secondary">Secondary School</option>
+                                            <option value="tertiary" selected>Tertiary (University/Polytechnic)</option>
+                                            <option value="postgraduate">Postgraduate (Master's/PhD)</option>
+                                        </select>
+                                        <small class="text-muted">Research shows parental education influences academic support</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Self-Assessment -->
+                            <div class="card section-card">
+                                <div class="card-body">
+                                    <h5>🎯 Self-Assessment</h5>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="difficulty" class="form-label">Perceived Difficulty:</label>
+                                            <input type="range" class="form-range" id="difficulty" min="1" max="5" value="3">
+                                            <span id="difficultyValue" class="badge bg-info">Medium (3/5)</span>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="confidence" class="form-label">Confidence Level:</label>
+                                            <input type="range" class="form-range" id="confidence" min="1" max="5" value="3">
+                                            <span id="confidenceValue" class="badge bg-info">Moderate (3/5)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary w-100 py-2 mt-3">
+                                🔮 Predict My Performance
+                            </button>
+                        </form>
+
+                        <div id="predictionResult" class="mt-4" style="display: none;">
+                            <div class="alert alert-success">
+                                <h5>📈 Enhanced Prediction Result</h5>
+                                <hr>
+                                <p><strong>🎓 Predicted Grade:</strong> <span id="resultGrade" class="fw-bold fs-3"></span></p>
+                                <p><strong>📊 Confidence Level:</strong> <span id="resultConfidence"></span>%</p>
+                                <div class="progress mb-3">
+                                    <div id="confidenceBar" class="progress-bar bg-success" style="width: 0%"></div>
+                                </div>
+                                
+                                <h6>📋 Factors Analysis:</h6>
+                                <div id="factorsAnalysis" class="small mb-3"></div>
+                                
+                                <h6>💡 Personalized Recommendations:</h6>
+                                <p id="recommendations" class="mb-0"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-light text-center py-3 mt-4">
+        <div class="container">
+            <p class="mb-0">&copy; 2025 USTED. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/validation.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        const API_BASE_URL = 'https://aamusted-predictor-backend2.onrender.com';
+        
+        // Range slider displays
+        document.getElementById('assignmentsSubmitted').addEventListener('input', function() {
+            document.getElementById('assignmentsValue').textContent = this.value + '%';
+        });
+        document.getElementById('attendance').addEventListener('input', function() {
+            document.getElementById('attendanceValue').textContent = this.value + '%';
+        });
+        document.getElementById('quizScores').addEventListener('input', function() {
+            document.getElementById('quizValue').textContent = this.value + '%';
+        });
+        document.getElementById('overallScore').addEventListener('input', function() {
+            document.getElementById('overallValue').textContent = this.value + '%';
+        });
+        document.getElementById('studyHours').addEventListener('input', function() {
+            document.getElementById('studyHoursValue').textContent = this.value + ' hours/week';
+        });
+        document.getElementById('difficulty').addEventListener('input', function() {
+            let texts = ['Easy', 'Fairly Easy', 'Medium', 'Challenging', 'Very Hard'];
+            document.getElementById('difficultyValue').textContent = texts[this.value-1] + ' (' + this.value + '/5)';
+        });
+        document.getElementById('confidence').addEventListener('input', function() {
+            let texts = ['Very Low', 'Low', 'Moderate', 'High', 'Very High'];
+            document.getElementById('confidenceValue').textContent = texts[this.value-1] + ' (' + this.value + '/5)';
+        });
+        
+        // Prediction form submission
+        document.getElementById('predictionForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            const predictionData = {
+                course_code: document.getElementById('courseCode').value,
+                current_grade: document.getElementById('currentGrade').value,
+                semester_type: document.getElementById('semesterType').value,
+                semester: parseInt(document.getElementById('semester').value),
+                academic_year: parseInt(document.getElementById('academicYear').value),
+                weekly_data: {
+                    assignments_submitted: parseInt(document.getElementById('assignmentsSubmitted').value),
+                    attendance: parseInt(document.getElementById('attendance').value),
+                    quiz_scores: parseInt(document.getElementById('quizScores').value)
+                },
+                overall_score: parseInt(document.getElementById('overallScore').value),
+                study_hours: parseInt(document.getElementById('studyHours').value),
+                parental_education: document.getElementById('parentalEducation').value,
+                difficulty: parseInt(document.getElementById('difficulty').value),
+                confidence: parseInt(document.getElementById('confidence').value)
+            };
+            
+            // Validate course code
+            const courseResult = validateCourseCode(predictionData.course_code);
+            if (!courseResult.isValid) {
+                document.getElementById('courseCodeError').textContent = courseResult.message;
+                return;
+            }
+            
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Predicting...';
+            submitBtn.disabled = true;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/predict-enhanced?token=${token}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(predictionData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('resultGrade').textContent = data.predicted_grade;
+                    document.getElementById('resultConfidence').textContent = data.confidence;
+                    document.getElementById('confidenceBar').style.width = `${data.confidence}%`;
+                    
+                    // Display factors analysis
+                    const factorsHtml = Object.entries(data.factors_analysis).map(([key, value]) => 
+                        `<div class="mb-1"><strong>${key.replace(/_/g, ' ')}:</strong> ${value}</div>`
+                    ).join('');
+                    document.getElementById('factorsAnalysis').innerHTML = factorsHtml;
+                    
+                    document.getElementById('recommendations').textContent = data.recommendations;
+                    document.getElementById('predictionResult').style.display = 'block';
+                    
+                    // Scroll to result
+                    document.getElementById('predictionResult').scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    alert(data.detail || 'Prediction failed');
+                }
+            } catch (error) {
+                console.error('Prediction error:', error);
+                alert('Network error: ' + error.message);
+            } finally {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        });
+        
+        // Check authentication
+        if (!localStorage.getItem('token')) {
+            window.location.href = 'login.html';
+        }
+        
+        // Logout
+        document.getElementById('logoutBtn')?.addEventListener('click', () => {
+            localStorage.removeItem('token');
+            window.location.href = 'index.html';
+        });
+    </script>
+</body>
+</html>
