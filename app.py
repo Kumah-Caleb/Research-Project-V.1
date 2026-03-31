@@ -248,13 +248,15 @@ def register(user: dict):
     }
     return {"id": user_id, "username": user.get("username")}
 
+
 @app.post("/api/login")
 def login(request: dict):
+    """Login for both students and lecturers"""
     username = request.get("username")
     password = request.get("password")
-
+    
     for u in users_db.values():
-        if u["username"] == username and verify_password(password, u["password_hash"]):
+        if (u["username"] == username or u.get("email") == username) and verify_password(password, u["password_hash"]):
             token = generate_token()
             tokens_db[token] = u["id"]
             return {
@@ -264,7 +266,9 @@ def login(request: dict):
                     "username": u["username"],
                     "full_name": u["full_name"],
                     "email": u["email"],
-                    "student_id": u["student_id"]
+                    "role": u.get("role", "student"),
+                    "student_id": u.get("student_id", ""),
+                    "lecturer_id": u.get("lecturer_id", "")
                 }
             }
     raise HTTPException(401, "Invalid credentials")
@@ -657,6 +661,7 @@ def lecturer_login(request: LecturerLoginRequest):
         }
     raise HTTPException(401, "Invalid lecturer credentials")
 
+
 @app.get("/api/lecturer/profile")
 def lecturer_profile(token: str):
     """Get lecturer profile"""
@@ -674,6 +679,7 @@ def lecturer_profile(token: str):
         "username": u["username"],
         "full_name": u["full_name"],
         "email": u["email"],
+        "lecturer_id": u.get("lecturer_id", u["username"]),
         "department": u.get("department", "Information Technology"),
         "courses": u.get("courses", [])
     }
@@ -942,3 +948,64 @@ def get_student_predict_data(student_id: str, token: str):
         "attendance": 80,
         "assignments": 75
     }
+
+# ============================================
+# LECTURER REGISTRATION AND AUTHENTICATION
+# ============================================
+
+@app.post("/api/lecturer/register")
+def lecturer_register(request: dict):
+    """Register a new lecturer account"""
+    global user_counter
+    
+    username = request.get("username") or request.get("lecturer_id")
+    email = request.get("email")
+    full_name = request.get("full_name")
+    lecturer_id = request.get("lecturer_id")
+    department = request.get("department", "Information Technology")
+    password = request.get("password")
+    
+    # Validate input
+    if not username or not email or not full_name or not lecturer_id or not password:
+        raise HTTPException(400, "All fields are required")
+    
+    # Check if username already exists
+    for u in users_db.values():
+        if u.get("username") == username:
+            raise HTTPException(400, "Username already taken")
+        if u.get("email") == email:
+            raise HTTPException(400, "Email already registered")
+        if u.get("lecturer_id") == lecturer_id:
+            raise HTTPException(400, "Lecturer ID already registered")
+    
+    user_id = user_counter
+    user_counter += 1
+    
+    users_db[user_id] = {
+        "id": user_id,
+        "username": username,
+        "email": email,
+        "full_name": full_name,
+        "lecturer_id": lecturer_id,
+        "department": department,
+        "password_hash": hash_password(password),
+        "role": "lecturer",
+        "courses": [],
+        "created_at": datetime.utcnow().isoformat()
+    }
+    
+    return {
+        "success": True,
+        "message": "Lecturer registered successfully",
+        "user": {
+            "id": user_id,
+            "username": username,
+            "email": email,
+            "full_name": full_name,
+            "lecturer_id": lecturer_id,
+            "department": department,
+            "role": "lecturer"
+        }
+    }
+
+
