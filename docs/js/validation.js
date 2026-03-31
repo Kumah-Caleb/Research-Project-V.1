@@ -47,3 +47,11 @@ function validateCourseCode(courseCode) {
     }
     return { isValid: true, message: '' };
 }
+// Add username validation
+function validateUsername(username) {
+    if (!username) return { isValid: false, message: 'Username is required' };
+    if (username.length < 3) return { isValid: false, message: 'Username must be at least 3 characters' };
+    if (username.length > 20) return { isValid: false, message: 'Username cannot exceed 20 characters' };
+    if (!/^[a-zA-Z0-9_]+$/.test(username)) return { isValid: false, message: 'Username can only contain letters, numbers, and underscore' };
+    return { isValid: true, message: '' };
+}
