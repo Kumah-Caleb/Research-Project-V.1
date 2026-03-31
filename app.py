@@ -610,9 +610,16 @@ def update_profile(request: dict, token: str):
 
     return {"success": True, "message": "Profile updated successfully"}
 
+# ✅ CORRECT — move uvicorn.run to the very END of the file
+# ... all routes defined above ...
+
+# ✅ CORRECT — move uvicorn.run to the very END of the file
+# ... all routes defined above ...
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
 
 # ============================================
 # LECTURER ENDPOINTS
@@ -633,33 +640,62 @@ class LecturerProfile(BaseModel):
 
 @app.post("/api/lecturer/login")
 def lecturer_login(request: LecturerLoginRequest):
-    """Login for lecturers"""
-    # For demo, create a default lecturer
-    lecturer_id = 1001
-    if request.username == "lecturer" or request.username == "dr.smith":
+    """Login for lecturers - checks users_db first, falls back to demo account"""
+
+    # 1️⃣ Check registered lecturers in users_db
+    for u in users_db.values():
+        if (
+            u.get("role") == "lecturer"
+            and (u["username"] == request.username or u.get("email") == request.username or u.get("lecturer_id") == request.username)
+            and verify_password(request.password, u["password_hash"])
+        ):
+            token = generate_token()
+            tokens_db[token] = u["id"]
+            return {
+                "token": token,
+                "user": {
+                    "id": u["id"],
+                    "username": u["username"],
+                    "full_name": u["full_name"],
+                    "email": u["email"],
+                    "role": "lecturer",
+                    "lecturer_id": u.get("lecturer_id", u["username"]),
+                    "department": u.get("department", "Information Technology")
+                }
+            }
+
+    # 2️⃣ Demo fallback (for testing only — remove in production)
+    DEMO_ACCOUNTS = {
+        "lecturer": {"password": "lecturer123", "name": "Dr. Demo Lecturer"},
+        "dr.smith": {"password": "smith123", "name": "Dr. John Smith"},
+    }
+    demo = DEMO_ACCOUNTS.get(request.username)
+    if demo and request.password == demo["password"]:
+        lecturer_id = 1001
         token = generate_token()
         tokens_db[token] = lecturer_id
-        # Store lecturer info
         users_db[lecturer_id] = {
             "id": lecturer_id,
             "username": request.username,
-            "full_name": "Dr. John Smith",
-            "email": "john.smith@usted.edu.gh",
+            "full_name": demo["name"],
+            "email": f"{request.username}@usted.edu.gh",
             "department": "Information Technology",
             "role": "lecturer",
-            "courses": ["ITE301", "ITE302", "ITE303"]
+            "courses": ["ITE301", "ITE302", "ITE303"],
+            "password_hash": hash_password(demo["password"])
         }
         return {
             "token": token,
             "user": {
                 "id": lecturer_id,
                 "username": request.username,
-                "full_name": "Dr. John Smith",
-                "email": "john.smith@usted.edu.gh",
+                "full_name": demo["name"],
+                "email": f"{request.username}@usted.edu.gh",
                 "role": "lecturer"
             }
         }
-    raise HTTPException(401, "Invalid lecturer credentials")
+
+    raise HTTPException(status_code=401, detail="Invalid lecturer credentials")
 
 
 @app.get("/api/lecturer/profile")
